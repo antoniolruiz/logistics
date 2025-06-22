@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Model Truck Yard Analyzer</title>
+    <title>Yard Auditor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Using Roboto as a readily available proxy for Google Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -53,7 +53,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
             <header class="mb-8 text-center">
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">Multi-Model Logistics Analyzer</h1>
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">Yard Auditor</h1>
                 <p class="mt-2 text-gray-600">Choose your AI model, upload media, and generate intelligent reports.</p>
             </header>
 
@@ -81,7 +81,7 @@
                     <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                 </div>
                 
-                <!-- Tabs -->
+                 <!-- Tabs -->
                 <div class="border-b border-gray-200">
                     <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                         <button id="tabVideo" class="tab-btn active shrink-0 border-b-2 py-4 px-1 text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Video Analysis</button>
@@ -89,7 +89,7 @@
                     </nav>
                 </div>
                 
-                <!-- Tab Content -->
+                 <!-- Tab Content -->
                 <div id="videoContent" class="tab-content">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Video</label>
@@ -97,14 +97,14 @@
                     </div>
                     <div class="flex items-center justify-center w-full">
                          <label for="videoUpload" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
-                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p class="text-xs text-gray-500">MP4, MOV, AVI, etc. (MAX. 50MB)</p>
-                                <p id="fileName" class="text-sm text-green-600 font-semibold mt-2"></p>
-                            </div>
-                            <input id="videoUpload" type="file" class="hidden" accept="video/*" />
-                        </label>
+                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                 <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                                 <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                 <p class="text-xs text-gray-500">MP4, MOV, AVI, etc. (MAX. 50MB)</p>
+                                 <p id="fileName" class="text-sm text-green-600 font-semibold mt-2"></p>
+                             </div>
+                             <input id="videoUpload" type="file" class="hidden" accept="video/*" />
+                         </label>
                     </div>
                     <div class="text-center mt-8 mb-8">
                         <button id="analyzeBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Analyze Video</button>
@@ -133,7 +133,7 @@
                         <div class="flex flex-col items-center">
                             <h3 class="font-semibold mb-2">After Image</h3>
                             <label for="screenshot2" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                                 <div id="ss2-prompt" class="flex flex-col items-center justify-center p-5 text-center">
+                                <div id="ss2-prompt" class="flex flex-col items-center justify-center p-5 text-center">
                                     <svg class="w-10 h-10 mb-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l-1.586-1.586a2 2 0 00-2.828 0L6 14"></path></svg>
                                     <p class="text-sm text-gray-500">Upload "After" Screenshot</p>
                                 </div>
@@ -188,10 +188,38 @@
                      </div>
                      <textarea id="aiResultText" class="w-full h-48 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" placeholder="AI-generated content will appear here..."></textarea>
                 </div>
-                <!-- Inventory Report Result (for Screenshot comparison) -->
+                <!-- Inventory Report Result -->
                 <div id="inventoryResultContainer" class="hidden mt-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 font-google-sans">Inventory Report</h2>
-                    <textarea id="inventoryResultText" class="w-full h-96 p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500" readonly></textarea>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 font-google-sans">Inventory Change Report</h2>
+                    <div id="inventoryReportVisual" class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-green-600 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-circle"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                Arrived
+                            </h3>
+                            <div id="addedTrailersContainer" class="space-y-3">
+                                <!-- Cards for added trailers will be injected here -->
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-600 mb-4 flex items-center gap-2">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-anchor"><circle cx="12" cy="12" r="8"/><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                                Remained
+                            </h3>
+                            <div id="remainedTrailersContainer" class="space-y-3">
+                                <!-- Cards for remained trailers will be injected here -->
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-red-600 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                Departed
+                            </h3>
+                            <div id="removedTrailersContainer" class="space-y-3">
+                                <!-- Cards for removed trailers will be injected here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -347,7 +375,10 @@
         const ss1Prompt = document.getElementById('ss1-prompt');
         const ss2Prompt = document.getElementById('ss2-prompt');
         const inventoryResultContainer = document.getElementById('inventoryResultContainer');
-        const inventoryResultText = document.getElementById('inventoryResultText');
+        const addedTrailersContainer = document.getElementById('addedTrailersContainer');
+        const removedTrailersContainer = document.getElementById('removedTrailersContainer');
+        const remainedTrailersContainer = document.getElementById('remainedTrailersContainer');
+
         
         // Tab Elements
         const tabVideo = document.getElementById('tabVideo');
@@ -391,40 +422,54 @@
         let analysisData = [];
         let rawApiResponse = '';
 
-        const defaultVideoPrompt = `You are a JSON data extraction engine. Your only purpose is to process the provided video/image frames and return a single, valid JSON object.
+        const defaultVideoPrompt = `You are a highly attentive logistics analyst specializing in visual recognition. Your task is to meticulously scan a truck yard and identify every unique semi-trailer that appears.
+For each unique trailer, provide the following information in a strict JSON array of objects.
 
-**TASK:**
-Analyze the media to identify every unique semi-trailer.
+1. trailer_id: The primary alphanumeric identification number on the side of the trailer.
+- CRITICAL: This ID is for tracking. Do NOT include physical dimensions like "53'" or "48'". These belong in the \`trailer_size\` field.
+- PRIORITY: Your primary goal for this field is to find the main registration or tracking number, often a mix of letters and numbers.
+- Example: If you see "XTRZ 123456" and "53'" nearby, the trailer_id is "XTRZ 123456".
+2. carrier: The name of the trucking company, identified from any logos or text on the trailer.
+3. is_loaded: A boolean value. This must be \`true\` if you see a plastic or metal seal on the trailer door handle, and \`false\` otherwise.
+4. location: A string, representing the loading door number or physical location where the trailer is parked.
+5. trailer_type: A string. Determine if the trailer is a "dry van" (a standard box trailer) or a "reefer" (a refrigerated trailer, which will have a large cooling unit on the front).
+6. trailer_size: A number. Estimate the length of the trailer in feet. Look for numbers like 53 or 48.
+7. image: the best frame for identification of the trailer.
 
-**REQUIRED JSON STRUCTURE:**
-Your output MUST be a JSON object with a single root key named "trailers". This key must contain an array of objects. Each object in the array represents one trailer and must have the following fields:
-- \`trailer_id\`: STRING. The primary tracking number. IMPORTANT: Exclude any dimension text like "53'".
-- \`carrier\`: STRING. The company name.
-- \`is_loaded\`: BOOLEAN. \`true\` if a seal is visible, otherwise \`false\`.
-- \`location\`: STRING. The door number or parking location.
-- \`trailer_type\`: STRING. Must be "dry van" or "reefer".
-- \`trailer_size\`: NUMBER. The length in feet (e.g., 53).
-- \`image\`: STRING. A brief description of the best frame for identification.
+Core Rules:
 
-**EXAMPLE OF PERFECT OUTPUT:**
+- Be Thorough: Analyze the entire input. Your main goal is to catalog EVERY unique trailer possible. You should AT LEAST analyze 10 frames per second in the video. 
+- Accuracy is Key: Pay very close attention to the difference between trailer_id and trailer_size.
+- Uniqueness: Only list each unique trailer_id once.
+- Use Null: If you cannot determine information, use a null value for that field.
+- Output Format: Your final output must be only the JSON array of objects, with no other text or markdown.`;
+        
+        const defaultInventoryPrompt = `You are a logistics yard auditor. Your task is to analyze the two provided images, a 'before' and 'after' state of loading doors.
+Your goal is to identify which trailers have arrived, which have departed, and which have remained.
+
+Respond with a single JSON object with three keys: "added", "removed", and "remained".
+- "added": An array of objects, where each object represents a trailer that is present in the 'after' image but not the 'before' image.
+- "removed": An array of objects, where each object represents a trailer that is present in the 'before' image but not the 'after' image.
+- "remained": An array of objects, where each object represents a trailer that is present in BOTH the 'before' and 'after' images.
+
+Each trailer object in the arrays must have the following keys:
+- "trailer_id": The primary alphanumeric identification number on the side of the trailer. Be as precise as possible.
+- "location": The door number or parking location where the change occurred.
+
+Example of a perfect response:
 {
-  "trailers": [
-    {
-      "trailer_id": "XPO 123456",
-      "carrier": "XPO Logistics",
-      "is_loaded": true,
-      "location": "Door 5",
-      "trailer_type": "dry van",
-      "trailer_size": 53,
-      "image": "Clear side view at 0:15"
-    }
+  "added": [
+    { "trailer_id": "HZCU 456789", "location": "Door 3" }
+  ],
+  "removed": [
+    { "trailer_id": "XYZ 123456", "location": "Door 4" }
+  ],
+  "remained": [
+    { "trailer_id": "ABC 789101", "location": "Door 1" }
   ]
 }
 
-**FINAL COMMAND:**
-Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any descriptive text, summaries, apologies, or markdown formatting like \`\`\`json. ONLY output the JSON.`;
-        
-        const defaultInventoryPrompt = `You are a logistics yard auditor. Your task is to analyze the two provided images, which represent a 'before' and 'after' state of loading doors at a facility. Identify and list all the differences between the two images. Focus on changes in trailer presence, which specific trailers have moved, which doors are now occupied, and which are now empty. Present the changes in a clear, itemized list. Do not respond in JSON.`;
+Only output the JSON object. Do not include any other text, explanations, or markdown formatting.`;
         
         videoPromptTextarea.value = defaultVideoPrompt;
         inventoryPromptTextarea.value = defaultInventoryPrompt;
@@ -530,7 +575,7 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
                 inventoryContent.classList.remove('hidden');
             }
              resetOnTabSwitch();
-             checkAllInputs();
+              checkAllInputs();
         }
 
         function switchSidePanelTab(tabName) {
@@ -637,31 +682,39 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
                 let resultText = '';
                 if (selectedModel.startsWith('gemini')) {
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-                    const payload = { contents: [{ parts: [
-                        {text: prompt},
-                        {inlineData: { mimeType: screenshot1File.type, data: ss1_b64 }},
-                        {inlineData: { mimeType: screenshot2File.type, data: ss2_b64 }}
-                    ]}]};
+                    const payload = { 
+                        contents: [{ parts: [
+                            {text: prompt},
+                            {inlineData: { mimeType: screenshot1File.type, data: ss1_b64 }},
+                            {inlineData: { mimeType: screenshot2File.type, data: ss2_b64 }}
+                        ]}],
+                        generationConfig: {
+                            "response_mime_type": "application/json",
+                        }
+                    };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
                     const result = await response.json();
                     resultText = result.candidates[0].content.parts[0].text;
                 } else { // GPT-4o
                     const apiUrl = "https://api.openai.com/v1/chat/completions";
-                    const payload = { model: selectedModel, messages: [{ role: 'user', content: [
-                        { type: 'text', text: prompt },
-                        { type: 'image_url', image_url: { url: `data:${screenshot1File.type};base64,${ss1_b64}` }},
-                        { type: 'image_url', image_url: { url: `data:${screenshot2File.type};base64,${ss2_b64}` }}
-                    ]}]};
+                    const payload = { 
+                        model: selectedModel, 
+                        response_format: { "type": "json_object" },
+                        messages: [{ role: 'user', content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: `data:${screenshot1File.type};base64,${ss1_b64}` }},
+                            { type: 'image_url', image_url: { url: `data:${screenshot2File.type};base64,${ss2_b64}` }}
+                        ]}]
+                    };
                      const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
                     const result = await response.json();
                     resultText = result.choices[0].message.content;
                 }
                 
-                resultsWrapper.classList.remove('hidden');
-                inventoryResultContainer.classList.remove('hidden');
-                inventoryResultText.value = resultText;
+                const reportData = JSON.parse(resultText);
+                displayInventoryReport(reportData);
 
             } catch (error) {
                  displayMessage(error.message);
@@ -676,7 +729,14 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
             const base64Video = await fileToBase64(videoFile);
             const prompt = videoPromptTextarea.value;
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: videoFile.type, data: base64Video } }] }] };
+            
+            // Enable JSON mode for Gemini models
+            const payload = {
+                contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: videoFile.type, data: base64Video } }] }],
+                generationConfig: {
+                    "response_mime_type": "application/json",
+                }
+            };
 
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const result = await response.json();
@@ -686,6 +746,7 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
                  throw new Error(`API Error: ${response.status} ${response.statusText}\n\nResponse:\n${rawApiResponse}`);
             }
             if (result.candidates?.[0]?.content?.parts?.[0]) {
+                // Since we're in JSON mode, the text is guaranteed to be a JSON string.
                 processApiResponse(rawApiResponse);
             } else {
                 throw new Error(`No content found in Gemini API response. Full Response:\n${rawApiResponse}`);
@@ -694,13 +755,13 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
         
         async function analyzeWithGPT4o(model) {
             const apiKey = getApiKey();
-            const frames = await extractFrames(videoPlayer, 2); 
+            const frames = await extractFrames(videoPlayer, 10); 
             if (frames.length === 0) throw new Error("Could not extract frames from video.");
             
             const prompt = videoPromptTextarea.value;
             const apiUrl = `https://api.openai.com/v1/chat/completions`;
-            const contentPayload = [{ type: "text", text: prompt }, ...frames.map(f => ({type: "image_url", image_url: {url: f, detail: "low"}}))];
-            const payload = { model: model, messages: [{ role: "user", content: contentPayload }], max_tokens: 2000 };
+            const contentPayload = [{ type: "text", text: prompt }, ...frames.map(f => ({type: "image_url", image_url: {url: f, detail: "high"}}))];
+            const payload = { model: model, messages: [{ role: "user", content: contentPayload }], max_tokens: 4096 };
             
             const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
             const result = await response.json();
@@ -718,33 +779,65 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
         }
         
         function processApiResponse(responseText) {
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (!jsonMatch?.[0]) {
-                 resultsWrapper.classList.remove('hidden');
-                 inventoryResultContainer.classList.remove('hidden');
-                 inventoryResultText.value = `The model did not return a valid JSON object. The raw response was:\n\n${responseText}`;
-                 return;
+            // This function is designed to be highly robust in extracting a JSON array (our dataframe)
+            // from a potentially messy LLM response that might include extra text.
+
+            // 1. Find the first opening square bracket '[' or brace '{'.
+            const firstBracket = responseText.indexOf('[');
+            const firstBrace = responseText.indexOf('{');
+            let startChar = '';
+            let endChar = '';
+            let startIndex = -1;
+
+            if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+                 startIndex = firstBracket;
+                 startChar = '[';
+                 endChar = ']';
+            } else if (firstBrace !== -1) {
+                startIndex = firstBrace;
+                startChar = '{';
+                endChar = '}';
             }
-            const jsonString = jsonMatch[0];
+
+            if (startIndex === -1) {
+                 throw new Error(`Could not find a valid JSON object or array in the API response. Raw response:\n\n${responseText}`);
+            }
+
+            // 2. Find the last closing character that matches the starting one.
+            const lastBracket = responseText.lastIndexOf(endChar);
+
+            if (lastBracket === -1 || lastBracket < startIndex) {
+                throw new Error(`Could not find a complete JSON structure in the API response. Raw response:\n\n${responseText}`);
+            }
+
+            // 3. Extract the text between them.
+            const jsonString = responseText.substring(startIndex, lastBracket + 1);
+
+            let parsedData;
             try {
-                const data = JSON.parse(jsonString);
-                if (data.trailers && Array.isArray(data.trailers)) {
-                    analysisData = data.trailers;
-                    displayResults(analysisData);
-                } else {
-                    throw new Error(`API returned invalid JSON. 'trailers' array missing.\n\n${jsonString}`);
-                }
+                // 4. Attempt to parse the extracted string as JSON.
+                parsedData = JSON.parse(jsonString);
             } catch (e) {
-                 throw new Error(`Could not parse the JSON response from the API. Invalid JSON:\n\n${jsonString}`);
+                throw new Error(`Found what looks like JSON, but it was not valid. Error: ${e.message}\n\nExtracted Text:\n${jsonString}`);
+            }
+
+            // 5. The video analysis expects an array, so we handle that case.
+            if (Array.isArray(parsedData)) {
+                analysisData = parsedData;
+                displayResults(analysisData);
+            } else {
+                throw new Error(`The extracted data was valid JSON but was not an array (dataframe) format as expected.\n\nParsed Data:\n${JSON.stringify(parsedData, null, 2)}`);
             }
         }
 
         async function handleGenerateSummary() {
-            aiResultLoading.classList.remove('hidden');
-            aiResultText.value = '';
+            aiResultText.value = 'Generating summary...';
             messageContainer.classList.add('hidden');
             
-            const prompt = `You are a logistics coordinator. Based on the following JSON data of trailers in a yard, write a brief, professional summary for the morning shift. Mention the total number of trailers, how many are loaded vs. unloaded, a breakdown of trailer types (dry vs. reefer), and list the carriers present. Here is the data: ${JSON.stringify(analysisData)}`;
+            // The `analysisData` is a JavaScript array (our dataframe).
+            // We must convert it to a string for the API prompt. JSON is a perfect format for this.
+            const dataAsString = JSON.stringify(analysisData, null, 2);
+            const prompt = `You are a logistics coordinator. Based on the following trailer data, write a brief, professional summary for the morning shift. Mention the total number of trailers, how many are loaded vs. unloaded, a breakdown of trailer types (dry vs. reefer), and list the carriers present. Here is the data:\n${dataAsString}`;
             
             try {
                 const selectedModel = modelSelector.value;
@@ -769,8 +862,7 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
                 aiResultText.value = generatedText || "Could not generate text from AI.";
             } catch (error) {
                 displayMessage(`AI Action Error: ${error.message}`);
-            } finally {
-                if(aiResultLoading) aiResultLoading.classList.add('hidden');
+                aiResultText.value = 'Failed to generate summary.';
             }
         }
 
@@ -822,17 +914,24 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
                     videoEl.addEventListener('error', () => reject('Video metadata could not be loaded.'), { once: true });
                     return;
                 }
-                const frames = [], maxFrames = 20, duration = videoEl.duration;
-                let totalFramesToCapture = Math.floor(duration * framesPerSecond), interval;
+                const frames = [], maxFrames = 100, duration = videoEl.duration; // Capped max frames
+                let totalFramesToCapture = Math.floor(duration * framesPerSecond);
+                let interval;
+
                 if (totalFramesToCapture > maxFrames) {
-                    displayMessage(`Note: Analysis capped at ${maxFrames} frames for performance.`, true);
+                    displayMessage(`Note: For performance, analysis is capped at ${maxFrames} frames.`, true);
                     totalFramesToCapture = maxFrames;
-                    interval = duration / (maxFrames - 1);
-                } else {
-                    interval = duration > 0 ? (totalFramesToCapture > 1 ? duration / (totalFramesToCapture - 1) : 0) : 0;
                 }
-                if (totalFramesToCapture === 0 && duration > 0) totalFramesToCapture = 1;
+                
+                if (totalFramesToCapture <= 1) {
+                    interval = 0;
+                     totalFramesToCapture = 1;
+                } else {
+                     interval = duration / (totalFramesToCapture - 1);
+                }
+
                 if (totalFramesToCapture === 0) { resolve([]); return; }
+
                 const canvas = document.getElementById('canvas'), context = canvas.getContext('2d');
                 canvas.width = videoEl.videoWidth; canvas.height = videoEl.videoHeight;
                 for (let i = 0; i < totalFramesToCapture; i++) {
@@ -878,6 +977,58 @@ Your response body MUST start with \`{\` and end with \`}\`. DO NOT add any desc
             resultsWrapper.classList.remove('hidden');
             resultsContainer.classList.remove('hidden');
             aiActionsContainer.classList.remove('hidden');
+        }
+
+        function displayInventoryReport(data) {
+            // Clear previous results
+            addedTrailersContainer.innerHTML = '';
+            remainedTrailersContainer.innerHTML = '';
+            removedTrailersContainer.innerHTML = '';
+
+            const createCard = (trailer, type) => {
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-lg shadow-sm border';
+                card.innerHTML = `
+                    <p class="font-semibold text-gray-800">${trailer.trailer_id || 'ID Unknown'}</p>
+                    <p class="text-sm text-gray-500">Location: ${trailer.location || 'N/A'}</p>
+                `;
+                if (type === 'added') {
+                    card.classList.add('bg-green-50', 'border-green-200');
+                } else if (type === 'removed') {
+                    card.classList.add('bg-red-50', 'border-red-200');
+                } else { // remained
+                     card.classList.add('bg-blue-50', 'border-blue-200');
+                }
+                return card;
+            };
+
+            if (data.added && data.added.length > 0) {
+                data.added.forEach(trailer => {
+                    addedTrailersContainer.appendChild(createCard(trailer, 'added'));
+                });
+            } else {
+                addedTrailersContainer.innerHTML = '<p class="text-sm text-gray-500">No new trailers arrived.</p>';
+            }
+
+            if (data.remained && data.remained.length > 0) {
+                data.remained.forEach(trailer => {
+                    remainedTrailersContainer.appendChild(createCard(trailer, 'remained'));
+                });
+            } else {
+                remainedTrailersContainer.innerHTML = '<p class="text-sm text-gray-500">No trailers remained.</p>';
+            }
+
+            if (data.removed && data.removed.length > 0) {
+                data.removed.forEach(trailer => {
+                    removedTrailersContainer.appendChild(createCard(trailer, 'removed'));
+                });
+            } else {
+                removedTrailersContainer.innerHTML = '<p class="text-sm text-gray-500">No trailers departed.</p>';
+            }
+            
+            resultsWrapper.classList.remove('hidden');
+            inventoryResultContainer.classList.remove('hidden');
+            aiActionsContainer.classList.add('hidden'); // Hide the general actions for this specific report
         }
 
     </script>
