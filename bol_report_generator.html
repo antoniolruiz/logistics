@@ -75,7 +75,7 @@
             <header class="mb-8">
                 <div class="flex items-center justify-between relative mb-6">
                     <div class="flex-1"></div>
-                    <img src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-d91b495/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200" />
+                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-d91b495/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
                 </div>
                 <div class="text-center mt-2">
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">BoL Report Generator</h1>
@@ -83,7 +83,7 @@
                 </div>
             </header>
 
-            <div class="space-y-6">
+            <div id="aiConfigSection" class="space-y-6 hidden">
                  <div>
                     <div class="flex items-center justify-between mb-2">
                         <label for="modelSelector" class="block text-lg font-medium text-gray-700 font-google-sans">Choose AI Model</label>
@@ -112,64 +112,64 @@
                     </div>
                     <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                 </div>
-                
-                 <div id="bolContent">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Bill of Lading (PDF)</label>
-                    </div>
-                     <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
-                         <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
-                             <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
-                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
-                             <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
-                         </div>
-                         <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
-                         <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
-                     </label>
-                    <div class="text-center mt-8 mb-8">
-                        <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Parse Bill of Lading</button>
-                    </div>
-                </div>
+            </div>
 
-            </div>
-            
-            <div id="loading" class="text-center my-4 hidden">
-                <div class="w-full max-w-2xl mx-auto">
-                    <div class="flex items-center justify-between mb-2">
-                        <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
-                        <span id="progressPercent" class="text-xl font-bold text-blue-600">0%</span>
-                    </div>
-                    <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
-                        <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
-                    </div>
+            <div id="bolContent">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Bill of Lading (PDF)</label>
                 </div>
-            </div>
-            <div id="messageContainer" class="hidden">
-                 <div id="message" class="text-red-600 font-medium"></div>
-            </div>
-            
-            <div id="resultsWrapper" class="hidden">
-                 <div id="bolResultContainer" class="hidden mt-6">
-                     <div class="flex justify-between items-center mb-4">
-                         <h2 class="text-2xl font-bold text-gray-800 font-google-sans">Bill of Lading Details</h2>
-                         <div class="flex gap-2">
-                             <button id="printBolBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="13" width="12" height="8" rx="2"/><path d="M6 17h0"/></svg>
-                                 Print Results
-                             </button>
-                             <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                 Export Data
-                             </button>
-                         </div>
+                 <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
+                     <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
+                         <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                         <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
+                         <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                      </div>
-                    <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                        </div>
+                     <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                     <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
+                 </label>
+                <div class="text-center mt-8 mb-8">
+                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Parse Bill of Lading</button>
                 </div>
             </div>
+
         </div>
     </div>
     
+    <div id="loading" class="text-center my-4 hidden">
+        <div class="w-full max-w-2xl mx-auto">
+            <div class="flex items-center justify-between mb-2">
+                <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
+                <span id="progressPercent" class="text-xl font-bold text-blue-600">0%</span>
+            </div>
+            <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
+                <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+    <div id="messageContainer" class="hidden">
+         <div id="message" class="text-red-600 font-medium"></div>
+    </div>
+    
+    <div id="resultsWrapper" class="hidden">
+         <div id="bolResultContainer" class="hidden mt-6">
+             <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold text-gray-800 font-google-sans">Bill of Lading Details</h2>
+                 <div class="flex gap-2">
+                     <button id="printBolBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="13" width="12" height="8" rx="2"/><path d="M6 17h0"/></svg>
+                         Print Results
+                     </button>
+                     <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                         Export Data
+                     </button>
+                 </div>
+             </div>
+            <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                </div>
+        </div>
+    </div>
+
     <div id="sidePanelOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
     <div id="sidePanel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
         <div class="flex flex-col h-full">
@@ -1212,6 +1212,24 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 }
             });
         }
+
+        // Hide AI config section initially and toggle on triple-click of logo
+        const aiConfigSection = document.getElementById('aiConfigSection');
+        const vectorLogo = document.getElementById('vectorLogo');
+        let logoClickCount = 0;
+        let logoClickTimer = null;
+        function toggleAIConfigSection() {
+            aiConfigSection.classList.toggle('hidden');
+        }
+        vectorLogo.addEventListener('click', function() {
+            logoClickCount++;
+            if (logoClickTimer) clearTimeout(logoClickTimer);
+            logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1000);
+            if (logoClickCount === 3) {
+                toggleAIConfigSection();
+                logoClickCount = 0;
+            }
+        });
 
     </script>
 </body>
