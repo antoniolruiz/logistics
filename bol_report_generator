@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoL Report Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-google-sans {
+            font-family: 'Roboto', sans-serif;
+        }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #message {
+            white-space: pre-wrap;
+            text-align: left;
+            background-color: #fef2f2;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+        }
+        .translate-x-full {
+             transform: translateX(100%);
+        }
+        .side-panel-tab.active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+            <header class="mb-8 text-center">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">BoL Report Generator</h1>
+                <p class="mt-2 text-gray-600">Upload a Bill of Lading PDF, and the AI will parse the details into a structured format.</p>
+            </header>
+
+            <div class="space-y-6">
+                 <div>
+                    <label for="modelSelector" class="block text-lg font-medium text-gray-700 mb-2 font-google-sans">Choose AI Model</label>
+                    <select id="modelSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Highest Quality)</option>
+                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Fast & Efficient)</option>
+                        <option value="gpt-4o">OpenAI GPT-4o</option>
+                    </select>
+                </div>
+                <div id="googleKeyContainer">
+                    <div class="flex items-center justify-between mb-2">
+                         <label for="googleApiKeyInput" class="block text-lg font-medium text-gray-700 font-google-sans">Google AI API Key</label>
+                         <button id="howToBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">How to get a key?</button>
+                    </div>
+                    <input type="password" id="googleApiKeyInput" placeholder="Enter your Google AI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div id="openaiKeyContainer" class="hidden">
+                    <label for="openaiApiKeyInput" class="block text-lg font-medium text-gray-700 mb-2 font-google-sans">OpenAI API Key</label>
+                    <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                
+                 <div id="bolContent">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Bill of Lading (PDF)</label>
+                        <button id="editBolPromptBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">Edit Prompt</button>
+                    </div>
+                     <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
+                         <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
+                             <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
+                             <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
+                         </div>
+                         <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                         <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
+                     </label>
+                    <div class="text-center mt-8 mb-8">
+                        <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Parse Bill of Lading</button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div id="loading" class="text-center my-4 hidden"><div class="inline-block loader w-12 h-12 border-4 rounded-full"></div><p class="mt-4 text-lg font-medium text-gray-600">Analyzing... This may take a moment.</p></div>
+            <div id="messageContainer" class="hidden">
+                 <div id="message" class="text-red-600 font-medium"></div>
+            </div>
+            
+            <div id="resultsWrapper" class="hidden">
+                 <div id="bolResultContainer" class="hidden mt-6">
+                     <div class="flex justify-between items-center mb-4">
+                         <h2 class="text-2xl font-bold text-gray-800 font-google-sans">Bill of Lading Details</h2>
+                         <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                             Export Data
+                         </button>
+                     </div>
+                    <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="sidePanelOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+    <div id="sidePanel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="flex flex-col h-full">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-xl font-google-sans font-bold">API Key Help</h2>
+                <button id="closePanelBtn" class="p-2 rounded-full hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+             <div class="border-b border-gray-200">
+                <nav class="flex" aria-label="Side Panel Tabs">
+                    <button id="panelTabKey" class="side-panel-tab active flex-1 border-b-2 py-3 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700">Get API Key</button>
+                    <button id="panelTabBilling" class="side-panel-tab flex-1 border-b-2 border-transparent py-3 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700">Enable Billing</button>
+                </nav>
+            </div>
+            <div id="panelContentKey" class="p-6 overflow-y-auto flex-grow">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 1: Go to Google AI Studio</h3>
+                        <p class="mb-3 text-sm">Navigate to <a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 hover:underline">aistudio.google.com</a> and sign in with your Google account.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/tutorial-api-key-1.png" alt="Google AI Studio Homepage" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 2: Get API Key</h3>
+                        <p class="mb-3 text-sm">Once in AI Studio, click **"Get API key"** from the left-hand menu.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/tutorial-api-key-2.png" alt="Get API Key button" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 3: Create API key in a new project</h3>
+                        <p class="mb-3 text-sm">A dialog will appear. Click on **"Create API key in new project"**.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/tutorial-api-key-3.png" alt="Create API Key in new project" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 4: Copy Your Key</h3>
+                        <p class="mb-3 text-sm">Your new API key will be displayed. Click the copy icon to copy the key.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/tutorial-api-key-4.png" alt="Copy new API key" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 5: Paste it Here</h3>
+                        <p class="mb-3 text-sm">Return to this page and paste the key into the "Google AI API Key" input field.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/tutorial-api-key-5.png" alt="Paste key into the application" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                </div>
+            </div>
+            <div id="panelContentBilling" class="p-6 overflow-y-auto flex-grow hidden">
+                 <div class="space-y-6">
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 1: Go to Google Cloud Console</h3>
+                        <p class="mb-3 text-sm">Navigate to the <a href="https://console.cloud.google.com/" target="_blank" class="text-blue-600 hover:underline">Google Cloud Console</a> and select the project associated with your API key.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/billing-1.png" alt="Google Cloud Console" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 2: Open Billing Menu</h3>
+                        <p class="mb-3 text-sm">Click the main navigation menu (hamburger icon) and select **"Billing"**.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/billing-2.png" alt="Billing Menu" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 3: Link a Billing Account</h3>
+                        <p class="mb-3 text-sm">If your project doesn't have a billing account, you'll see a prompt to **"Link a billing account"**. Click it. If you need to create one, select **"Manage billing accounts"** and then **"Create account"**.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/billing-3.png" alt="Link billing account" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                    <div>
+                        <h3 class="font-bold font-google-sans text-lg mb-2">Step 4: Set Up Payment</h3>
+                        <p class="mb-3 text-sm">Follow the on-screen instructions to provide your payment information and complete the setup.</p>
+                        <img src="https://storage.googleapis.com/gemini-codelab-images/billing-4.png" alt="Payment information" class="rounded-lg border shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/600x300/e2e8f0/334155?text=Image+Not+Found';">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="promptSidePanelOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+    <div id="promptSidePanel" class="fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="flex flex-col h-full">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h2 class="text-xl font-google-sans font-bold">Edit Prompt</h2>
+                <button id="closePromptPanelBtn" class="p-2 rounded-full hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+            <div id="promptPanelContentBol" class="p-6 overflow-y-auto flex-grow flex flex-col">
+                <label for="bolPromptTextarea" class="font-semibold mb-2">Bill of Lading Prompt</label>
+                <textarea id="bolPromptTextarea" class="w-full flex-grow p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                 <div class="mt-4 flex gap-4">
+                     <button id="saveBolPromptBtn" class="flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Save</button>
+                     <button id="resetBolPromptBtn" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Reset to Default</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="imageZoomModal" class="hidden fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-[100] p-4">
+        <button id="closeZoomModal" class="absolute top-4 right-4 text-white text-4xl font-bold">&times;</button>
+        <button id="zoomPrevBtn" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <img id="zoomedImage" src="" class="max-w-full max-h-full">
+         <button id="zoomNextBtn" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+    </div>
+
+    <div id="fieldEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-[100]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 id="editModalTitle" class="text-lg font-bold mb-4">Edit Field</h3>
+            <div id="editModalContent">
+                </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="cancelEditBtn" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
+                <button id="saveEditBtn" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set the workerSrc for pdf.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+
+        // DOM Elements
+        const modelSelector = document.getElementById('modelSelector');
+        const googleKeyContainer = document.getElementById('googleKeyContainer');
+        const openaiKeyContainer = document.getElementById('openaiKeyContainer');
+        const googleApiKeyInput = document.getElementById('googleApiKeyInput');
+        const openaiApiKeyInput = document.getElementById('openaiApiKeyInput');
+        const loading = document.getElementById('loading');
+        const messageContainer = document.getElementById('messageContainer');
+        const message = document.getElementById('message');
+        const resultsWrapper = document.getElementById('resultsWrapper');
+        
+        // BoL Elements
+        const bolUpload = document.getElementById('bolUpload');
+        const bolPromptText = document.getElementById('bol-prompt-text');
+        const pdfFileNameDisplay = document.getElementById('pdfFileName');
+        const bolPreviewContainer = document.getElementById('bol-preview-container');
+        const parseBolBtn = document.getElementById('parseBolBtn');
+        const bolResultContainer = document.getElementById('bolResultContainer');
+        const exportBolBtn = document.getElementById('exportBolBtn');
+        const bolResultCard = document.getElementById('bolResultCard');
+
+        // Modal Elements
+        const imageZoomModal = document.getElementById('imageZoomModal');
+        const zoomedImage = document.getElementById('zoomedImage');
+        const closeZoomModal = document.getElementById('closeZoomModal');
+        const zoomPrevBtn = document.getElementById('zoomPrevBtn');
+        const zoomNextBtn = document.getElementById('zoomNextBtn');
+        const fieldEditModal = document.getElementById('fieldEditModal');
+        const editModalTitle = document.getElementById('editModalTitle');
+        const editModalContent = document.getElementById('editModalContent');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const saveEditBtn = document.getElementById('saveEditBtn');
+
+        // Side Panel Elements
+        const howToBtn = document.getElementById('howToBtn');
+        const sidePanel = document.getElementById('sidePanel');
+        const sidePanelOverlay = document.getElementById('sidePanelOverlay');
+        const closePanelBtn = document.getElementById('closePanelBtn');
+        const panelTabKey = document.getElementById('panelTabKey');
+        const panelTabBilling = document.getElementById('panelTabBilling');
+        const panelContentKey = document.getElementById('panelContentKey');
+        const panelContentBilling = document.getElementById('panelContentBilling');
+        
+        // Prompt Panel Elements
+        const editBolPromptBtn = document.getElementById('editBolPromptBtn');
+        const promptSidePanelOverlay = document.getElementById('promptSidePanelOverlay');
+        const promptSidePanel = document.getElementById('promptSidePanel');
+        const closePromptPanelBtn = document.getElementById('closePromptPanelBtn');
+        const promptPanelContentBol = document.getElementById('promptPanelContentBol');
+        const bolPromptTextarea = document.getElementById('bolPromptTextarea');
+        const saveBolPromptBtn = document.getElementById('saveBolPromptBtn');
+        const resetBolPromptBtn = document.getElementById('resetBolPromptBtn');
+        
+        let bolFile = null;
+        let bolPageImages = [];
+        let currentBolPageIndex = 0;
+
+        const defaultBolPrompt = `You are an expert at parsing shipping documents. Your task is to analyze all the following pages from a single Bill of Lading (BoL) and consolidate all information into a single JSON object.
+Aggregate the data from all provided pages to find the most complete information for each field. Scrutinize every page for line items under tables like "Shipping Details" to create a comprehensive list of all unique items.
+
+Extract the following fields and return them in one JSON object. If a field is not present across any of the pages, use "N/A" as the value.
+
+- "appointment_number": The appointment or pickup number.
+- "seal_number": The seal number for the trailer.
+- "date": The pickup or shipping date.
+- "carrier": The name of the carrier.
+- "origin": The full address of the shipper/origin.
+- "destination": The full address of the consignee/destination.
+- "contents": An array of objects, where each object represents a unique line item found across all pages. Each object should contain:
+    - "description": The description of the goods.
+    - "amount": The total quantity or number of units (e.g., pallets, cases).
+    - "weight": The total weight of the items.
+- "scac": The Standard Carrier Alpha Code (a 2-4 letter code).
+- "delivery_number": The delivery or pro number.
+- "bol_number": The primary Bill of Lading number.
+- "shipment_number": The shipment ID or number.
+- "temperature": The required transit temperature (e.g., 34-40°F).
+
+Only output the final, consolidated JSON object. Do not include any other text, explanations, or markdown formatting.`;
+
+        
+        bolPromptTextarea.value = defaultBolPrompt;
+
+        // --- Event Listeners ---
+        modelSelector.addEventListener('input', () => {
+            const isGpt = modelSelector.value.startsWith('gpt');
+            googleKeyContainer.classList.toggle('hidden', isGpt);
+            openaiKeyContainer.classList.toggle('hidden', !isGpt);
+            checkAllInputs();
+        });
+
+        googleApiKeyInput.addEventListener('input', checkAllInputs);
+        openaiApiKeyInput.addEventListener('input', checkAllInputs);
+
+        bolUpload.addEventListener('change', async (event) => {
+            if (event.target.files.length === 0) return;
+            bolFile = event.target.files[0];
+            pdfFileNameDisplay.textContent = bolFile.name;
+            bolPromptText.classList.add('hidden');
+            
+            // Immediately enable the button if key is present
+            checkAllInputs(); 
+
+            bolPreviewContainer.innerHTML = '<div class="text-center col-span-full">Rendering PDF...</div>';
+
+            try {
+                bolPageImages = await renderPdfToImages(bolFile);
+                bolPreviewContainer.innerHTML = '';
+                bolPageImages.forEach(imgDataUrl => {
+                    const img = document.createElement('img');
+                    img.src = imgDataUrl;
+                    img.className = 'w-full h-auto object-cover rounded-lg border shadow-sm';
+                    bolPreviewContainer.appendChild(img);
+                });
+            } catch (error) {
+                displayMessage(`Error rendering PDF: ${error.message}`);
+                bolPreviewContainer.innerHTML = '';
+                bolPromptText.classList.remove('hidden');
+                pdfFileNameDisplay.textContent = '';
+                bolFile = null; // Reset the file on failure
+                bolPageImages = []; // Reset images
+                checkAllInputs(); // Disable button on failure
+            }
+        });
+        
+        parseBolBtn.addEventListener('click', handleBolParsing);
+        exportBolBtn.addEventListener('click', handleExportBolData);
+
+        howToBtn.addEventListener('click', () => {
+            sidePanel.classList.remove('translate-x-full');
+            sidePanelOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closePanel = () => {
+            sidePanel.classList.add('translate-x-full');
+            sidePanelOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+        closePanelBtn.addEventListener('click', closePanel);
+        sidePanelOverlay.addEventListener('click', closePanel);
+        
+        // Prompt Panel Listeners
+        editBolPromptBtn.addEventListener('click', () => openPromptPanel());
+
+        const openPromptPanel = () => {
+            promptSidePanel.classList.remove('translate-x-full');
+            promptSidePanelOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+        
+        const closePromptPanel = () => {
+            promptSidePanel.classList.add('translate-x-full');
+            promptSidePanelOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        closePromptPanelBtn.addEventListener('click', closePromptPanel);
+        promptSidePanelOverlay.addEventListener('click', closePromptPanel);
+        saveBolPromptBtn.addEventListener('click', closePromptPanel);
+        resetBolPromptBtn.addEventListener('click', () => { bolPromptTextarea.value = defaultBolPrompt; });
+
+        // Side Panel Tab switching
+        panelTabKey.addEventListener('click', () => switchSidePanelTab('key'));
+        panelTabBilling.addEventListener('click', () => switchSidePanelTab('billing'));
+        
+        // Modal Listeners
+        closeZoomModal.addEventListener('click', () => {
+            imageZoomModal.classList.add('hidden');
+            imageZoomModal.classList.remove('flex');
+        });
+        imageZoomModal.addEventListener('click', (e) => {
+             if (e.target === imageZoomModal) {
+                imageZoomModal.classList.add('hidden');
+                imageZoomModal.classList.remove('flex');
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+             fieldEditModal.classList.add('hidden');
+             fieldEditModal.classList.remove('flex');
+        });
+        saveEditBtn.addEventListener('click', () => {
+            try {
+                const fieldId = saveEditBtn.dataset.fieldId;
+                const input = document.getElementById('edit-input');
+                const targetSpan = document.querySelector(`[data-field-id="${fieldId}"]`);
+                if (targetSpan && input) {
+                    targetSpan.textContent = input.value || 'N/A';
+                }
+            } catch(error) {
+                console.error("Error saving field:", error);
+            } finally {
+                fieldEditModal.classList.add('hidden');
+                fieldEditModal.classList.remove('flex');
+            }
+        });
+        fieldEditModal.addEventListener('click', (e) => {
+             if (e.target === fieldEditModal) {
+                fieldEditModal.classList.add('hidden');
+                fieldEditModal.classList.remove('flex');
+            }
+        });
+
+
+        // --- Core Functions ---
+        
+        function switchSidePanelTab(tabName) {
+            if (tabName === 'key') {
+                panelTabKey.classList.add('active');
+                panelTabBilling.classList.remove('active');
+                panelContentKey.classList.remove('hidden');
+                panelContentBilling.classList.add('hidden');
+            } else {
+                panelTabKey.classList.remove('active');
+                panelTabBilling.classList.add('active');
+                panelContentKey.classList.add('hidden');
+                panelContentBilling.classList.remove('hidden');
+            }
+        }
+        
+        function hasApiKey() {
+            const model = modelSelector.value;
+            const googleKey = googleApiKeyInput.value.trim();
+            const openaiKey = openaiApiKeyInput.value.trim();
+            return model.startsWith('gpt') ? !!openaiKey : !!googleKey;
+        }
+
+        function checkAllInputs() {
+            const hasKey = hasApiKey();
+            parseBolBtn.disabled = !(hasKey && bolFile);
+        }
+
+        async function handleBolParsing() {
+            resetUI();
+            loading.classList.remove('hidden');
+            
+            if (bolPageImages.length === 0) {
+                displayMessage("Please upload a PDF and wait for pages to render.");
+                loading.classList.add('hidden');
+                return;
+            }
+
+            const selectedModel = modelSelector.value;
+
+            try {
+                const apiKey = getApiKey();
+                const prompt = bolPromptTextarea.value;
+                let resultText = '';
+                
+                const imageParts = bolPageImages.map(imgDataUrl => ({
+                    inlineData: { mimeType: 'image/jpeg', data: imgDataUrl.split(',')[1] }
+                }));
+
+                if (selectedModel.startsWith('gemini')) {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }, ...imageParts] }],
+                        generationConfig: { "response_mime_type": "application/json" }
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    const result = await response.json();
+                    resultText = result.candidates[0].content.parts[0].text;
+                } else { // GPT-4o
+                    const apiUrl = "https://api.openai.com/v1/chat/completions";
+                    const imageContent = bolPageImages.map(imgDataUrl => ({
+                         type: 'image_url', image_url: { url: imgDataUrl } 
+                    }));
+                    const payload = {
+                        model: selectedModel,
+                        response_format: { "type": "json_object" },
+                        messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, ...imageContent]}]
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    const result = await response.json();
+                    resultText = result.choices[0].message.content;
+                }
+                const consolidatedData = JSON.parse(resultText);
+                displayBolResults(consolidatedData);
+
+            } catch (error) {
+                displayMessage(error.message);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayBolResults(data) {
+            bolResultCard.innerHTML = '';
+            currentBolPageIndex = 0; // Reset page index
+
+            const updateBolCarousel = () => {
+                const img = bolResultCard.querySelector('#carouselImage');
+                const pageCounter = bolResultCard.querySelector('#pageCounter');
+                if (img && pageCounter) {
+                    img.src = bolPageImages[currentBolPageIndex];
+                    img.alt = `Bill of Lading Page ${currentBolPageIndex + 1}`;
+                    pageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+                }
+                const zoomImg = document.getElementById('zoomedImage');
+                if(zoomImg) {
+                    zoomImg.src = bolPageImages[currentBolPageIndex];
+                }
+            };
+            
+            const createCarousel = () => {
+                const carouselContainer = document.createElement('div');
+                carouselContainer.className = 'md:col-span-1 relative';
+
+                const img = document.createElement('img');
+                img.id = 'carouselImage';
+                img.src = bolPageImages.length > 0 ? bolPageImages[0] : '';
+                img.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer';
+                img.alt = 'Bill of Lading Page 1';
+                img.addEventListener('click', () => openImageZoomModal());
+
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                prevBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+                prevBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
+                    updateBolCarousel();
+                });
+                
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                nextBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+                 nextBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
+                    updateBolCarousel();
+                });
+
+                const pageCounter = document.createElement('div');
+                pageCounter.id = 'pageCounter';
+                pageCounter.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full';
+                
+                carouselContainer.append(img, prevBtn, nextBtn, pageCounter);
+
+                if (bolPageImages.length <= 1) {
+                    prevBtn.classList.add('hidden');
+                    nextBtn.classList.add('hidden');
+                }
+                
+                updateBolCarousel();
+                return carouselContainer;
+            };
+
+            let contentsHtml = `
+                    <table class="w-full text-sm mt-1 border-collapse">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="p-2 text-left font-semibold text-gray-700">Description</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="3" class="p-2 text-center text-gray-500">No contents listed.</td></tr>
+                        </tbody>
+                    </table>
+            `;
+
+            if (data.contents && data.contents.length > 0) {
+                contentsHtml = `
+                    <table class="w-full text-sm mt-1 border-collapse">
+                        <thead>
+                           <tr class="border-b bg-gray-50">
+                                <th class="p-2 text-left font-semibold text-gray-700">Description</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        ${data.contents.map(item => `
+                            <tr class="border-b">
+                                <td class="p-2">${item.description || 'N/A'}</td>
+                                <td class="p-2">${item.amount || 'N/A'}</td>
+                                <td class="p-2">${item.weight || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            const mainDiv = document.createElement('div');
+            mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
+            mainDiv.innerHTML = `
+                <div class="md:col-span-1">
+                    <div id="mainCarouselContainer" class="relative">
+                        </div>
+                </div>
+                <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    ${createDisplayField('bol_number', 'BoL Number', data.bol_number)}
+                    ${createDisplayField('appointment_number', 'Appointment Number', data.appointment_number)}
+                    ${createDisplayField('seal_number', 'Seal Number', data.seal_number)}
+                    ${createDisplayField('shipment_number', 'Shipment Number', data.shipment_number)}
+                    ${createDisplayField('delivery_number', 'Delivery Number', data.delivery_number)}
+                    ${createDisplayField('scac', 'SCAC', data.scac)}
+                    ${createDisplayField('date', 'Date', data.date)}
+                    ${createDisplayField('carrier', 'Carrier', data.carrier)}
+                    ${createDisplayField('temperature', 'Temperature', data.temperature)}
+                    <div class="sm:col-span-2">${createDisplayField('origin', 'Origin', data.origin)}</div>
+                    <div class="sm:col-span-2">${createDisplayField('destination', 'Destination', data.destination)}</div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Contents</label>
+                        <div class="p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">${contentsHtml}</div>
+                    </div>
+                </div>
+            `;
+            bolResultCard.appendChild(mainDiv);
+            if (bolPageImages.length > 0) {
+                bolResultCard.querySelector('#mainCarouselContainer').appendChild(createCarousel());
+            }
+            
+            // Re-attach listeners for dynamically created elements
+            bolResultCard.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const wrapper = e.currentTarget.closest('div');
+                    const fieldId = wrapper.querySelector('span[data-field-id]').dataset.fieldId;
+                    const fieldLabel = wrapper.querySelector('label').textContent;
+                    const currentValue = wrapper.querySelector('span[data-field-id]').textContent;
+                    openEditModal(fieldId, fieldLabel, currentValue);
+                });
+            });
+
+             bolResultCard.querySelectorAll('#carouselImage').forEach(img => {
+                 img.addEventListener('click', () => openImageZoomModal());
+            });
+            
+            resultsWrapper.classList.remove('hidden');
+            bolResultContainer.classList.remove('hidden');
+        }
+
+        function createDisplayField(id, label, value) {
+            return `
+                <div>
+                    <label for="${id}" class="block text-sm font-medium text-gray-700">${label}</label>
+                    <div class="mt-1 flex items-center justify-between p-2 border bg-gray-50 rounded-md">
+                        <span class="text-sm text-gray-900" data-field-id="${id}">${value || 'N/A'}</span>
+                        <button data-action="edit" class="text-gray-400 hover:text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                    </div>
+                </div>`;
+        }
+        
+        function openEditModal(fieldId, fieldLabel, currentValue) {
+            editModalTitle.textContent = `Edit ${fieldLabel}`;
+            editModalContent.innerHTML = `<textarea id="edit-input" class="w-full rounded-md border-gray-300 shadow-sm" rows="3">${currentValue === 'N/A' ? '' : currentValue}</textarea>`;
+            saveEditBtn.dataset.fieldId = fieldId;
+            fieldEditModal.classList.remove('hidden');
+            fieldEditModal.classList.add('flex');
+        }
+        
+        function openImageZoomModal() {
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            imageZoomModal.classList.remove('hidden');
+            imageZoomModal.classList.add('flex');
+        }
+
+        zoomPrevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#carouselImage').src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#pageCounter').textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+        });
+        zoomNextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#carouselImage').src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#pageCounter').textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+        });
+
+        function handleExportBolData() {
+            const card = document.getElementById('bolResultCard');
+            if (!card) return;
+
+            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Content Description", "Content Amount", "Content Weight"];
+            const rows = [];
+            
+            const getValue = (id) => card.querySelector(`[data-field-id="${id}"]`) ? card.querySelector(`[data-field-id="${id}"]`).textContent : 'N/A';
+            
+            const baseData = {
+                appointment_number: getValue('appointment_number'),
+                seal_number: getValue('seal_number'),
+                date: getValue('date'),
+                carrier: getValue('carrier'),
+                origin: getValue('origin'),
+                destination: getValue('destination'),
+                scac: getValue('scac'),
+                delivery_number: getValue('delivery_number'),
+                bol_number: getValue('bol_number'),
+                shipment_number: getValue('shipment_number'),
+                temperature: getValue('temperature'),
+            };
+
+            const contentRows = card.querySelectorAll('tbody > tr');
+            if (contentRows.length > 0 && contentRows[0].cells.length > 1) {
+                 contentRows.forEach(row => {
+                    rows.push([
+                        baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature,
+                        row.cells[0] ? row.cells[0].innerText : 'N/A',
+                        row.cells[1] ? row.cells[1].innerText : 'N/A',
+                        row.cells[2] ? row.cells[2].innerText : 'N/A'
+                    ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                });
+            } else {
+                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "bol_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function getApiKey() {
+            const isGpt = modelSelector.value.startsWith('gpt');
+            const key = isGpt ? openaiApiKeyInput.value.trim() : googleApiKeyInput.value.trim();
+            if (!key) throw new Error(`Please provide an ${isGpt ? 'OpenAI' : 'Google AI'} API Key.`);
+            return key;
+        }
+        
+        function resetUI() {
+            loading.classList.add('hidden');
+            parseBolBtn.disabled = true;
+            resultsWrapper.classList.add('hidden');
+            messageContainer.classList.add('hidden');
+            bolResultContainer.classList.add('hidden');
+        }
+        
+        async function renderPdfToImages(file) {
+            const fileReader = new FileReader();
+            return new Promise((resolve, reject) => {
+                fileReader.onload = async (event) => {
+                    try {
+                        const typedarray = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                        const pageImages = [];
+
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            pageImages.push(canvas.toDataURL('image/jpeg'));
+                        }
+                        resolve(pageImages);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+        
+        function displayMessage(msg) {
+            messageContainer.classList.remove('hidden');
+            message.innerText = msg;
+        }
+
+    </script>
+</body>
+</html>
