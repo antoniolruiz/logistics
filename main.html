@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yard Auditor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <!-- Using Roboto as a readily available proxy for Google Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -86,6 +87,7 @@
                     <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                         <button id="tabVideo" class="tab-btn active shrink-0 border-b-2 py-4 px-1 text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Video Analysis</button>
                         <button id="tabInventory" class="tab-btn shrink-0 border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Inventory Report</button>
+                        <button id="tabBol" class="tab-btn shrink-0 border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">Bill of Lading Parser</button>
                     </nav>
                 </div>
                 
@@ -146,6 +148,26 @@
                         <button id="compareBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Generate Inventory Report</button>
                     </div>
                 </div>
+
+                <div id="bolContent" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Bill of Lading (PDF)</label>
+                        <button id="editBolPromptBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">Edit Prompt</button>
+                    </div>
+                     <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
+                        <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
+                             <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                             <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
+                             <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
+                        </div>
+                        <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                        <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
+                    </label>
+                    <div class="text-center mt-8 mb-8">
+                        <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Parse Bill of Lading</button>
+                    </div>
+                </div>
+
             </div>
             
             <div id="loading" class="text-center my-4 hidden"><div class="inline-block loader w-12 h-12 border-4 rounded-full"></div><p class="mt-4 text-lg font-medium text-gray-600">Analyzing... This may take a moment.</p></div>
@@ -219,6 +241,19 @@
                                 <!-- Cards for removed trailers will be injected here -->
                             </div>
                         </div>
+                    </div>
+                </div>
+                 <!-- BoL Parser Result -->
+                <div id="bolResultContainer" class="hidden mt-6">
+                     <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800 font-google-sans">Bill of Lading Details</h2>
+                        <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Export Data
+                        </button>
+                    </div>
+                    <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                        <!-- BoL result card will be injected here -->
                     </div>
                 </div>
             </div>
@@ -314,6 +349,7 @@
                 <nav class="flex" aria-label="Prompt Panel Tabs">
                     <button id="promptPanelTabVideo" class="side-panel-tab active flex-1 border-b-2 py-3 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700">Video Analysis</button>
                     <button id="promptPanelTabInventory" class="side-panel-tab flex-1 border-b-2 border-transparent py-3 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700">Inventory Report</button>
+                    <button id="promptPanelTabBol" class="side-panel-tab flex-1 border-b-2 border-transparent py-3 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700">Bill of Lading</button>
                 </nav>
             </div>
             <!-- Prompt Panel Content -->
@@ -333,6 +369,36 @@
                     <button id="resetInventoryPromptBtn" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Reset to Default</button>
                 </div>
             </div>
+             <div id="promptPanelContentBol" class="p-6 overflow-y-auto flex-grow hidden flex-col">
+                <label for="bolPromptTextarea" class="font-semibold mb-2">Bill of Lading Prompt</label>
+                <textarea id="bolPromptTextarea" class="w-full flex-grow p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                 <div class="mt-4 flex gap-4">
+                    <button id="saveBolPromptBtn" class="flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Save</button>
+                    <button id="resetBolPromptBtn" class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Reset to Default</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Zoom Modal -->
+    <div id="imageZoomModal" class="hidden fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-[100] p-4">
+        <button id="closeZoomModal" class="absolute top-4 right-4 text-white text-4xl font-bold">&times;</button>
+        <button id="zoomPrevBtn" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <img id="zoomedImage" src="" class="max-w-full max-h-full">
+         <button id="zoomNextBtn" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+    </div>
+
+    <!-- Field Edit Modal -->
+    <div id="fieldEditModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-[100]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 id="editModalTitle" class="text-lg font-bold mb-4">Edit Field</h3>
+            <div id="editModalContent">
+                <!-- Input/Textarea will be injected here -->
+            </div>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="cancelEditBtn" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">Cancel</button>
+                <button id="saveEditBtn" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Save</button>
+            </div>
         </div>
     </div>
 
@@ -342,6 +408,9 @@
     <canvas id="canvas" class="hidden"></canvas>
 
     <script>
+        // Set the workerSrc for pdf.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+
         // DOM Elements
         const modelSelector = document.getElementById('modelSelector');
         const googleKeyContainer = document.getElementById('googleKeyContainer');
@@ -379,12 +448,36 @@
         const removedTrailersContainer = document.getElementById('removedTrailersContainer');
         const remainedTrailersContainer = document.getElementById('remainedTrailersContainer');
 
-        
+        // BoL Tab Elements
+        const bolUpload = document.getElementById('bolUpload');
+        const bolPromptText = document.getElementById('bol-prompt-text');
+        const pdfFileNameDisplay = document.getElementById('pdfFileName');
+        const bolPreviewContainer = document.getElementById('bol-preview-container');
+        const parseBolBtn = document.getElementById('parseBolBtn');
+        const bolResultContainer = document.getElementById('bolResultContainer');
+        const exportBolBtn = document.getElementById('exportBolBtn');
+        const bolResultCard = document.getElementById('bolResultCard');
+
+        // Modal Elements
+        const imageZoomModal = document.getElementById('imageZoomModal');
+        const zoomedImage = document.getElementById('zoomedImage');
+        const closeZoomModal = document.getElementById('closeZoomModal');
+        const zoomPrevBtn = document.getElementById('zoomPrevBtn');
+        const zoomNextBtn = document.getElementById('zoomNextBtn');
+        const fieldEditModal = document.getElementById('fieldEditModal');
+        const editModalTitle = document.getElementById('editModalTitle');
+        const editModalContent = document.getElementById('editModalContent');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const saveEditBtn = document.getElementById('saveEditBtn');
+
+
         // Tab Elements
         const tabVideo = document.getElementById('tabVideo');
         const tabInventory = document.getElementById('tabInventory');
+        const tabBol = document.getElementById('tabBol');
         const videoContent = document.getElementById('videoContent');
         const inventoryContent = document.getElementById('inventoryContent');
+        const bolContent = document.getElementById('bolContent');
 
         // Side Panel Elements
         const howToBtn = document.getElementById('howToBtn');
@@ -399,19 +492,25 @@
         // Prompt Panel Elements
         const editVideoPromptBtn = document.getElementById('editVideoPromptBtn');
         const editInventoryPromptBtn = document.getElementById('editInventoryPromptBtn');
+        const editBolPromptBtn = document.getElementById('editBolPromptBtn');
         const promptSidePanelOverlay = document.getElementById('promptSidePanelOverlay');
         const promptSidePanel = document.getElementById('promptSidePanel');
         const closePromptPanelBtn = document.getElementById('closePromptPanelBtn');
         const promptPanelTabVideo = document.getElementById('promptPanelTabVideo');
         const promptPanelTabInventory = document.getElementById('promptPanelTabInventory');
+        const promptPanelTabBol = document.getElementById('promptPanelTabBol');
         const promptPanelContentVideo = document.getElementById('promptPanelContentVideo');
         const promptPanelContentInventory = document.getElementById('promptPanelContentInventory');
+        const promptPanelContentBol = document.getElementById('promptPanelContentBol');
         const videoPromptTextarea = document.getElementById('videoPromptTextarea');
         const inventoryPromptTextarea = document.getElementById('inventoryPromptTextarea');
+        const bolPromptTextarea = document.getElementById('bolPromptTextarea');
         const saveVideoPromptBtn = document.getElementById('saveVideoPromptBtn');
         const resetVideoPromptBtn = document.getElementById('resetVideoPromptBtn');
         const saveInventoryPromptBtn = document.getElementById('saveInventoryPromptBtn');
         const resetInventoryPromptBtn = document.getElementById('resetInventoryPromptBtn');
+        const saveBolPromptBtn = document.getElementById('saveBolPromptBtn');
+        const resetBolPromptBtn = document.getElementById('resetBolPromptBtn');
         
         const videoPlayer = document.getElementById('videoPlayer');
         const canvas = document.getElementById('canvas');
@@ -419,6 +518,9 @@
         let videoFile = null;
         let screenshot1File = null;
         let screenshot2File = null;
+        let bolFile = null;
+        let bolPageImages = [];
+        let currentBolPageIndex = 0;
         let analysisData = [];
         let rawApiResponse = '';
 
@@ -470,9 +572,34 @@ Example of a perfect response:
 }
 
 Only output the JSON object. Do not include any other text, explanations, or markdown formatting.`;
+
+        const defaultBolPrompt = `You are an expert at parsing shipping documents. Your task is to analyze all the following pages from a single Bill of Lading (BoL) and consolidate all information into a single JSON object.
+Aggregate the data from all provided pages to find the most complete information for each field. Scrutinize every page for line items under tables like "Shipping Details" to create a comprehensive list of all unique items.
+
+Extract the following fields and return them in one JSON object. If a field is not present across any of the pages, use "N/A" as the value.
+
+- "appointment_number": The appointment or pickup number.
+- "seal_number": The seal number for the trailer.
+- "date": The pickup or shipping date.
+- "carrier": The name of the carrier.
+- "origin": The full address of the shipper/origin.
+- "destination": The full address of the consignee/destination.
+- "contents": An array of objects, where each object represents a unique line item found across all pages. Each object should contain:
+    - "description": The description of the goods.
+    - "amount": The total quantity or number of units (e.g., pallets, cases).
+    - "weight": The total weight of the items.
+- "scac": The Standard Carrier Alpha Code (a 2-4 letter code).
+- "delivery_number": The delivery or pro number.
+- "bol_number": The primary Bill of Lading number.
+- "shipment_number": The shipment ID or number.
+- "temperature": The required transit temperature (e.g., 34-40°F).
+
+Only output the final, consolidated JSON object. Do not include any other text, explanations, or markdown formatting.`;
+
         
         videoPromptTextarea.value = defaultVideoPrompt;
         inventoryPromptTextarea.value = defaultInventoryPrompt;
+        bolPromptTextarea.value = defaultBolPrompt;
 
         // --- Event Listeners ---
         modelSelector.addEventListener('input', () => {
@@ -502,9 +629,43 @@ Only output the JSON object. Do not include any other text, explanations, or mar
             handleFileUpload(screenshot2File, null, ss2Preview, ss2Prompt);
             checkAllInputs();
         });
+
+        bolUpload.addEventListener('change', async (event) => {
+            if (event.target.files.length === 0) return;
+            bolFile = event.target.files[0];
+            pdfFileNameDisplay.textContent = bolFile.name;
+            bolPromptText.classList.add('hidden');
+            
+            // Immediately enable the button if key is present
+            checkAllInputs(); 
+
+            bolPreviewContainer.innerHTML = '<div class="text-center col-span-full">Rendering PDF...</div>';
+
+            try {
+                bolPageImages = await renderPdfToImages(bolFile);
+                bolPreviewContainer.innerHTML = '';
+                bolPageImages.forEach(imgDataUrl => {
+                    const img = document.createElement('img');
+                    img.src = imgDataUrl;
+                    img.className = 'w-full h-auto object-cover rounded-lg border shadow-sm';
+                    bolPreviewContainer.appendChild(img);
+                });
+            } catch (error) {
+                displayMessage(`Error rendering PDF: ${error.message}`);
+                bolPreviewContainer.innerHTML = '';
+                 bolPromptText.classList.remove('hidden');
+                 pdfFileNameDisplay.textContent = '';
+                 bolFile = null; // Reset the file on failure
+                 bolPageImages = []; // Reset images
+                 checkAllInputs(); // Disable button on failure
+            }
+        });
         
         analyzeBtn.addEventListener('click', handleAnalysis);
         compareBtn.addEventListener('click', handleInventory);
+        parseBolBtn.addEventListener('click', handleBolParsing);
+        exportBolBtn.addEventListener('click', handleExportBolData);
+
         generateSummaryBtn.addEventListener('click', handleGenerateSummary);
         downloadDataBtn.addEventListener('click', handleDownloadData);
         seeOriginalAnswerBtn.addEventListener('click', () => {
@@ -528,6 +689,8 @@ Only output the JSON object. Do not include any other text, explanations, or mar
         // Prompt Panel Listeners
         editVideoPromptBtn.addEventListener('click', () => openPromptPanel('video'));
         editInventoryPromptBtn.addEventListener('click', () => openPromptPanel('inventory'));
+        editBolPromptBtn.addEventListener('click', () => openPromptPanel('bol'));
+
 
         const openPromptPanel = (tab) => {
             promptSidePanel.classList.remove('translate-x-full');
@@ -546,36 +709,79 @@ Only output the JSON object. Do not include any other text, explanations, or mar
         promptSidePanelOverlay.addEventListener('click', closePromptPanel);
         saveVideoPromptBtn.addEventListener('click', closePromptPanel);
         saveInventoryPromptBtn.addEventListener('click', closePromptPanel);
+        saveBolPromptBtn.addEventListener('click', closePromptPanel);
         resetVideoPromptBtn.addEventListener('click', () => { videoPromptTextarea.value = defaultVideoPrompt; });
         resetInventoryPromptBtn.addEventListener('click', () => { inventoryPromptTextarea.value = defaultInventoryPrompt; });
+        resetBolPromptBtn.addEventListener('click', () => { bolPromptTextarea.value = defaultBolPrompt; });
 
         // Tab switching
         tabVideo.addEventListener('click', () => switchTab('video'));
         tabInventory.addEventListener('click', () => switchTab('inventory'));
+        tabBol.addEventListener('click', () => switchTab('bol'));
+
 
         // Side Panel Tab switching
         panelTabKey.addEventListener('click', () => switchSidePanelTab('key'));
         panelTabBilling.addEventListener('click', () => switchSidePanelTab('billing'));
         promptPanelTabVideo.addEventListener('click', () => switchPromptPanelTab('video'));
         promptPanelTabInventory.addEventListener('click', () => switchPromptPanelTab('inventory'));
+        promptPanelTabBol.addEventListener('click', () => switchPromptPanelTab('bol'));
+        
+        // Modal Listeners
+        closeZoomModal.addEventListener('click', () => {
+            imageZoomModal.classList.add('hidden');
+            imageZoomModal.classList.remove('flex');
+        });
+        imageZoomModal.addEventListener('click', (e) => {
+             if (e.target === imageZoomModal) {
+                imageZoomModal.classList.add('hidden');
+                imageZoomModal.classList.remove('flex');
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', () => {
+             fieldEditModal.classList.add('hidden');
+             fieldEditModal.classList.remove('flex');
+        });
+        saveEditBtn.addEventListener('click', () => {
+            try {
+                const fieldId = saveEditBtn.dataset.fieldId;
+                const input = document.getElementById('edit-input');
+                const targetSpan = document.querySelector(`[data-field-id="${fieldId}"]`);
+                if (targetSpan && input) {
+                    targetSpan.textContent = input.value || 'N/A';
+                }
+            } catch(error) {
+                console.error("Error saving field:", error);
+            } finally {
+                fieldEditModal.classList.add('hidden');
+                fieldEditModal.classList.remove('flex');
+            }
+        });
+        fieldEditModal.addEventListener('click', (e) => {
+             if (e.target === fieldEditModal) {
+                fieldEditModal.classList.add('hidden');
+                fieldEditModal.classList.remove('flex');
+            }
+        });
 
 
         // --- Core Functions ---
         
         function switchTab(tabName) {
-            if (tabName === 'video') {
-                tabVideo.classList.add('active');
-                tabInventory.classList.remove('active');
-                videoContent.classList.remove('hidden');
-                inventoryContent.classList.add('hidden');
-            } else {
-                tabVideo.classList.remove('active');
-                tabInventory.classList.add('active');
-                videoContent.classList.add('hidden');
-                inventoryContent.classList.remove('hidden');
+             const tabs = {
+                video: { btn: tabVideo, content: videoContent },
+                inventory: { btn: tabInventory, content: inventoryContent },
+                bol: { btn: tabBol, content: bolContent }
+            };
+
+            for (const key in tabs) {
+                const isActive = key === tabName;
+                tabs[key].btn.classList.toggle('active', isActive);
+                tabs[key].content.classList.toggle('hidden', !isActive);
             }
              resetOnTabSwitch();
-              checkAllInputs();
+             checkAllInputs();
         }
 
         function switchSidePanelTab(tabName) {
@@ -593,21 +799,16 @@ Only output the JSON object. Do not include any other text, explanations, or mar
         }
         
          function switchPromptPanelTab(tabName) {
-            if (tabName === 'video') {
-                promptPanelTabVideo.classList.add('active');
-                promptPanelTabInventory.classList.remove('active');
-                promptPanelContentVideo.classList.remove('hidden');
-                promptPanelContentVideo.classList.add('flex');
-                promptPanelContentInventory.classList.add('hidden');
-                promptPanelContentInventory.classList.remove('flex');
-
-            } else {
-                promptPanelTabVideo.classList.remove('active');
-                promptPanelTabInventory.classList.add('active');
-                promptPanelContentVideo.classList.add('hidden');
-                promptPanelContentVideo.classList.remove('flex');
-                promptPanelContentInventory.classList.remove('hidden');
-                promptPanelContentInventory.classList.add('flex');
+            const tabs = {
+                video: { btn: promptPanelTabVideo, content: promptPanelContentVideo },
+                inventory: { btn: promptPanelTabInventory, content: promptPanelContentInventory },
+                bol: { btn: promptPanelTabBol, content: promptPanelContentBol }
+            };
+            for (const key in tabs) {
+                const isActive = key === tabName;
+                tabs[key].btn.classList.toggle('active', isActive);
+                tabs[key].content.classList.toggle('hidden', !isActive);
+                tabs[key].content.classList.toggle('flex', isActive);
             }
         }
         
@@ -622,6 +823,7 @@ Only output the JSON object. Do not include any other text, explanations, or mar
             const hasKey = hasApiKey();
             analyzeBtn.disabled = !(hasKey && videoFile);
             compareBtn.disabled = !(hasKey && screenshot1File && screenshot2File);
+            parseBolBtn.disabled = !(hasKey && bolFile);
         }
 
         function handleFileUpload(file, nameDisplay, previewEl, promptEl) {
@@ -651,7 +853,7 @@ Only output the JSON object. Do not include any other text, explanations, or mar
         }
 
         async function handleAnalysis() {
-            resetUI(true);
+            resetUI('video');
             loading.classList.remove('hidden');
             const selectedModel = modelSelector.value;
             try {
@@ -669,7 +871,7 @@ Only output the JSON object. Do not include any other text, explanations, or mar
         }
         
         async function handleInventory() {
-            resetUI(false);
+            resetUI('inventory');
             loading.classList.remove('hidden');
             const selectedModel = modelSelector.value;
             try {
@@ -722,6 +924,315 @@ Only output the JSON object. Do not include any other text, explanations, or mar
                 loading.classList.add('hidden');
                 checkAllInputs();
             }
+        }
+
+        async function handleBolParsing() {
+            resetUI('bol');
+            loading.classList.remove('hidden');
+            
+            if (bolPageImages.length === 0) {
+                displayMessage("Please upload a PDF and wait for pages to render.");
+                loading.classList.add('hidden');
+                return;
+            }
+
+            const selectedModel = modelSelector.value;
+
+            try {
+                const apiKey = getApiKey();
+                const prompt = bolPromptTextarea.value;
+                let resultText = '';
+                
+                const imageParts = bolPageImages.map(imgDataUrl => ({
+                    inlineData: { mimeType: 'image/jpeg', data: imgDataUrl.split(',')[1] }
+                }));
+
+                if (selectedModel.startsWith('gemini')) {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: prompt }, ...imageParts] }],
+                        generationConfig: { "response_mime_type": "application/json" }
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    const result = await response.json();
+                    resultText = result.candidates[0].content.parts[0].text;
+                } else { // GPT-4o
+                    const apiUrl = "https://api.openai.com/v1/chat/completions";
+                    const imageContent = bolPageImages.map(imgDataUrl => ({
+                         type: 'image_url', image_url: { url: imgDataUrl } 
+                    }));
+                    const payload = {
+                        model: selectedModel,
+                        response_format: { "type": "json_object" },
+                        messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, ...imageContent]}]
+                    };
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    const result = await response.json();
+                    resultText = result.choices[0].message.content;
+                }
+                const consolidatedData = JSON.parse(resultText);
+                displayBolResults(consolidatedData);
+
+            } catch (error) {
+                displayMessage(error.message);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function displayBolResults(data) {
+            bolResultCard.innerHTML = '';
+            currentBolPageIndex = 0; // Reset page index
+
+            const updateBolCarousel = () => {
+                const img = bolResultCard.querySelector('#carouselImage');
+                const pageCounter = bolResultCard.querySelector('#pageCounter');
+                if (img && pageCounter) {
+                    img.src = bolPageImages[currentBolPageIndex];
+                    img.alt = `Bill of Lading Page ${currentBolPageIndex + 1}`;
+                    pageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+                }
+                const zoomImg = document.getElementById('zoomedImage');
+                if(zoomImg) {
+                    zoomImg.src = bolPageImages[currentBolPageIndex];
+                }
+            };
+            
+            const createCarousel = () => {
+                const carouselContainer = document.createElement('div');
+                carouselContainer.className = 'md:col-span-1 relative';
+
+                const img = document.createElement('img');
+                img.id = 'carouselImage';
+                img.src = bolPageImages.length > 0 ? bolPageImages[0] : '';
+                img.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer';
+                img.alt = 'Bill of Lading Page 1';
+                img.addEventListener('click', () => openImageZoomModal());
+
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                prevBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+                prevBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
+                    updateBolCarousel();
+                });
+                
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                nextBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+                 nextBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
+                    updateBolCarousel();
+                });
+
+                const pageCounter = document.createElement('div');
+                pageCounter.id = 'pageCounter';
+                pageCounter.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full';
+                
+                carouselContainer.append(img, prevBtn, nextBtn, pageCounter);
+
+                if (bolPageImages.length <= 1) {
+                    prevBtn.classList.add('hidden');
+                    nextBtn.classList.add('hidden');
+                }
+                
+                updateBolCarousel();
+                return carouselContainer;
+            };
+
+            let contentsHtml = `
+                 <table class="w-full text-sm mt-1 border-collapse">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="p-2 text-left font-semibold text-gray-700">Description</th>
+                            <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
+                            <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="p-2 text-center text-gray-500">No contents listed.</td></tr>
+                    </tbody>
+                </table>
+            `;
+
+            if (data.contents && data.contents.length > 0) {
+                contentsHtml = `
+                    <table class="w-full text-sm mt-1 border-collapse">
+                        <thead>
+                           <tr class="border-b bg-gray-50">
+                                <th class="p-2 text-left font-semibold text-gray-700">Description</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        ${data.contents.map(item => `
+                            <tr class="border-b">
+                                <td class="p-2">${item.description || 'N/A'}</td>
+                                <td class="p-2">${item.amount || 'N/A'}</td>
+                                <td class="p-2">${item.weight || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            const mainDiv = document.createElement('div');
+            mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
+            mainDiv.innerHTML = `
+                ${bolPageImages.length > 0 ? createCarousel().outerHTML : ''}
+                <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    ${createDisplayField('bol_number', 'BoL Number', data.bol_number)}
+                    ${createDisplayField('appointment_number', 'Appointment Number', data.appointment_number)}
+                    ${createDisplayField('seal_number', 'Seal Number', data.seal_number)}
+                    ${createDisplayField('shipment_number', 'Shipment Number', data.shipment_number)}
+                    ${createDisplayField('delivery_number', 'Delivery Number', data.delivery_number)}
+                    ${createDisplayField('scac', 'SCAC', data.scac)}
+                    ${createDisplayField('date', 'Date', data.date)}
+                    ${createDisplayField('carrier', 'Carrier', data.carrier)}
+                    ${createDisplayField('temperature', 'Temperature', data.temperature)}
+                    <div class="sm:col-span-2">${createDisplayField('origin', 'Origin', data.origin)}</div>
+                    <div class="sm:col-span-2">${createDisplayField('destination', 'Destination', data.destination)}</div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Contents</label>
+                        <div class="p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">${contentsHtml}</div>
+                    </div>
+                </div>
+            `;
+            bolResultCard.appendChild(mainDiv);
+            
+            // Re-attach listeners for dynamically created elements
+            bolResultCard.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const wrapper = e.currentTarget.closest('div');
+                    const fieldId = wrapper.querySelector('span[data-field-id]').dataset.fieldId;
+                    const fieldLabel = wrapper.querySelector('label').textContent;
+                    const currentValue = wrapper.querySelector('span[data-field-id]').textContent;
+                    openEditModal(fieldId, fieldLabel, currentValue);
+                });
+            });
+
+             bolResultCard.querySelectorAll('#carouselImage').forEach(img => {
+                img.addEventListener('click', () => openImageZoomModal());
+            });
+
+            // Re-attach listeners for carousel buttons within the results card after rendering
+            const newPrevBtn = bolResultCard.querySelector('.md\\:col-span-1.relative > button:nth-of-type(1)');
+            const newNextBtn = bolResultCard.querySelector('.md\\:col-span-1.relative > button:nth-of-type(2)');
+            const newCarouselImage = bolResultCard.querySelector('#carouselImage');
+            const newPageCounter = bolResultCard.querySelector('#pageCounter');
+
+            const updateMainCarousel = () => {
+                if (newCarouselImage) newCarouselImage.src = bolPageImages[currentBolPageIndex];
+                if (newPageCounter) newPageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+            };
+            
+            if(newPrevBtn) newPrevBtn.addEventListener('click', (e) => { 
+                e.stopPropagation(); 
+                currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
+                updateMainCarousel();
+            });
+            if(newNextBtn) newNextBtn.addEventListener('click', (e) => { 
+                e.stopPropagation();
+                currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
+                updateMainCarousel();
+            });
+            
+            resultsWrapper.classList.remove('hidden');
+            bolResultContainer.classList.remove('hidden');
+        }
+
+        function createDisplayField(id, label, value) {
+            return `
+                <div>
+                    <label for="${id}" class="block text-sm font-medium text-gray-700">${label}</label>
+                    <div class="mt-1 flex items-center justify-between p-2 border bg-gray-50 rounded-md">
+                        <span class="text-sm text-gray-900" data-field-id="${id}">${value || 'N/A'}</span>
+                        <button data-action="edit" class="text-gray-400 hover:text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                    </div>
+                </div>`;
+        }
+        
+        function openEditModal(fieldId, fieldLabel, currentValue) {
+            editModalTitle.textContent = `Edit ${fieldLabel}`;
+            editModalContent.innerHTML = `<textarea id="edit-input" class="w-full rounded-md border-gray-300 shadow-sm" rows="3">${currentValue === 'N/A' ? '' : currentValue}</textarea>`;
+            saveEditBtn.dataset.fieldId = fieldId;
+            fieldEditModal.classList.remove('hidden');
+            fieldEditModal.classList.add('flex');
+        }
+        
+        function openImageZoomModal() {
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            imageZoomModal.classList.remove('hidden');
+            imageZoomModal.classList.add('flex');
+        }
+
+        zoomPrevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#carouselImage').src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#pageCounter').textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+        });
+        zoomNextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
+            zoomedImage.src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#carouselImage').src = bolPageImages[currentBolPageIndex];
+            bolResultCard.querySelector('#pageCounter').textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+        });
+
+        function handleExportBolData() {
+            const card = document.getElementById('bolResultCard');
+            if (!card) return;
+
+            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Content Description", "Content Amount", "Content Weight"];
+            const rows = [];
+            
+            const getValue = (id) => card.querySelector(`[data-field-id="${id}"]`) ? card.querySelector(`[data-field-id="${id}"]`).textContent : 'N/A';
+            
+            const baseData = {
+                appointment_number: getValue('appointment_number'),
+                seal_number: getValue('seal_number'),
+                date: getValue('date'),
+                carrier: getValue('carrier'),
+                origin: getValue('origin'),
+                destination: getValue('destination'),
+                scac: getValue('scac'),
+                delivery_number: getValue('delivery_number'),
+                bol_number: getValue('bol_number'),
+                shipment_number: getValue('shipment_number'),
+                temperature: getValue('temperature'),
+            };
+
+            const contentRows = card.querySelectorAll('tbody > tr');
+            if (contentRows.length > 0 && contentRows[0].cells.length > 1) {
+                 contentRows.forEach(row => {
+                    rows.push([
+                        baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature,
+                        row.cells[0] ? row.cells[0].innerText : 'N/A',
+                        row.cells[1] ? row.cells[1].innerText : 'N/A',
+                        row.cells[2] ? row.cells[2].innerText : 'N/A'
+                    ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                });
+            } else {
+                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "bol_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         async function analyzeWithGemini(model) {
@@ -890,16 +1401,25 @@ Only output the JSON object. Do not include any other text, explanations, or mar
             resultsWrapper.classList.add('hidden');
             messageContainer.classList.add('hidden');
             loading.classList.add('hidden');
+            // Hide all specific result containers
+            resultsContainer.classList.add('hidden');
+            inventoryResultContainer.classList.add('hidden');
+            bolResultContainer.classList.add('hidden');
         }
 
-        function resetUI(isVideoTab) {
+        function resetUI(tabName) {
             loading.classList.add('hidden');
-            if (isVideoTab) {
+            
+            // Disable the primary action button for the specific tab being reset.
+            if (tabName === 'video') {
                 analyzeBtn.disabled = true;
-            } else {
+            } else if (tabName === 'inventory') {
                 compareBtn.disabled = true;
+            } else if (tabName === 'bol') {
+                parseBolBtn.disabled = true;
             }
-            resetOnTabSwitch();
+
+            resetOnTabSwitch(); // This hides all result sections
             rawApiResponse = ''; 
         }
         
@@ -907,40 +1427,32 @@ Only output the JSON object. Do not include any other text, explanations, or mar
             return videoPromptTextarea.value;
         }
         
-        function extractFrames(videoEl, framesPerSecond) {
-            return new Promise(async (resolve, reject) => {
-                if (!videoEl.duration || videoEl.duration === Infinity) {
-                    videoEl.addEventListener('loadedmetadata', () => resolve(extractFrames(videoEl, framesPerSecond)), { once: true });
-                    videoEl.addEventListener('error', () => reject('Video metadata could not be loaded.'), { once: true });
-                    return;
-                }
-                const frames = [], maxFrames = 100, duration = videoEl.duration; // Capped max frames
-                let totalFramesToCapture = Math.floor(duration * framesPerSecond);
-                let interval;
+        async function renderPdfToImages(file) {
+            const fileReader = new FileReader();
+            return new Promise((resolve, reject) => {
+                fileReader.onload = async (event) => {
+                    try {
+                        const typedarray = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                        const pageImages = [];
 
-                if (totalFramesToCapture > maxFrames) {
-                    displayMessage(`Note: For performance, analysis is capped at ${maxFrames} frames.`, true);
-                    totalFramesToCapture = maxFrames;
-                }
-                
-                if (totalFramesToCapture <= 1) {
-                    interval = 0;
-                     totalFramesToCapture = 1;
-                } else {
-                     interval = duration / (totalFramesToCapture - 1);
-                }
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
 
-                if (totalFramesToCapture === 0) { resolve([]); return; }
-
-                const canvas = document.getElementById('canvas'), context = canvas.getContext('2d');
-                canvas.width = videoEl.videoWidth; canvas.height = videoEl.videoHeight;
-                for (let i = 0; i < totalFramesToCapture; i++) {
-                    videoEl.currentTime = Math.min(i * interval, duration);
-                    await new Promise(r => videoEl.addEventListener('seeked', r, { once: true }));
-                    context.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                    frames.push(canvas.toDataURL('image/jpeg'));
-                }
-                resolve(frames);
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            pageImages.push(canvas.toDataURL('image/jpeg'));
+                        }
+                        resolve(pageImages);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
             });
         }
         
