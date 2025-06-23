@@ -353,9 +353,11 @@ Extract the following fields and return them in one JSON object. If a field is n
 - "origin": The full address of the shipper/origin.
 - "destination": The full address of the consignee/destination.
 - "contents": An array of objects, where each object represents a unique line item found across all pages. Each object should contain:
+    - "item_number": The item or SKU number for the product (if available).
     - "description": The description of the goods.
     - "amount": The total quantity or number of units (e.g., pallets, cases).
     - "weight": The total weight of the items.
+    - "use_by_date": The use by, best by, or expiration date for the item (if available).
 - "scac": The Standard Carrier Alpha Code (a 2-4 letter code).
 - "delivery_number": The delivery or pro number.
 - "bol_number": The primary Bill of Lading number.
@@ -643,6 +645,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 if (carousel) carousel.remove();
                 // Remove edit buttons
                 printContents.querySelectorAll('[data-action="edit"]').forEach(btn => btn.remove());
+                // Remove remove-row and add-row buttons
+                printContents.querySelectorAll('.remove-row-btn').forEach(btn => btn.remove());
+                const addRowBtn = printContents.querySelector('#addRowBtn');
+                if (addRowBtn) addRowBtn.remove();
                 // Create a print window
                 const printWindow = window.open('', '', 'width=900,height=700');
                 printWindow.document.write(`
@@ -654,15 +660,16 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                             body { font-family: 'Inter', sans-serif; background: #fff; color: #222; margin: 0; padding: 2rem; }
                             h2 { font-size: 2rem; font-weight: 700; margin-bottom: 2.5rem; }
                             label { font-weight: 600; color: #374151; }
-                            .field-block { margin-bottom: 2rem; }
+                            .field-block { margin-bottom: 2.5rem; }
                             .field-label { display: block; font-size: 1rem; margin-bottom: 0.2rem; color: #555; }
                             .field-value { font-size: 1.1rem; background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 2.5rem; margin-bottom: 2.5rem; }
+                            .print-section { margin-bottom: 2.5rem; }
+                            .section-title { font-size: 1.2rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1.2rem; color: #2563eb; }
+                            .data-point { margin-bottom: 2.2rem; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 2.5rem; margin-bottom: 2.5rem; font-size: 80%; }
                             th, td { border: 1px solid #e5e7eb; padding: 0.6rem 0.8rem; text-align: left; }
                             th { background: #f1f5f9; font-weight: 700; }
                             tr:nth-child(even) { background: #f9fafb; }
-                            .section-title { font-size: 1.2rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1.2rem; color: #2563eb; }
-                            .print-section { margin-bottom: 2.5rem; }
                         </style>
                     </head>
                     <body>
@@ -916,18 +923,22 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     <table class="w-full text-sm mt-1 border-collapse" id="contentsTable">
                         <thead>
                            <tr class="border-b bg-gray-50">
+                                <th class="p-2 text-left font-semibold text-gray-700">Item #</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Description</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
+                                <th class="p-2 text-left font-semibold text-gray-700">Use By Date</th>
                                 <th class="p-2"></th>
                             </tr>
                         </thead>
                         <tbody>
                         ${data.contents.map((item, idx) => `
                             <tr class="border-b" data-row="${idx}">
+                                <td class="p-2 editable-table-cell" data-col="item_number">${item.item_number || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="description">${item.description || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="amount">${item.amount || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="weight">${item.weight || 'N/A'}</td>
+                                <td class="p-2 editable-table-cell" data-col="use_by_date">${item.use_by_date || 'N/A'}</td>
                                 <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                             </tr>
                         `).join('')}
@@ -1031,7 +1042,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const card = document.getElementById('bolResultCard');
             if (!card) return;
 
-            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Content Description", "Content Amount", "Content Weight"];
+            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Item #", "Content Description", "Content Amount", "Content Weight", "Use By Date"];
             const rows = [];
             
             const getValue = (id) => card.querySelector(`[data-field-id="${id}"]`) ? card.querySelector(`[data-field-id="${id}"]`).textContent : 'N/A';
@@ -1055,13 +1066,15 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                  contentRows.forEach(row => {
                     rows.push([
                         baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature,
-                        row.cells[0] ? row.cells[0].innerText : 'N/A',
-                        row.cells[1] ? row.cells[1].innerText : 'N/A',
-                        row.cells[2] ? row.cells[2].innerText : 'N/A'
+                        row.cells[0] ? row.cells[0].innerText : 'N/A', // Item #
+                        row.cells[1] ? row.cells[1].innerText : 'N/A', // Description
+                        row.cells[2] ? row.cells[2].innerText : 'N/A', // Amount
+                        row.cells[3] ? row.cells[3].innerText : 'N/A', // Weight
+                        row.cells[4] ? row.cells[4].innerText : 'N/A'  // Use By Date
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
             }
 
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
@@ -1153,9 +1166,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const table = document.getElementById('contentsTable').getElementsByTagName('tbody')[0];
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td class="p-2 editable-table-cell" data-col="item_number">N/A</td>
                     <td class="p-2 editable-table-cell" data-col="description">N/A</td>
                     <td class="p-2 editable-table-cell" data-col="amount">N/A</td>
                     <td class="p-2 editable-table-cell" data-col="weight">N/A</td>
+                    <td class="p-2 editable-table-cell" data-col="use_by_date">N/A</td>
                     <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                 `;
                 table.appendChild(row);
@@ -1203,9 +1218,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     const tbody = newTable.getElementsByTagName('tbody')[0];
                     const row = document.createElement('tr');
                     row.innerHTML = `
+                        <td class="p-2 editable-table-cell" data-col="item_number">N/A</td>
                         <td class="p-2 editable-table-cell" data-col="description">N/A</td>
                         <td class="p-2 editable-table-cell" data-col="amount">N/A</td>
                         <td class="p-2 editable-table-cell" data-col="weight">N/A</td>
+                        <td class="p-2 editable-table-cell" data-col="use_by_date">N/A</td>
                         <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                     `;
                     tbody.appendChild(row);
