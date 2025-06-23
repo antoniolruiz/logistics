@@ -131,7 +131,17 @@
 
             </div>
             
-            <div id="loading" class="text-center my-4 hidden"><div class="inline-block loader w-12 h-12 border-4 rounded-full"></div><p class="mt-4 text-lg font-medium text-gray-600">Analyzing... This may take a moment.</p></div>
+            <div id="loading" class="text-center my-4 hidden">
+                <div class="w-full max-w-2xl mx-auto">
+                    <div class="flex items-center justify-between mb-2">
+                        <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
+                        <span id="progressPercent" class="text-xl font-bold text-blue-600">0%</span>
+                    </div>
+                    <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
+                        <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
             <div id="messageContainer" class="hidden">
                  <div id="message" class="text-red-600 font-medium"></div>
             </div>
@@ -693,10 +703,24 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             parseBolBtn.disabled = !(hasKey && bolFile);
         }
 
+        // Remove spinner loader references and add progress bar logic
+        // --- Progress Bar Logic ---
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const progressPercent = document.getElementById('progressPercent');
+
+        function setProgress(percent, label) {
+            progressBar.style.width = percent + '%';
+            progressPercent.textContent = Math.round(percent) + '%';
+            progressLabel.textContent = label;
+        }
+
+        // --- Update handleBolParsing and PDF rendering to use progress bar ---
         async function handleBolParsing() {
             resetUI();
             loading.classList.remove('hidden');
-            
+            setProgress(10, 'Preparing...');
+
             if (bolPageImages.length === 0) {
                 displayMessage("Please upload a PDF and wait for pages to render.");
                 loading.classList.add('hidden');
@@ -706,15 +730,16 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const selectedModel = modelSelector.value;
 
             try {
+                setProgress(20, 'Analyzing...');
                 const apiKey = getApiKey();
                 const prompt = bolPromptTextarea.value;
                 let resultText = '';
-                
                 const imageParts = bolPageImages.map(imgDataUrl => ({
                     inlineData: { mimeType: 'image/jpeg', data: imgDataUrl.split(',')[1] }
                 }));
 
                 if (selectedModel.startsWith('gemini')) {
+                    setProgress(40, 'Sending to Gemini...');
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: prompt }, ...imageParts] }],
@@ -722,10 +747,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    setProgress(70, 'Processing Gemini Response...');
                     const result = await response.json();
                     resultText = result.candidates[0].content.parts[0].text;
                 } else if (selectedModel === 'claude-4') {
-                    // Claude 4 API integration
+                    setProgress(40, 'Sending to Claude 4...');
                     const apiUrl = 'https://api.anthropic.com/v1/messages';
                     const imageContent = bolPageImages.map(imgDataUrl => ({
                         type: 'image',
@@ -754,12 +780,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         body: JSON.stringify(payload)
                     });
                     if (!response.ok) throw new Error(`Claude 4 API Error: ${response.status} ${await response.text()}`);
+                    setProgress(70, 'Processing Claude 4 Response...');
                     const result = await response.json();
-                    // Claude returns an array of content blocks; find the first text block
                     const textBlock = result.content.find(c => c.type === 'text');
                     if (!textBlock) throw new Error('Claude 4 did not return a text response.');
                     resultText = textBlock.text;
-                } else { // GPT-4o
+                } else {
+                    setProgress(40, 'Sending to OpenAI...');
                     const apiUrl = "https://api.openai.com/v1/chat/completions";
                     const imageContent = bolPageImages.map(imgDataUrl => ({
                          type: 'image_url', image_url: { url: imgDataUrl } 
@@ -771,17 +798,54 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    setProgress(70, 'Processing OpenAI Response...');
                     const result = await response.json();
                     resultText = result.choices[0].message.content;
                 }
+                setProgress(90, 'Parsing Results...');
                 const consolidatedData = JSON.parse(resultText);
+                setProgress(100, 'Done');
                 displayBolResults(consolidatedData);
-
+                setTimeout(() => { loading.classList.add('hidden'); }, 800);
             } catch (error) {
                 displayMessage(error.message);
+                setProgress(0, 'Error');
             } finally {
-                loading.classList.add('hidden');
+                // loading.classList.add('hidden');
             }
+        }
+
+        // Update PDF rendering to show progress
+        async function renderPdfToImages(file) {
+            const fileReader = new FileReader();
+            return new Promise((resolve, reject) => {
+                fileReader.onload = async (event) => {
+                    try {
+                        setProgress(20, 'Rendering PDF...');
+                        const typedarray = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                        const pageImages = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            pageImages.push(canvas.toDataURL('image/jpeg'));
+                            setProgress(20 + Math.round((i/pdf.numPages)*20), `Rendering Page ${i} of ${pdf.numPages}`);
+                        }
+                        setProgress(40, 'PDF Rendered');
+                        resolve(pageImages);
+                    } catch (error) {
+                        setProgress(0, 'Error');
+                        reject(error);
+                    }
+                };
+                setProgress(10, 'Uploading PDF...');
+                fileReader.readAsArrayBuffer(file);
+            });
         }
 
         function displayBolResults(data) {
@@ -1021,35 +1085,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             resultsWrapper.classList.add('hidden');
             messageContainer.classList.add('hidden');
             bolResultContainer.classList.add('hidden');
-        }
-        
-        async function renderPdfToImages(file) {
-            const fileReader = new FileReader();
-            return new Promise((resolve, reject) => {
-                fileReader.onload = async (event) => {
-                    try {
-                        const typedarray = new Uint8Array(event.target.result);
-                        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-                        const pageImages = [];
-
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const viewport = page.getViewport({ scale: 1.5 });
-                            const canvas = document.createElement('canvas');
-                            const context = canvas.getContext('2d');
-                            canvas.height = viewport.height;
-                            canvas.width = viewport.width;
-
-                            await page.render({ canvasContext: context, viewport: viewport }).promise;
-                            pageImages.push(canvas.toDataURL('image/jpeg'));
-                        }
-                        resolve(pageImages);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                fileReader.readAsArrayBuffer(file);
-            });
+            setProgress(0, '');
         }
         
         function displayMessage(msg) {
