@@ -524,27 +524,40 @@
         let analysisData = [];
         let rawApiResponse = '';
 
-        const defaultVideoPrompt = `You are a highly attentive logistics analyst specializing in visual recognition. Your task is to meticulously scan a truck yard and identify every unique semi-trailer that appears.
-For each unique trailer, provide the following information in a strict JSON array of objects.
+        const defaultVideoPrompt = `You are LOGOS (Logistics Observation and Guidance System), an advanced AI agent specializing in real-time visual analysis of logistics environments. Your sole function is to process visual data (images or video frames) of a truck yard and act as a meticulous digital manifest creator.
+## Primary Objective
+Your primary objective is to identify every unique semi-trailer within the provided visual data and compile a comprehensive JSON manifest according to the strict schema and protocol defined below.
+## JSON Schema & Field Definitions
+You must provide the information for each unique trailer as an object within a single JSON array. Adhere precisely to these field definitions:
 
-1. trailer_id: The primary alphanumeric identification number on the side of the trailer.
-- CRITICAL: This ID is for tracking. Do NOT include physical dimensions like "53'" or "48'". These belong in the \`trailer_size\` field.
-- PRIORITY: Your primary goal for this field is to find the main registration or tracking number, often a mix of letters and numbers.
-- Example: If you see "XTRZ 123456" and "53'" nearby, the trailer_id is "XTRZ 123456".
-2. carrier: The name of the trucking company, identified from any logos or text on the trailer.
-3. is_loaded: A boolean value. This must be \`true\` if you see a plastic or metal seal on the trailer door handle, and \`false\` otherwise.
-4. location: A string, representing the loading door number or physical location where the trailer is parked.
-5. trailer_type: A string. Determine if the trailer is a "dry van" (a standard box trailer) or a "reefer" (a refrigerated trailer, which will have a large cooling unit on the front).
-6. trailer_size: A number. Estimate the length of the trailer in feet. Look for numbers like 53 or 48.
-7. image: the best frame for identification of the trailer.
+trailer_id: (String) The primary alphanumeric tracking number on the trailer.
+CRITICAL: This is the unique identifier. It must NOT include trailer dimensions (e.g., "53'").
+PRIORITY: Locate the main registration or unit number (e.g., UMLZ 548231, XTRZ 123456, JBHT 789101).
+ACTION: If an ID is partially obscured, make a best-effort attempt to transcribe only the clearly visible characters. Do not guess.
+carrier: (String) The name of the operating trucking company.
+ACTION: Identify this from logos or text on the trailer. Prioritize the operating carrier name (e.g., "Swift", "J.B. Hunt") over the trailer manufacturer name (e.g., "Wabash", "Great Dane").
+is_loaded: (Boolean) A definitive boolean value (true/false).
+ACTION: This is determined exclusively by the visual presence of a plastic or metal security seal on the rear door latch mechanism. If a seal is present, return true. If no seal is present or the doors are not visible, return false.
+location: (String) A precise string describing the trailer's position.
+ACTION: Prioritize loading dock numbers first (e.g., "Door 42"). If not at a dock, use parking space numbers (e.g., "Spot B17") or a descriptive location (e.g., "North Fence Line").
+trailer_type: (String) A controlled vocabulary string.
+ACTION: Must be one of: "Dry Van", "Reefer", "Flatbed", "Tanker", "Intermodal Chassis", or "Other". A "Reefer" is distinguished by a large refrigeration unit on its front face.
+trailer_size: (Number) The length of the trailer in feet.
+ACTION: Look for explicit numerical markings like 53 or 48 on the trailer body. Return the value as a number (e.g., 53), not a string.
+image_identifier: (String) A reference to the single best frame used for identification.
+ACTION: This should be a timestamp (e.g., "01:32.5") or a frame number (e.g., "frame_1950") if available. The ideal frame is one with the clearest, most readable view of the trailer_id.
+## Core Operational Protocol
 
-Core Rules:
+Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. When you first identify a trailer, track it across subsequent frames to confirm its details and find the best possible view. You must only report each unique trailer_id once in the final output. Aggregate information from multiple sightings of the same trailer to create the most complete record.
+Processing Rate (For Video): You must process the visual data at a rate of at least 10 frames per second to ensure no trailer is missed.
+Confidence & Null Values: Accuracy is paramount. If a piece of information cannot be determined with high confidence from the visual data, you must use a null value for that specific field. Do not infer or guess information that is not visually present.
+## CRITICAL OUTPUT CONSTRAINT
+Your entire response MUST be a single, raw JSON array.
 
-- Be Thorough: Analyze the entire input. Your main goal is to catalog EVERY unique trailer possible. You should AT LEAST analyze 10 frames per second in the video. 
-- Accuracy is Key: Pay very close attention to the difference between trailer_id and trailer_size.
-- Uniqueness: Only list each unique trailer_id once.
-- Use Null: If you cannot determine information, use a null value for that field.
-- Output Format: Your final output must be only the JSON array of objects, with no other text or markdown.`;
+DO NOT include any introductory text (e.g., "Here is the JSON...").
+DO NOT include any concluding remarks or explanations.
+DO NOT wrap the JSON in markdown code fences (like \`\`\`json).
+The very first character of your output must be [ and the very last character must be ].`;
         
         const defaultInventoryPrompt = `You are a logistics yard auditor. Your task is to analyze the two provided images, a 'before' and 'after' state of loading doors.
 Your goal is to identify which trailers have arrived, which have departed, and which have remained.
@@ -1085,7 +1098,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const mainDiv = document.createElement('div');
             mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
             mainDiv.innerHTML = `
-                ${bolPageImages.length > 0 ? createCarousel().outerHTML : ''}
+                <div class="md:col-span-1">
+                    <div id="mainCarouselContainer" class="relative">
+                        <!-- Carousel will be inserted here by createCarousel -->
+                    </div>
+                </div>
                 <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     ${createDisplayField('bol_number', 'BoL Number', data.bol_number)}
                     ${createDisplayField('appointment_number', 'Appointment Number', data.appointment_number)}
@@ -1105,6 +1122,9 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 </div>
             `;
             bolResultCard.appendChild(mainDiv);
+            if (bolPageImages.length > 0) {
+                bolResultCard.querySelector('#mainCarouselContainer').appendChild(createCarousel());
+            }
             
             // Re-attach listeners for dynamically created elements
             bolResultCard.querySelectorAll('[data-action="edit"]').forEach(btn => {
@@ -1119,28 +1139,6 @@ Only output the final, consolidated JSON object. Do not include any other text, 
 
              bolResultCard.querySelectorAll('#carouselImage').forEach(img => {
                 img.addEventListener('click', () => openImageZoomModal());
-            });
-
-            // Re-attach listeners for carousel buttons within the results card after rendering
-            const newPrevBtn = bolResultCard.querySelector('.md\\:col-span-1.relative > button:nth-of-type(1)');
-            const newNextBtn = bolResultCard.querySelector('.md\\:col-span-1.relative > button:nth-of-type(2)');
-            const newCarouselImage = bolResultCard.querySelector('#carouselImage');
-            const newPageCounter = bolResultCard.querySelector('#pageCounter');
-
-            const updateMainCarousel = () => {
-                if (newCarouselImage) newCarouselImage.src = bolPageImages[currentBolPageIndex];
-                if (newPageCounter) newPageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
-            };
-            
-            if(newPrevBtn) newPrevBtn.addEventListener('click', (e) => { 
-                e.stopPropagation(); 
-                currentBolPageIndex = (currentBolPageIndex - 1 + bolPageImages.length) % bolPageImages.length;
-                updateMainCarousel();
-            });
-            if(newNextBtn) newNextBtn.addEventListener('click', (e) => { 
-                e.stopPropagation();
-                currentBolPageIndex = (currentBolPageIndex + 1) % bolPageImages.length;
-                updateMainCarousel();
             });
             
             resultsWrapper.classList.remove('hidden');
@@ -1483,7 +1481,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     ? `<span class="inline-flex items-center justify-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-emerald-700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Loaded</span>` 
                     : `<span class="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-red-700"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Not Loaded</span>`;
                 row.innerHTML = `
-                    <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900">${trailer.trailer_id || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.carrier || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${loadedStatus}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.location || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.trailer_type || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.trailer_size || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.image || 'N/A'}</td>`;
+                    <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900">${trailer.trailer_id || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.carrier || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${loadedStatus}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.location || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.trailer_type || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.trailer_size || 'N/A'}</td><td class="whitespace-nowrap px-4 py-3 text-gray-700">${trailer.image_identifier || 'N/A'}</td>`;
                 resultsTableBody.appendChild(row);
             });
             resultsWrapper.classList.remove('hidden');
