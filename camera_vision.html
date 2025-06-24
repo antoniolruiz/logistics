@@ -138,9 +138,9 @@
     
     <div id="loading" class="text-center my-4 hidden">
         <div class="w-full max-w-2xl mx-auto">
-            <div class="flex items-center justify-between mb-2">
-                <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
-                <span id="progressPercent" class="text-xl font-bold text-blue-600">0%</span>
+            <div class="flex items-center justify-center mb-2">
+                <span id="progressLabel" class="text-xl font-semibold text-blue-600">Uploading Video</span>
+                <span id="progressDots" class="text-xl font-semibold text-blue-600 ml-1">...</span>
             </div>
             <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
                 <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
@@ -902,34 +902,69 @@ The very first character of your output must be [ and the very last character mu
             parseBolBtn.disabled = !(hasKey && videoFile);
         }
 
-        // Remove spinner loader references and add progress bar logic
         // --- Progress Bar Logic ---
         const progressBar = document.getElementById('progressBar');
         const progressLabel = document.getElementById('progressLabel');
-        const progressPercent = document.getElementById('progressPercent');
+        const progressDots = document.getElementById('progressDots');
+
+        const progressMessages = [
+            "Uploading Video",
+            "Running AI Model", 
+            "Fetching Core Properties",
+            "Creating Final Output"
+        ];
+        let currentMessageIndex = 0;
+        let dotsInterval;
 
         function setProgress(percent, label) {
             progressBar.style.width = percent + '%';
-            progressPercent.textContent = Math.round(percent) + '%';
-            progressLabel.textContent = label;
+            if (label) {
+                progressLabel.textContent = label;
+            }
+        }
+
+        function startProgressAnimation() {
+            currentMessageIndex = 0;
+            progressLabel.textContent = progressMessages[0];
+            
+            // Animate dots
+            let dotCount = 0;
+            dotsInterval = setInterval(() => {
+                dotCount = (dotCount + 1) % 4;
+                progressDots.textContent = '.'.repeat(dotCount);
+            }, 500);
+
+            // Rotate messages every 3 seconds
+            setInterval(() => {
+                currentMessageIndex = (currentMessageIndex + 1) % progressMessages.length;
+                progressLabel.textContent = progressMessages[currentMessageIndex];
+            }, 3000);
+        }
+
+        function stopProgressAnimation() {
+            if (dotsInterval) {
+                clearInterval(dotsInterval);
+            }
         }
 
         // --- Update handleBolParsing and PDF rendering to use progress bar ---
         async function handleBolParsing() {
             resetUI();
             loading.classList.remove('hidden');
-            setProgress(10, 'Preparing...');
+            startProgressAnimation();
+            setProgress(10, '');
 
             if (videoFrames.length === 0) {
                 displayMessage("Please upload a video and wait for frames to render.");
                 loading.classList.add('hidden');
+                stopProgressAnimation();
                 return;
             }
 
             const selectedModel = modelSelector.value;
 
             try {
-                setProgress(20, 'Analyzing...');
+                setProgress(20, '');
                 const apiKey = getApiKey();
                 const prompt = bolPromptTextarea.value;
                 let resultText = '';
@@ -938,7 +973,7 @@ The very first character of your output must be [ and the very last character mu
                 }));
 
                 if (selectedModel.startsWith('gemini')) {
-                    setProgress(40, 'Sending to Gemini...');
+                    setProgress(40, '');
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: prompt }, ...imageParts] }],
@@ -946,11 +981,11 @@ The very first character of your output must be [ and the very last character mu
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing Gemini Response...');
+                    setProgress(70, '');
                     const result = await response.json();
                     resultText = result.candidates[0].content.parts[0].text;
                 } else if (selectedModel === 'claude-4') {
-                    setProgress(40, 'Sending to Claude 4...');
+                    setProgress(40, '');
                     const apiUrl = 'https://api.anthropic.com/v1/messages';
                     const imageContent = videoFrames.map(frameDataUrl => ({
                         type: 'image',
@@ -979,13 +1014,13 @@ The very first character of your output must be [ and the very last character mu
                         body: JSON.stringify(payload)
                     });
                     if (!response.ok) throw new Error(`Claude 4 API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing Claude 4 Response...');
+                    setProgress(70, '');
                     const result = await response.json();
                     const textBlock = result.content.find(c => c.type === 'text');
                     if (!textBlock) throw new Error('Claude 4 did not return a text response.');
                     resultText = textBlock.text;
                 } else {
-                    setProgress(40, 'Sending to OpenAI...');
+                    setProgress(40, '');
                     const apiUrl = "https://api.openai.com/v1/chat/completions";
                     const imageContent = videoFrames.map(frameDataUrl => ({
                          type: 'image_url', image_url: { url: frameDataUrl } 
@@ -997,19 +1032,23 @@ The very first character of your output must be [ and the very last character mu
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing OpenAI Response...');
+                    setProgress(70, '');
                     const result = await response.json();
                     resultText = result.choices[0].message.content;
                 }
-                setProgress(90, 'Parsing Results...');
+                setProgress(90, '');
                 const consolidatedData = JSON.parse(resultText);
                 rawModelResponse = resultText; // Store the raw response
-                setProgress(100, 'Done');
+                setProgress(100, '');
                 displayBolResults(consolidatedData);
-                setTimeout(() => { loading.classList.add('hidden'); }, 800);
+                setTimeout(() => { 
+                    loading.classList.add('hidden'); 
+                    stopProgressAnimation();
+                }, 800);
             } catch (error) {
                 displayMessage(error.message);
-                setProgress(0, 'Error');
+                setProgress(0, '');
+                stopProgressAnimation();
             } finally {
                 // loading.classList.add('hidden');
             }
@@ -1401,6 +1440,7 @@ The very first character of your output must be [ and the very last character mu
             messageContainer.classList.add('hidden');
             bolResultContainer.classList.add('hidden');
             setProgress(0, '');
+            stopProgressAnimation();
         }
         
         function displayMessage(msg) {
@@ -1590,17 +1630,95 @@ The very first character of your output must be [ and the very last character mu
         compareYardBtn.addEventListener('click', () => {
             compareYardModal.classList.remove('hidden');
             compareYardModal.classList.add('flex');
-            previousTrailers = currentTrailers;
-            currentTrailers = [];
-            compareImageUpload.value = '';
-            compareCsvUpload.value = '';
+            
+            // Store the current trailers as the "current" state for comparison
+            // The uploaded file will become the "previous" state
+            const currentTrailersForComparison = [...currentTrailers]; // Create a copy
+            
+            console.log('Current trailers for comparison:', currentTrailersForComparison);
+            
+            // Reset the previous trailers (will be filled by upload)
+            previousTrailers = [];
             runComparisonBtn.disabled = true;
             comparisonResults.classList.add('hidden');
+            
+            // Reset upload section to original state
+            const uploadSection = document.getElementById('compareUploadSection');
+            uploadSection.innerHTML = `
+                <h4 class="text-lg font-semibold mb-3">Upload Previous Yard State</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+                        <label for="compareImageUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                            <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="text-sm text-gray-500">Click to upload image</p>
+                            <input id="compareImageUpload" type="file" class="hidden" accept="image/*" />
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload CSV</label>
+                        <label for="compareCsvUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                            <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            </svg>
+                            <p class="text-sm text-gray-500">Click to upload CSV</p>
+                            <input id="compareCsvUpload" type="file" class="hidden" accept=".csv" />
+                        </label>
+                    </div>
+                </div>
+                <div class="mt-4 text-center">
+                    <button id="runComparisonBtn" class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        Run Comparison
+                    </button>
+                </div>
+            `;
+            
+            // Store the current trailers in a closure for the comparison function
+            window.currentTrailersForComparison = currentTrailersForComparison;
         });
 
-        compareImageUpload.addEventListener('change', async (event) => {
-            if (compareImageUpload.files.length === 0) return;
-            const file = compareImageUpload.files[0];
+        // Use event delegation for the comparison modal
+        compareYardModal.addEventListener('change', (event) => {
+            console.log('Change event detected:', event.target.id);
+            if (event.target.id === 'compareImageUpload') {
+                console.log('Processing image upload');
+                handleImageUpload(event);
+            } else if (event.target.id === 'compareCsvUpload') {
+                console.log('Processing CSV upload');
+                handleCsvUpload(event);
+            }
+        });
+
+        compareYardModal.addEventListener('click', (event) => {
+            console.log('Click event detected:', event.target.id);
+            if (event.target.id === 'runComparisonBtn') {
+                console.log('Running comparison');
+                runComparison();
+            }
+        });
+
+        function handleImageUpload(event) {
+            console.log('handleImageUpload called');
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            console.log('File selected:', file.name, file.type);
+            
+            // Get the current elements
+            const imageUpload = document.getElementById('compareImageUpload');
+            const csvUpload = document.getElementById('compareCsvUpload');
+            const csvContainer = csvUpload.parentElement;
+            
+            console.log('Elements found:', { imageUpload: !!imageUpload, csvUpload: !!csvUpload, csvContainer: !!csvContainer });
+            
+            // Disable CSV upload
+            csvUpload.disabled = true;
+            csvContainer.style.opacity = '0.5';
+            csvContainer.style.pointerEvents = 'none';
             
             try {
                 // Process the image using the same AI model
@@ -1689,9 +1807,8 @@ The very first character of your output must be [ and the very last character mu
                     }
                     
                     previousTrailers = trailers;
-                    runComparisonBtn.disabled = false;
                     
-                    // Show success message
+                    // Show success message and enable comparison button
                     const uploadSection = document.getElementById('compareUploadSection');
                     uploadSection.innerHTML = `
                         <div class="text-center p-4">
@@ -1702,60 +1819,91 @@ The very first character of your output must be [ and the very last character mu
                             </button>
                         </div>
                     `;
-                    
-                    // Re-attach event listener
-                    document.getElementById('runComparisonBtn').addEventListener('click', runComparison);
                 };
                 reader.readAsDataURL(file);
             } catch (error) {
                 displayMessage(`Error processing image: ${error.message}`);
+                // Re-enable CSV upload on error
+                csvUpload.disabled = false;
+                csvContainer.style.opacity = '1';
+                csvContainer.style.pointerEvents = 'auto';
             }
-        });
+        }
 
-        compareCsvUpload.addEventListener('change', (event) => {
-            if (compareCsvUpload.files.length === 0) return;
-            const file = compareCsvUpload.files[0];
+        function handleCsvUpload(event) {
+            console.log('handleCsvUpload called');
+            const file = event.target.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            console.log('File selected:', file.name, file.type);
+            
+            // Get the current elements
+            const csvUpload = document.getElementById('compareCsvUpload');
+            const imageUpload = document.getElementById('compareImageUpload');
+            const imageContainer = imageUpload.parentElement;
+            
+            console.log('Elements found:', { csvUpload: !!csvUpload, imageUpload: !!imageUpload, imageContainer: !!imageContainer });
+            
+            // Disable image upload
+            imageUpload.disabled = true;
+            imageContainer.style.opacity = '0.5';
+            imageContainer.style.pointerEvents = 'none';
+            
             const reader = new FileReader();
             reader.onload = function(e) {
-                const csvData = e.target.result;
-                const lines = csvData.split('\n');
-                const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-                const trailers = [];
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (lines[i].trim()) {
-                        const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-                        const trailer = {};
-                        headers.forEach((header, index) => {
-                            trailer[header.toLowerCase().replace(/\s+/g, '_')] = values[index] || '';
-                        });
-                        trailers.push(trailer);
+                try {
+                    const csvData = e.target.result;
+                    const lines = csvData.split('\n');
+                    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+                    const trailers = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].trim()) {
+                            const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+                            const trailer = {};
+                            headers.forEach((header, index) => {
+                                trailer[header.toLowerCase().replace(/\s+/g, '_')] = values[index] || '';
+                            });
+                            trailers.push(trailer);
+                        }
                     }
+                    
+                    previousTrailers = trailers;
+                    
+                    // Show success message and enable comparison button
+                    const uploadSection = document.getElementById('compareUploadSection');
+                    uploadSection.innerHTML = `
+                        <div class="text-center p-4">
+                            <div class="text-green-600 font-semibold mb-2">✓ CSV Processed Successfully</div>
+                            <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded CSV</div>
+                            <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
+                                Run Comparison
+                            </button>
+                        </div>
+                    `;
+                } catch (error) {
+                    displayMessage(`Error processing CSV: ${error.message}`);
+                    // Re-enable image upload on error
+                    imageUpload.disabled = false;
+                    imageContainer.style.opacity = '1';
+                    imageContainer.style.pointerEvents = 'auto';
                 }
-                
-                previousTrailers = trailers;
-                runComparisonBtn.disabled = false;
-                
-                // Show success message
-                const uploadSection = document.getElementById('compareUploadSection');
-                uploadSection.innerHTML = `
-                    <div class="text-center p-4">
-                        <div class="text-green-600 font-semibold mb-2">✓ CSV Processed Successfully</div>
-                        <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded CSV</div>
-                        <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
-                            Run Comparison
-                        </button>
-                    </div>
-                `;
-                
-                // Re-attach event listener
-                document.getElementById('runComparisonBtn').addEventListener('click', runComparison);
             };
             reader.readAsText(file);
-        });
+        }
+
+        // Original event listeners (will be replaced by the functions above)
+        compareImageUpload.addEventListener('change', handleImageUpload);
+        compareCsvUpload.addEventListener('change', handleCsvUpload);
 
         function runComparison() {
-            if (!currentTrailers || !previousTrailers) {
+            console.log('runComparison called');
+            console.log('Current trailers for comparison:', window.currentTrailersForComparison);
+            console.log('Previous trailers:', previousTrailers);
+            
+            if (!window.currentTrailersForComparison || !previousTrailers) {
                 displayMessage("Please ensure both current and previous yard states are available.");
                 return;
             }
@@ -1764,7 +1912,7 @@ The very first character of your output must be [ and the very last character mu
             const currentMap = new Map();
             const previousMap = new Map();
             
-            currentTrailers.forEach(trailer => {
+            window.currentTrailersForComparison.forEach(trailer => {
                 if (trailer.trailer_id) {
                     currentMap.set(trailer.trailer_id, trailer);
                 }
@@ -1782,7 +1930,7 @@ The very first character of your output must be [ and the very last character mu
             const remainingTrailers = [];
 
             // Find added trailers (in current but not in previous)
-            currentTrailers.forEach(trailer => {
+            window.currentTrailersForComparison.forEach(trailer => {
                 if (trailer.trailer_id && !previousMap.has(trailer.trailer_id)) {
                     addedTrailers.push(trailer);
                 }
@@ -1796,11 +1944,13 @@ The very first character of your output must be [ and the very last character mu
             });
 
             // Find remaining trailers (in both)
-            currentTrailers.forEach(trailer => {
+            window.currentTrailersForComparison.forEach(trailer => {
                 if (trailer.trailer_id && previousMap.has(trailer.trailer_id)) {
                     remainingTrailers.push(trailer);
                 }
             });
+
+            console.log('Comparison results:', { added: addedTrailers.length, removed: removedTrailers.length, remaining: remainingTrailers.length });
 
             // Update the comparison results display
             comparisonResults.classList.remove('hidden');
@@ -1877,11 +2027,11 @@ The very first character of your output must be [ and the very last character mu
             const removedTrailers = [];
             const remainingTrailers = [];
             
-            if (currentTrailers && previousTrailers) {
+            if (window.currentTrailersForComparison && previousTrailers) {
                 const currentMap = new Map();
                 const previousMap = new Map();
                 
-                currentTrailers.forEach(trailer => {
+                window.currentTrailersForComparison.forEach(trailer => {
                     if (trailer.trailer_id) {
                         currentMap.set(trailer.trailer_id, trailer);
                     }
@@ -1894,7 +2044,7 @@ The very first character of your output must be [ and the very last character mu
                 });
 
                 // Find added trailers (in current but not in previous)
-                currentTrailers.forEach(trailer => {
+                window.currentTrailersForComparison.forEach(trailer => {
                     if (trailer.trailer_id && !previousMap.has(trailer.trailer_id)) {
                         addedTrailers.push(trailer);
                     }
@@ -1908,7 +2058,7 @@ The very first character of your output must be [ and the very last character mu
                 });
 
                 // Find remaining trailers (in both)
-                currentTrailers.forEach(trailer => {
+                window.currentTrailersForComparison.forEach(trailer => {
                     if (trailer.trailer_id && previousMap.has(trailer.trailer_id)) {
                         remainingTrailers.push(trailer);
                     }
