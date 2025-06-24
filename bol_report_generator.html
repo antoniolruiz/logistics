@@ -67,6 +67,37 @@
             outline: none;
         }
         .field-block, .mt-1.flex.items-center.p-2.border.bg-gray-50.rounded-md { margin-bottom: 1.1rem !important; }
+        
+        /* Progress bar rotation and animation */
+        #progressBar {
+            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 50%, #3b82f6 100%);
+            background-size: 200% 100%;
+            animation: progressShimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes progressShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Animated dots */
+        .animated-dots {
+            display: inline-block;
+            animation: dotAnimation 1.5s infinite;
+        }
+        
+        @keyframes dotAnimation {
+            0% { content: ""; }
+            25% { content: "."; }
+            50% { content: ".."; }
+            75% { content: "..."; }
+            100% { content: ""; }
+        }
+        
+        .animated-dots::after {
+            content: "";
+            animation: dotAnimation 1.5s infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -138,9 +169,8 @@
     
     <div id="loading" class="text-center my-4 hidden">
         <div class="w-full max-w-2xl mx-auto">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-center mb-2">
                 <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
-                <span id="progressPercent" class="text-xl font-bold text-blue-600">0%</span>
             </div>
             <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
                 <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
@@ -717,30 +747,85 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         // --- Progress Bar Logic ---
         const progressBar = document.getElementById('progressBar');
         const progressLabel = document.getElementById('progressLabel');
-        const progressPercent = document.getElementById('progressPercent');
 
-        function setProgress(percent, label) {
-            progressBar.style.width = percent + '%';
-            progressPercent.textContent = Math.round(percent) + '%';
-            progressLabel.textContent = label;
+        let progressInterval = null;
+        let messageRotationInterval = null;
+        let currentMessageIndex = 0;
+        let currentProgress = 0;
+
+        const progressMessages = [
+            "Ingesting BoL PDF",
+            "Parsing documents", 
+            "Organizing content", 
+            "Finalizing output"
+        ];
+
+        function setProgress(targetProgress, message = null) {
+            // Update progress bar width
+            currentProgress = targetProgress;
+            progressBar.style.width = currentProgress + '%';
+            
+            // Update message if provided
+            if (message) {
+                progressLabel.innerHTML = message + '<span class="animated-dots"></span>';
+            }
+        }
+
+        function startMessageRotation() {
+            // Clear any existing rotation
+            if (messageRotationInterval) {
+                clearInterval(messageRotationInterval);
+            }
+            
+            // Start rotating messages
+            messageRotationInterval = setInterval(() => {
+                const message = progressMessages[currentMessageIndex];
+                progressLabel.innerHTML = message + '<span class="animated-dots"></span>';
+                currentMessageIndex = (currentMessageIndex + 1) % progressMessages.length;
+            }, 2000); // Change message every 2 seconds
+        }
+
+        function stopMessageRotation() {
+            if (messageRotationInterval) {
+                clearInterval(messageRotationInterval);
+                messageRotationInterval = null;
+            }
+        }
+
+        function startContinuousProgress() {
+            // Start a background progress that slowly increments
+            const backgroundInterval = setInterval(() => {
+                if (currentProgress < 95) { // Don't go above 95% until explicitly set to 100%
+                    currentProgress += 0.5;
+                    progressBar.style.width = currentProgress + '%';
+                }
+            }, 100); // Update every 100ms for smooth background progress
+            
+            return backgroundInterval;
         }
 
         // --- Update handleBolParsing and PDF rendering to use progress bar ---
         async function handleBolParsing() {
             resetUI();
             loading.classList.remove('hidden');
-            setProgress(10, 'Preparing...');
+            currentProgress = 0;
+            setProgress(0, 'Ingesting BoL PDF');
+            
+            // Start message rotation
+            startMessageRotation();
 
             if (bolPageImages.length === 0) {
+                stopMessageRotation();
                 displayMessage("Please upload a PDF and wait for pages to render.");
                 loading.classList.add('hidden');
                 return;
             }
 
             const selectedModel = modelSelector.value;
+            let backgroundProgressInterval = null;
 
             try {
-                setProgress(20, 'Analyzing...');
+                setProgress(25, 'Parsing documents');
                 const apiKey = getApiKey();
                 const prompt = bolPromptTextarea.value;
                 let resultText = '';
@@ -748,8 +833,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     inlineData: { mimeType: 'image/jpeg', data: imgDataUrl.split(',')[1] }
                 }));
 
+                // Start background progress during API calls
+                backgroundProgressInterval = startContinuousProgress();
+
                 if (selectedModel.startsWith('gemini')) {
-                    setProgress(40, 'Sending to Gemini...');
+                    setProgress(50, 'Organizing content');
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: prompt }, ...imageParts] }],
@@ -757,11 +845,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing Gemini Response...');
+                    setProgress(75, 'Finalizing output');
                     const result = await response.json();
                     resultText = result.candidates[0].content.parts[0].text;
                 } else if (selectedModel === 'claude-4') {
-                    setProgress(40, 'Sending to Claude 4...');
+                    setProgress(50, 'Organizing content');
                     const apiUrl = 'https://api.anthropic.com/v1/messages';
                     const imageContent = bolPageImages.map(imgDataUrl => ({
                         type: 'image',
@@ -790,13 +878,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         body: JSON.stringify(payload)
                     });
                     if (!response.ok) throw new Error(`Claude 4 API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing Claude 4 Response...');
+                    setProgress(75, 'Finalizing output');
                     const result = await response.json();
                     const textBlock = result.content.find(c => c.type === 'text');
                     if (!textBlock) throw new Error('Claude 4 did not return a text response.');
                     resultText = textBlock.text;
                 } else {
-                    setProgress(40, 'Sending to OpenAI...');
+                    setProgress(50, 'Organizing content');
                     const apiUrl = "https://api.openai.com/v1/chat/completions";
                     const imageContent = bolPageImages.map(imgDataUrl => ({
                          type: 'image_url', image_url: { url: imgDataUrl } 
@@ -808,16 +896,27 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
                     if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, 'Processing OpenAI Response...');
+                    setProgress(75, 'Finalizing output');
                     const result = await response.json();
                     resultText = result.choices[0].message.content;
                 }
-                setProgress(90, 'Parsing Results...');
+                
+                // Clear background progress
+                if (backgroundProgressInterval) {
+                    clearInterval(backgroundProgressInterval);
+                }
+                
+                setProgress(90, 'Finalizing output');
                 const consolidatedData = JSON.parse(resultText);
+                stopMessageRotation();
                 setProgress(100, 'Done');
                 displayBolResults(consolidatedData);
                 setTimeout(() => { loading.classList.add('hidden'); }, 800);
             } catch (error) {
+                if (backgroundProgressInterval) {
+                    clearInterval(backgroundProgressInterval);
+                }
+                stopMessageRotation();
                 displayMessage(error.message);
                 setProgress(0, 'Error');
             } finally {
@@ -831,10 +930,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             return new Promise((resolve, reject) => {
                 fileReader.onload = async (event) => {
                     try {
-                        setProgress(20, 'Rendering PDF...');
+                        setProgress(20, 'Processing PDF pages');
                         const typedarray = new Uint8Array(event.target.result);
                         const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
                         const pageImages = [];
+                        
+                        // Start background progress during page rendering
+                        const backgroundProgressInterval = startContinuousProgress();
+                        
                         for (let i = 1; i <= pdf.numPages; i++) {
                             const page = await pdf.getPage(i);
                             const viewport = page.getViewport({ scale: 1.5 });
@@ -844,16 +947,20 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                             canvas.width = viewport.width;
                             await page.render({ canvasContext: context, viewport: viewport }).promise;
                             pageImages.push(canvas.toDataURL('image/jpeg'));
-                            setProgress(20 + Math.round((i/pdf.numPages)*20), `Rendering Page ${i} of ${pdf.numPages}`);
+                            setProgress(20 + Math.round((i/pdf.numPages)*20), `Converting page ${i} of ${pdf.numPages}`);
                         }
-                        setProgress(40, 'PDF Rendered');
+                        
+                        // Clear background progress
+                        clearInterval(backgroundProgressInterval);
+                        
+                        setProgress(40, 'PDF processing complete');
                         resolve(pageImages);
                     } catch (error) {
                         setProgress(0, 'Error');
                         reject(error);
                     }
                 };
-                setProgress(10, 'Uploading PDF...');
+                setProgress(10, 'Reading PDF file');
                 fileReader.readAsArrayBuffer(file);
             });
         }
@@ -1101,6 +1208,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             resultsWrapper.classList.add('hidden');
             messageContainer.classList.add('hidden');
             bolResultContainer.classList.add('hidden');
+            
+            // Reset progress state
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            stopMessageRotation();
+            currentProgress = 0;
             setProgress(0, '');
         }
         

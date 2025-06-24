@@ -168,6 +168,10 @@
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                          Raw Results
                      </button>
+                     <button id="compareYardBtn" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-git-compare"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9V6a2 2 0 0 1 2-2h7"/></svg>
+                         Compare Against Yard
+                     </button>
                  </div>
              </div>
             <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
@@ -306,6 +310,111 @@
         </div>
     </div>
 
+    <div id="compareYardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Compare Against Previous Yard State</h3>
+                <button id="closeCompareYardBtn" class="p-2 rounded-full hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-auto">
+                <!-- Upload Section -->
+                <div id="compareUploadSection" class="mb-6">
+                    <h4 class="text-lg font-semibold mb-3">Upload Previous Yard State</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+                            <label for="compareImageUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                                <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="text-sm text-gray-500">Click to upload image</p>
+                                <input id="compareImageUpload" type="file" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload CSV</label>
+                            <label for="compareCsvUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                                <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                </svg>
+                                <p class="text-sm text-gray-500">Click to upload CSV</p>
+                                <input id="compareCsvUpload" type="file" class="hidden" accept=".csv" />
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button id="runComparisonBtn" class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            Run Comparison
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comparison Results -->
+                <div id="comparisonResults" class="hidden">
+                    <h4 class="text-lg font-semibold mb-3">Comparison Results</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M5 13l4 4L19 7"/></svg>
+                                <span class="font-semibold text-green-800">Added</span>
+                            </div>
+                            <div id="addedCount" class="text-2xl font-bold text-green-600">0</div>
+                            <div class="text-sm text-green-700">New trailers</div>
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-600"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                <span class="font-semibold text-red-800">Removed</span>
+                            </div>
+                            <div id="removedCount" class="text-2xl font-bold text-red-600">0</div>
+                            <div class="text-sm text-red-700">Missing trailers</div>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M9 12l2 2 4-4"/></svg>
+                                <span class="font-semibold text-blue-800">Remaining</span>
+                            </div>
+                            <div id="remainingCount" class="text-2xl font-bold text-blue-600">0</div>
+                            <div class="text-sm text-blue-700">Still in yard</div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Results Tables -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div>
+                            <h5 class="font-semibold text-green-800 mb-2">Added Trailers</h5>
+                            <div id="addedTrailers" class="bg-green-50 border border-green-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                <p class="text-sm text-green-700 text-center">No new trailers found</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-red-800 mb-2">Removed Trailers</h5>
+                            <div id="removedTrailers" class="bg-red-50 border border-red-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                <p class="text-sm text-red-700 text-center">No trailers removed</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold text-blue-800 mb-2">Remaining Trailers</h5>
+                            <div id="remainingTrailers" class="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                <p class="text-sm text-blue-700 text-center">No trailers remaining</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-4">
+                        <button id="exportComparisonBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Export Comparison
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Set the workerSrc for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
@@ -351,7 +460,19 @@
         const closeRawResultsBtn2 = document.getElementById('closeRawResultsBtn2');
         const copyRawResultsBtn = document.getElementById('copyRawResultsBtn');
         
+        // Comparison Modal Elements
+        const compareYardBtn = document.getElementById('compareYardBtn');
+        const compareYardModal = document.getElementById('compareYardModal');
+        const closeCompareYardBtn = document.getElementById('closeCompareYardBtn');
+        const compareImageUpload = document.getElementById('compareImageUpload');
+        const compareCsvUpload = document.getElementById('compareCsvUpload');
+        const runComparisonBtn = document.getElementById('runComparisonBtn');
+        const comparisonResults = document.getElementById('comparisonResults');
+        const exportComparisonBtn = document.getElementById('exportComparisonBtn');
+        
         let rawModelResponse = ''; // Store the raw response from the model
+        let currentTrailers = []; // Store current trailer data for comparison
+        let previousTrailers = []; // Store previous trailer data for comparison
 
         // Side Panel Elements
         const howToBtn = document.getElementById('howToBtn');
@@ -380,46 +501,52 @@
         let trailerImages = []; // Global variable for trailer images
         let videoDuration = 0; // Store video duration
 
-        const defaultBolPrompt = `You are a highly attentive logistics analyst specializing in visual recognition and video analysis. Your task is to meticulously scan a truck yard video and identify every unique semi-trailer that appears, providing precise timestamps for each identification.
+        const defaultBolPrompt = `You are LOGOS (Logistics Observation and Guidance System), an advanced AI agent specializing in real-time visual analysis of logistics environments. Your sole function is to process visual data (images or video frames) of a truck yard and act as a meticulous digital manifest creator.
 
-For each unique trailer, provide the following information as a data frame. Be extremely precise with timestamps.
+## Primary Objective
+Your primary objective is to identify every unique semi-trailer within the provided visual data and compile a comprehensive JSON manifest according to the strict schema and protocol defined below.
 
-1. trailer_id: The primary alphanumeric identification number on the side of the trailer.
-- CRITICAL: This ID is for tracking. Do NOT include physical dimensions like "53'" or "48'". These belong in the \`trailer_size\` field.
-- Example: If you see "XTRZ 123456" and "53'" nearby, the trailer_id is "XTRZ 123456".
+## JSON Schema & Field Definitions
+You must provide the information for each unique trailer as an object within a single JSON array. Adhere precisely to these field definitions:
 
-2. carrier: The name of the trucking company, identified from any logos or text on the trailer.
+trailer_id: (String) The primary alphanumeric tracking number on the trailer.
+CRITICAL: This is the unique identifier. It must NOT include trailer dimensions (e.g., "53'").
+PRIORITY: Locate the main registration or unit number (e.g., UMLZ 548231, XTRZ 123456, JBHT 789101).
+ACTION: If an ID is partially obscured, make a best-effort attempt to transcribe only the clearly visible characters. Do not guess.
 
-3. is_loaded: A boolean value. This must be \`true\` if you see a plastic or metal seal on the trailer door handle, and \`false\` otherwise.
+carrier: (String) The name of the operating trucking company.
+ACTION: Identify this from logos or text on the trailer. Prioritize the operating carrier name (e.g., "Swift", "J.B. Hunt") over the trailer manufacturer name (e.g., "Wabash", "Great Dane").
 
-4. location: A string, representing the loading door number or physical location where the trailer is parked.
+is_loaded: (Boolean) A definitive boolean value (true/false).
+ACTION: This is determined exclusively by the visual presence of a plastic or metal security seal on the rear door latch mechanism. If a seal is present, return true. If no seal is present or the doors are not visible, return false.
 
-5. trailer_type: A string. Determine if the trailer is a "dry van" (a standard box trailer) or a "reefer" (a refrigerated trailer, which will have a large cooling unit on the front).
+location: (String) A precise string describing the trailer's position.
+ACTION: Prioritize loading dock numbers first (e.g., "Door 42"). If not at a dock, use parking space numbers (e.g., "Spot B17") or a descriptive location (e.g., "North Fence Line").
 
-6. trailer_size: A number. Estimate the length of the trailer in feet. Look for numbers like 53 or 48.
+trailer_type: (String) A controlled vocabulary string.
+ACTION: Must be one of: "Dry Van", "Reefer", "Flatbed", "Tanker", "Intermodal Chassis", or "Other". A "Reefer" is distinguished by a large refrigeration unit on its front face.
 
-7. timestamp: The EXACT video timestamp (in seconds, as a decimal number) where this trailer is most clearly visible and identifiable.
-- CRITICAL: Provide timestamps with decimal precision (e.g., 12.5, 23.75, 45.2)
-- Choose the moment when the trailer ID is most readable and the trailer is fully visible
-- If a trailer appears multiple times, use the timestamp of its BEST/clearest appearance
-- Be as precise as possible - even 0.1 second differences matter
+trailer_size: (Number) The length of the trailer in feet.
+ACTION: Look for explicit numerical markings like 53 or 48 on the trailer body. Return the value as a number (e.g., 53), not a string.
 
-TIMESTAMP ANALYSIS INSTRUCTIONS:
-- Analyze the video frame-by-frame to identify the optimal moment for each trailer
-- Consider lighting, angle, distance, and clarity when selecting timestamps
-- For trailers that appear briefly, choose the frame with maximum visibility
-- For stationary trailers, choose when they are most clearly in frame
-- For moving trailers, choose when they are most stable and readable
+image_identifier: (Number) The frame number (1-100) that provides the best view of this trailer.
+ACTION: Return a number between 1 and 100 representing the extracted frame that shows the clearest, most readable view of the trailer_id. This is NOT a timestamp - it is the sequential frame number from the video processing (frame 1, frame 2, frame 3, etc.). Choose the frame where the trailer identification is most legible and complete. NOTE: It is perfectly acceptable for multiple trailers to use the same frame number if they appear in the same frame.
 
-Core Rules:
-- Be Thorough: Analyze the entire video input. Your main goal is to catalog EVERY unique trailer possible.
-- Accuracy is Key: Pay very close attention to the difference between trailer_id and trailer_size.
-- Uniqueness: Only list each unique trailer_id once, even if it appears multiple times.
-- Timestamp Precision: Provide timestamps with decimal precision for maximum accuracy.
-- Use Null: If you cannot determine information, use a null value for that field.
-- Strict DataFrame Output: Your final output MUST be a valid data frame. Do not include any other text.
+## Core Operational Protocol
 
-Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precision)`;
+Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. When you first identify a trailer, track it across subsequent frames to confirm its details and find the best possible view. You must only report each unique trailer_id once in the final output. Aggregate information from multiple sightings of the same trailer to create the most complete record.
+
+Processing Rate (For Video): You must process the visual data at a rate of at least 10 frames per second to ensure no trailer is missed.
+
+Confidence & Null Values: Accuracy is paramount. If a piece of information cannot be determined with high confidence from the visual data, you must use a null value for that specific field. Do not infer or guess information that is not visually present.
+
+## CRITICAL OUTPUT CONSTRAINT
+Your entire response MUST be a single, raw JSON array.
+
+DO NOT include any introductory text (e.g., "Here is the JSON...").
+DO NOT include any concluding remarks or explanations.
+DO NOT wrap the JSON in markdown code fences (like \`\`\`json).
+The very first character of your output must be [ and the very last character must be ].`;
 
         const defaultGoogleApiKey = "AIzaSyDe0pVIFyKI_SiTpVMlpbt1Gtdg3uF9WbU";
         googleApiKeyInput.value = defaultGoogleApiKey;
@@ -732,6 +859,7 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                             th, td { border: 1px solid #e5e7eb; padding: 0.6rem 0.8rem; text-align: left; }
                             th { background: #f1f5f9; font-weight: 700; }
                             tr:nth-child(even) { background: #f9fafb; }
+                            .highlighted-row { background: #dbeafe !important; border-color: #3b82f6 !important; }
                         </style>
                     </head>
                     <body>
@@ -1011,12 +1139,21 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                 }
             }
 
-            // Extract frames based on timestamps for each trailer
+            // Store current trailers for comparison
+            currentTrailers = trailers;
+
+            // Extract frames based on frame numbers for each trailer
             trailerImages = trailers
-                .filter(trailer => trailer.timestamp !== null && trailer.timestamp !== undefined)
+                .filter(trailer => trailer.image_identifier !== null && trailer.image_identifier !== undefined)
                 .map(trailer => {
-                    const frame = findClosestFrame(trailer.timestamp);
-                    return frame || null;
+                    // Use frame number directly (1-100)
+                    const frameNumber = parseInt(trailer.image_identifier);
+                    
+                    if (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= 100 && frameNumber <= videoFrames.length) {
+                        // Frame numbers are 1-based, but array is 0-based
+                        return videoFrames[frameNumber - 1] || null;
+                    }
+                    return null;
                 })
                 .filter(frame => frame !== null);
 
@@ -1031,6 +1168,27 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                 const zoomFrame = document.getElementById('zoomedFrame');
                 if(zoomFrame && trailerImages.length > 0) {
                     zoomFrame.src = trailerImages[currentFrameIndex];
+                }
+                
+                // Highlight the corresponding table row
+                highlightTableRow(currentFrameIndex);
+            };
+            
+            const highlightTableRow = (frameIndex) => {
+                // Remove previous highlights
+                bolResultCard.querySelectorAll('#trailersTable tbody tr').forEach(row => {
+                    row.classList.remove('bg-blue-50', 'border-blue-300');
+                    row.classList.add('border-gray-200');
+                });
+                
+                // Highlight the current row
+                const currentFrameNumber = trailers[frameIndex]?.image_identifier;
+                if (currentFrameNumber) {
+                    const matchingRows = bolResultCard.querySelectorAll(`#trailersTable tbody tr[data-frame="${currentFrameNumber}"]`);
+                    matchingRows.forEach(row => {
+                        row.classList.add('bg-blue-50', 'border-blue-300');
+                        row.classList.remove('border-gray-200');
+                    });
                 }
             };
             
@@ -1088,20 +1246,18 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                                 <th class="p-2 text-left font-semibold text-gray-700">Location</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Type</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Size (ft)</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Timestamp</th>
                                 <th class="p-2"></th>
                             </tr>
                         </thead>
                         <tbody>
                         ${trailers.map((trailer, idx) => `
-                            <tr class="border-b" data-row="${idx}">
+                            <tr class="border-b" data-row="${idx}" data-frame="${trailer.image_identifier || ''}">
                                 <td class="p-2 editable-table-cell" data-col="trailer_id">${trailer.trailer_id || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="carrier">${trailer.carrier || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="is_loaded">${trailer.is_loaded ? 'Yes' : 'No'}</td>
                                 <td class="p-2 editable-table-cell" data-col="location">${trailer.location || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_type">${trailer.trailer_type || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_size">${trailer.trailer_size || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="timestamp">${trailer.timestamp ? `${Math.round(trailer.timestamp)}s` : 'N/A'}</td>
                                 <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                             </tr>
                         `).join('')}
@@ -1202,7 +1358,7 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
             const card = document.getElementById('bolResultCard');
             if (!card) return;
 
-            const headers = ["Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)", "Timestamp"];
+            const headers = ["Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)"];
             const rows = [];
             
             const trailerRows = card.querySelectorAll('tbody > tr');
@@ -1214,12 +1370,11 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                         row.cells[2] ? row.cells[2].innerText : 'N/A', // Loaded
                         row.cells[3] ? row.cells[3].innerText : 'N/A', // Location
                         row.cells[4] ? row.cells[4].innerText : 'N/A', // Type
-                        row.cells[5] ? row.cells[5].innerText : 'N/A', // Size
-                        row.cells[6] ? row.cells[6].innerText : 'N/A'  // Timestamp
+                        row.cells[5] ? row.cells[5].innerText : 'N/A'  // Size
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                 rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                 rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
             }
 
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
@@ -1317,7 +1472,7 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                     <td class="p-2 editable-table-cell" data-col="location">N/A</td>
                     <td class="p-2 editable-table-cell" data-col="trailer_type">N/A</td>
                     <td class="p-2 editable-table-cell" data-col="trailer_size">N/A</td>
-                    <td class="p-2 editable-table-cell" data-col="timestamp">N/A</td>
+                    <td class="p-2 editable-table-cell" data-col="image_identifier">N/A</td>
                     <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                 `;
                 table.appendChild(row);
@@ -1371,7 +1526,6 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                         <td class="p-2 editable-table-cell" data-col="location">N/A</td>
                         <td class="p-2 editable-table-cell" data-col="trailer_type">N/A</td>
                         <td class="p-2 editable-table-cell" data-col="trailer_size">N/A</td>
-                        <td class="p-2 editable-table-cell" data-col="timestamp">N/A</td>
                         <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
                     `;
                     tbody.appendChild(row);
@@ -1431,6 +1585,386 @@ Example timestamp format: 12.5, 23.75, 45.2, 67.8 (seconds with decimal precisio
                 }, 2000);
             });
         });
+
+        // Comparison Modal Listeners
+        compareYardBtn.addEventListener('click', () => {
+            compareYardModal.classList.remove('hidden');
+            compareYardModal.classList.add('flex');
+            previousTrailers = currentTrailers;
+            currentTrailers = [];
+            compareImageUpload.value = '';
+            compareCsvUpload.value = '';
+            runComparisonBtn.disabled = true;
+            comparisonResults.classList.add('hidden');
+        });
+
+        compareImageUpload.addEventListener('change', async (event) => {
+            if (compareImageUpload.files.length === 0) return;
+            const file = compareImageUpload.files[0];
+            
+            try {
+                // Process the image using the same AI model
+                const apiKey = getApiKey();
+                const prompt = bolPromptTextarea.value;
+                const selectedModel = modelSelector.value;
+                
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const imageDataUrl = e.target.result;
+                    
+                    // Send to AI for analysis
+                    const imagePart = {
+                        inlineData: { mimeType: 'image/jpeg', data: imageDataUrl.split(',')[1] }
+                    };
+                    
+                    let resultText = '';
+                    if (selectedModel.startsWith('gemini')) {
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                        const payload = {
+                            contents: [{ parts: [{ text: prompt }, imagePart] }],
+                            generationConfig: { "response_mime_type": "application/json" }
+                        };
+                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                        const result = await response.json();
+                        resultText = result.candidates[0].content.parts[0].text;
+                    } else if (selectedModel === 'claude-4') {
+                        const apiUrl = 'https://api.anthropic.com/v1/messages';
+                        const payload = {
+                            model: 'claude-4-opus-20250514',
+                            max_tokens: 4096,
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: [
+                                        { type: 'text', text: prompt },
+                                        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageDataUrl.split(',')[1] } }
+                                    ]
+                                }
+                            ]
+                        };
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-api-key': apiKey,
+                                'anthropic-version': '2023-06-01'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error(`Claude 4 API Error: ${response.status} ${await response.text()}`);
+                        const result = await response.json();
+                        const textBlock = result.content.find(c => c.type === 'text');
+                        if (!textBlock) throw new Error('Claude 4 did not return a text response.');
+                        resultText = textBlock.text;
+                    } else {
+                        const apiUrl = "https://api.openai.com/v1/chat/completions";
+                        const payload = {
+                            model: selectedModel,
+                            response_format: { "type": "json_object" },
+                            messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageDataUrl } }]}]
+                        };
+                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                        const result = await response.json();
+                        resultText = result.choices[0].message.content;
+                    }
+                    
+                    // Parse the result and store as previous trailers
+                    const parsedData = JSON.parse(resultText);
+                    let trailers = [];
+                    if (Array.isArray(parsedData)) {
+                        trailers = parsedData;
+                    } else if (parsedData.trailers) {
+                        trailers = parsedData.trailers;
+                    } else if (parsedData.data) {
+                        trailers = parsedData.data;
+                    } else {
+                        for (const key in parsedData) {
+                            if (Array.isArray(parsedData[key])) {
+                                trailers = parsedData[key];
+                                break;
+                            }
+                        }
+                    }
+                    
+                    previousTrailers = trailers;
+                    runComparisonBtn.disabled = false;
+                    
+                    // Show success message
+                    const uploadSection = document.getElementById('compareUploadSection');
+                    uploadSection.innerHTML = `
+                        <div class="text-center p-4">
+                            <div class="text-green-600 font-semibold mb-2">✓ Image Processed Successfully</div>
+                            <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded image</div>
+                            <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
+                                Run Comparison
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Re-attach event listener
+                    document.getElementById('runComparisonBtn').addEventListener('click', runComparison);
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                displayMessage(`Error processing image: ${error.message}`);
+            }
+        });
+
+        compareCsvUpload.addEventListener('change', (event) => {
+            if (compareCsvUpload.files.length === 0) return;
+            const file = compareCsvUpload.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvData = e.target.result;
+                const lines = csvData.split('\n');
+                const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+                const trailers = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+                        const trailer = {};
+                        headers.forEach((header, index) => {
+                            trailer[header.toLowerCase().replace(/\s+/g, '_')] = values[index] || '';
+                        });
+                        trailers.push(trailer);
+                    }
+                }
+                
+                previousTrailers = trailers;
+                runComparisonBtn.disabled = false;
+                
+                // Show success message
+                const uploadSection = document.getElementById('compareUploadSection');
+                uploadSection.innerHTML = `
+                    <div class="text-center p-4">
+                        <div class="text-green-600 font-semibold mb-2">✓ CSV Processed Successfully</div>
+                        <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded CSV</div>
+                        <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
+                            Run Comparison
+                        </button>
+                    </div>
+                `;
+                
+                // Re-attach event listener
+                document.getElementById('runComparisonBtn').addEventListener('click', runComparison);
+            };
+            reader.readAsText(file);
+        });
+
+        function runComparison() {
+            if (!currentTrailers || !previousTrailers) {
+                displayMessage("Please ensure both current and previous yard states are available.");
+                return;
+            }
+
+            // Create maps for efficient lookup
+            const currentMap = new Map();
+            const previousMap = new Map();
+            
+            currentTrailers.forEach(trailer => {
+                if (trailer.trailer_id) {
+                    currentMap.set(trailer.trailer_id, trailer);
+                }
+            });
+            
+            previousTrailers.forEach(trailer => {
+                if (trailer.trailer_id) {
+                    previousMap.set(trailer.trailer_id, trailer);
+                }
+            });
+
+            // Find added, removed, and remaining trailers
+            const addedTrailers = [];
+            const removedTrailers = [];
+            const remainingTrailers = [];
+
+            // Find added trailers (in current but not in previous)
+            currentTrailers.forEach(trailer => {
+                if (trailer.trailer_id && !previousMap.has(trailer.trailer_id)) {
+                    addedTrailers.push(trailer);
+                }
+            });
+
+            // Find removed trailers (in previous but not in current)
+            previousTrailers.forEach(trailer => {
+                if (trailer.trailer_id && !currentMap.has(trailer.trailer_id)) {
+                    removedTrailers.push(trailer);
+                }
+            });
+
+            // Find remaining trailers (in both)
+            currentTrailers.forEach(trailer => {
+                if (trailer.trailer_id && previousMap.has(trailer.trailer_id)) {
+                    remainingTrailers.push(trailer);
+                }
+            });
+
+            // Update the comparison results display
+            comparisonResults.classList.remove('hidden');
+            
+            const addedCount = document.getElementById('addedCount');
+            const removedCount = document.getElementById('removedCount');
+            const remainingCount = document.getElementById('remainingCount');
+            const addedTrailersList = document.getElementById('addedTrailers');
+            const removedTrailersList = document.getElementById('removedTrailers');
+            const remainingTrailersList = document.getElementById('remainingTrailers');
+
+            addedCount.textContent = addedTrailers.length;
+            removedCount.textContent = removedTrailers.length;
+            remainingCount.textContent = remainingTrailers.length;
+
+            // Update detailed lists
+            addedTrailersList.innerHTML = addedTrailers.length > 0 ? 
+                addedTrailers.map(trailer => `
+                    <div class="flex items-center justify-between p-2 bg-green-100 rounded mb-2">
+                        <span class="font-semibold text-green-800">${trailer.trailer_id || 'N/A'}</span>
+                        <span class="text-sm text-green-600">${trailer.carrier || 'N/A'}</span>
+                    </div>
+                `).join('') : 
+                '<p class="text-sm text-green-700 text-center">No new trailers found</p>';
+
+            removedTrailersList.innerHTML = removedTrailers.length > 0 ? 
+                removedTrailers.map(trailer => `
+                    <div class="flex items-center justify-between p-2 bg-red-100 rounded mb-2">
+                        <span class="font-semibold text-red-800">${trailer.trailer_id || 'N/A'}</span>
+                        <span class="text-sm text-red-600">${trailer.carrier || 'N/A'}</span>
+                    </div>
+                `).join('') : 
+                '<p class="text-sm text-red-700 text-center">No trailers removed</p>';
+
+            remainingTrailersList.innerHTML = remainingTrailers.length > 0 ? 
+                remainingTrailers.map(trailer => `
+                    <div class="flex items-center justify-between p-2 bg-blue-100 rounded mb-2">
+                        <span class="font-semibold text-blue-800">${trailer.trailer_id || 'N/A'}</span>
+                        <span class="text-sm text-blue-600">${trailer.carrier || 'N/A'}</span>
+                    </div>
+                `).join('') : 
+                '<p class="text-sm text-blue-700 text-center">No trailers remaining</p>';
+        }
+
+        // Update progress bar for comparison
+        const comparisonProgressBar = document.getElementById('comparisonProgressBar');
+        const comparisonProgressText = document.getElementById('comparisonProgressText');
+
+        function updateComparisonProgress(percent, text) {
+            comparisonProgressBar.style.width = percent + '%';
+            comparisonProgressText.textContent = text;
+        }
+
+        // Close comparison modal
+        closeCompareYardBtn.addEventListener('click', () => {
+            compareYardModal.classList.add('hidden');
+            compareYardModal.classList.remove('flex');
+        });
+
+        compareYardModal.addEventListener('click', (e) => {
+            if (e.target === compareYardModal) {
+                compareYardModal.classList.add('hidden');
+                compareYardModal.classList.remove('flex');
+            }
+        });
+
+        // Export comparison results
+        exportComparisonBtn.addEventListener('click', () => {
+            const headers = ["Status", "Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)"];
+            const rows = [];
+            
+            // Get the comparison results from the current state
+            const addedTrailers = [];
+            const removedTrailers = [];
+            const remainingTrailers = [];
+            
+            if (currentTrailers && previousTrailers) {
+                const currentMap = new Map();
+                const previousMap = new Map();
+                
+                currentTrailers.forEach(trailer => {
+                    if (trailer.trailer_id) {
+                        currentMap.set(trailer.trailer_id, trailer);
+                    }
+                });
+                
+                previousTrailers.forEach(trailer => {
+                    if (trailer.trailer_id) {
+                        previousMap.set(trailer.trailer_id, trailer);
+                    }
+                });
+
+                // Find added trailers (in current but not in previous)
+                currentTrailers.forEach(trailer => {
+                    if (trailer.trailer_id && !previousMap.has(trailer.trailer_id)) {
+                        addedTrailers.push(trailer);
+                    }
+                });
+
+                // Find removed trailers (in previous but not in current)
+                previousTrailers.forEach(trailer => {
+                    if (trailer.trailer_id && !currentMap.has(trailer.trailer_id)) {
+                        removedTrailers.push(trailer);
+                    }
+                });
+
+                // Find remaining trailers (in both)
+                currentTrailers.forEach(trailer => {
+                    if (trailer.trailer_id && previousMap.has(trailer.trailer_id)) {
+                        remainingTrailers.push(trailer);
+                    }
+                });
+            }
+            
+            // Add added trailers
+            addedTrailers.forEach(trailer => {
+                rows.push([
+                    "Added",
+                    trailer.trailer_id || 'N/A',
+                    trailer.carrier || 'N/A',
+                    trailer.is_loaded ? 'Yes' : 'No',
+                    trailer.location || 'N/A',
+                    trailer.trailer_type || 'N/A',
+                    trailer.trailer_size || 'N/A'
+                ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+            });
+            
+            // Add removed trailers
+            removedTrailers.forEach(trailer => {
+                rows.push([
+                    "Removed",
+                    trailer.trailer_id || 'N/A',
+                    trailer.carrier || 'N/A',
+                    trailer.is_loaded ? 'Yes' : 'No',
+                    trailer.location || 'N/A',
+                    trailer.trailer_type || 'N/A',
+                    trailer.trailer_size || 'N/A'
+                ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+            });
+            
+            // Add remaining trailers
+            remainingTrailers.forEach(trailer => {
+                rows.push([
+                    "Remaining",
+                    trailer.trailer_id || 'N/A',
+                    trailer.carrier || 'N/A',
+                    trailer.is_loaded ? 'Yes' : 'No',
+                    trailer.location || 'N/A',
+                    trailer.trailer_type || 'N/A',
+                    trailer.trailer_size || 'N/A'
+                ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "yard_comparison_results.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // Add event listener for the original runComparisonBtn
+        runComparisonBtn.addEventListener('click', runComparison);
     </script>
 </body>
 </html>
