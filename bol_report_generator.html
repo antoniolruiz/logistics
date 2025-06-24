@@ -124,7 +124,7 @@
                     <select id="modelSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro</option>
                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                         <option value="gpt-4o">OpenAI GPT-4o</option>
                         <option value="claude-4">Claude 4</option>
@@ -193,6 +193,10 @@
                      <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                          Export Data
+                     </button>
+                     <button id="rawResultsBtn" class="bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                        Raw Results
                      </button>
                  </div>
              </div>
@@ -311,6 +315,16 @@
         </div>
     </div>
 
+    <div id="rawJsonModal" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-[100]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+            <h3 class="text-lg font-bold mb-4">Raw JSON Output</h3>
+            <pre id="rawJsonContent" class="bg-gray-100 p-4 rounded-md overflow-x-auto text-sm" style="max-height: 60vh;"></pre>
+            <div class="mt-6 flex justify-end gap-4">
+                <button id="closeRawJsonBtn" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Set the workerSrc for pdf.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
@@ -371,6 +385,7 @@
         let bolFile = null;
         let bolPageImages = [];
         let currentBolPageIndex = 0;
+        let rawJsonResult = '';
 
         const defaultBolPrompt = `You are an expert at parsing shipping documents. Your task is to analyze all the following pages from a single Bill of Lading (BoL) and consolidate all information into a single JSON object.
 Aggregate the data from all provided pages to find the most complete information for each field. Scrutinize every page for line items under tables like "Shipping Details" to create a comprehensive list of all unique items.
@@ -906,6 +921,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     clearInterval(backgroundProgressInterval);
                 }
                 
+                rawJsonResult = resultText;
                 setProgress(90, 'Finalizing output');
                 const consolidatedData = JSON.parse(resultText);
                 stopMessageRotation();
@@ -1363,6 +1379,43 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 logoClickCount = 0;
             }
         });
+
+        // Raw JSON modal logic
+        const rawResultsBtn = document.getElementById('rawResultsBtn');
+        const rawJsonModal = document.getElementById('rawJsonModal');
+        const rawJsonContent = document.getElementById('rawJsonContent');
+        const closeRawJsonBtn = document.getElementById('closeRawJsonBtn');
+
+        if (rawResultsBtn) {
+            rawResultsBtn.addEventListener('click', () => {
+                if (rawJsonResult) {
+                    try {
+                        const formattedJson = JSON.stringify(JSON.parse(rawJsonResult), null, 2);
+                        rawJsonContent.textContent = formattedJson;
+                    } catch (e) {
+                        rawJsonContent.textContent = rawJsonResult; // Show raw text if not valid JSON
+                    }
+                } else {
+                    rawJsonContent.textContent = 'No raw data available.';
+                }
+                rawJsonModal.classList.remove('hidden');
+                rawJsonModal.classList.add('flex');
+            });
+        }
+        if(closeRawJsonBtn) {
+            closeRawJsonBtn.addEventListener('click', () => {
+                rawJsonModal.classList.add('hidden');
+                rawJsonModal.classList.remove('flex');
+            });
+        }
+        if(rawJsonModal) {
+            rawJsonModal.addEventListener('click', (e) => {
+                if (e.target === rawJsonModal) {
+                    rawJsonModal.classList.add('hidden');
+                    rawJsonModal.classList.remove('flex');
+                }
+            });
+        }
 
     </script>
 </body>
