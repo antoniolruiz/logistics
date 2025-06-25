@@ -113,6 +113,22 @@
                     </div>
                     <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                 </div>
+                
+                <div id="apiDataSourceSection">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-lg font-medium text-gray-700 font-google-sans">API Data Source for Comparison</label>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <div>
+                            <label for="apiEndpointInput" class="block text-sm font-medium text-gray-600">API Endpoint</label>
+                            <input type="text" id="apiEndpointInput" value="https://api.withvector-demo.com/1.0/entities/query?DEBUG=view--Trailers" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+                        <div>
+                            <label for="mainBearerTokenInput" class="block text-sm font-medium text-gray-600">Bearer Token</label>
+                            <input type="password" id="mainBearerTokenInput" value="c8bbdf8ea487904a48cad965c3590f8d" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="bolContent">
@@ -322,34 +338,26 @@
             <div class="flex-1 overflow-auto">
                 <!-- Upload Section -->
                 <div id="compareUploadSection" class="mb-6">
-                    <h4 class="text-lg font-semibold mb-3">Upload Previous Yard State</h4>
+                    <h4 class="text-lg font-semibold mb-3">Choose Comparison Method</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
-                            <label for="compareImageUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                                <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                </svg>
-                                <p class="text-sm text-gray-500">Click to upload image</p>
-                                <input id="compareImageUpload" type="file" class="hidden" accept="image/*" />
-                            </label>
+                        <div class="p-4 border rounded-lg bg-blue-50">
+                            <h5 class="font-semibold text-blue-800 mb-3">Compare Against API</h5>
+                            <p class="text-sm text-gray-600 mb-3">Fetch live data from the Vector API for comparison</p>
+                            <button id="fetchCompareBtn" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-sm">
+                                Fetch & Compare
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Upload CSV</label>
-                            <label for="compareCsvUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                                <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                </svg>
-                                <p class="text-sm text-gray-500">Click to upload CSV</p>
-                                <input id="compareCsvUpload" type="file" class="hidden" accept=".csv" />
+                        <div class="p-4 border rounded-lg bg-green-50">
+                            <h5 class="font-semibold text-green-800 mb-3">Upload CSV File</h5>
+                            <p class="text-sm text-gray-600 mb-3">Upload a CSV file with trailer data for comparison</p>
+                            <label for="compareCsvUpload" class="w-full inline-block text-center py-2 px-4 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition">
+                                Upload CSV
                             </label>
+                            <input type="file" id="compareCsvUpload" class="hidden" accept=".csv">
+                            <p id="csvFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                         </div>
                     </div>
-                    <div class="mt-4 text-center">
-                        <button id="runComparisonBtn" class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                            Run Comparison
-                        </button>
-                    </div>
+                    <div id="comparisonApiStatus" class="mt-4 text-center"></div>
                 </div>
 
                 <!-- Comparison Results -->
@@ -1634,223 +1642,59 @@ The very first character of your output must be [ and the very last character mu
             // Store the current trailers as the "current" state for comparison
             // The uploaded file will become the "previous" state
             const currentTrailersForComparison = [...currentTrailers]; // Create a copy
-            
-            console.log('Current trailers for comparison:', currentTrailersForComparison);
-            
-            // Reset the previous trailers (will be filled by upload)
-            previousTrailers = [];
-            runComparisonBtn.disabled = true;
-            comparisonResults.classList.add('hidden');
-            
-            // Reset upload section to original state
+            window.currentTrailersForComparison = currentTrailersForComparison;
+
+            // Reset the modal to show the API data source UI
             const uploadSection = document.getElementById('compareUploadSection');
             uploadSection.innerHTML = `
-                <h4 class="text-lg font-semibold mb-3">Upload Previous Yard State</h4>
+                <h4 class="text-lg font-semibold mb-3">Choose Comparison Method</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
-                        <label for="compareImageUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                            <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p class="text-sm text-gray-500">Click to upload image</p>
-                            <input id="compareImageUpload" type="file" class="hidden" accept="image/*" />
-                        </label>
+                    <div class="p-4 border rounded-lg bg-blue-50">
+                        <h5 class="font-semibold text-blue-800 mb-3">Compare Against API</h5>
+                        <p class="text-sm text-gray-600 mb-3">Fetch live data from the Vector API for comparison</p>
+                        <button id="fetchCompareBtn" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-sm">
+                            Fetch & Compare
+                        </button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload CSV</label>
-                        <label for="compareCsvUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                            <svg class="w-8 h-8 mb-2 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                            </svg>
-                            <p class="text-sm text-gray-500">Click to upload CSV</p>
-                            <input id="compareCsvUpload" type="file" class="hidden" accept=".csv" />
+                    <div class="p-4 border rounded-lg bg-green-50">
+                        <h5 class="font-semibold text-green-800 mb-3">Upload CSV File</h5>
+                        <p class="text-sm text-gray-600 mb-3">Upload a CSV file with trailer data for comparison</p>
+                        <label for="compareCsvUpload" class="w-full inline-block text-center py-2 px-4 bg-green-600 text-white rounded-lg cursor-pointer hover:bg-green-700 transition">
+                            Upload CSV
                         </label>
+                        <input type="file" id="compareCsvUpload" class="hidden" accept=".csv">
+                        <p id="csvFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                     </div>
                 </div>
-                <div class="mt-4 text-center">
-                    <button id="runComparisonBtn" class="bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-                        Run Comparison
-                    </button>
-                </div>
+                <div id="comparisonApiStatus" class="mt-4 text-center"></div>
             `;
             
-            // Store the current trailers in a closure for the comparison function
-            window.currentTrailersForComparison = currentTrailersForComparison;
+            comparisonResults.classList.add('hidden');
         });
 
         // Use event delegation for the comparison modal
+        compareYardModal.addEventListener('click', (event) => {
+            if (event.target.id === 'fetchCompareBtn') {
+                fetchComparisonData();
+            }
+        });
+        
         compareYardModal.addEventListener('change', (event) => {
-            console.log('Change event detected:', event.target.id);
-            if (event.target.id === 'compareImageUpload') {
-                console.log('Processing image upload');
-                handleImageUpload(event);
-            } else if (event.target.id === 'compareCsvUpload') {
-                console.log('Processing CSV upload');
+            if (event.target.id === 'compareCsvUpload') {
                 handleCsvUpload(event);
             }
         });
 
-        compareYardModal.addEventListener('click', (event) => {
-            console.log('Click event detected:', event.target.id);
-            if (event.target.id === 'runComparisonBtn') {
-                console.log('Running comparison');
-                runComparison();
-            }
-        });
-
-        function handleImageUpload(event) {
-            console.log('handleImageUpload called');
-            const file = event.target.files[0];
-            if (!file) {
-                console.log('No file selected');
-                return;
-            }
-            console.log('File selected:', file.name, file.type);
-            
-            // Get the current elements
-            const imageUpload = document.getElementById('compareImageUpload');
-            const csvUpload = document.getElementById('compareCsvUpload');
-            const csvContainer = csvUpload.parentElement;
-            
-            console.log('Elements found:', { imageUpload: !!imageUpload, csvUpload: !!csvUpload, csvContainer: !!csvContainer });
-            
-            // Disable CSV upload
-            csvUpload.disabled = true;
-            csvContainer.style.opacity = '0.5';
-            csvContainer.style.pointerEvents = 'none';
-            
-            try {
-                // Process the image using the same AI model
-                const apiKey = getApiKey();
-                const prompt = bolPromptTextarea.value;
-                const selectedModel = modelSelector.value;
-                
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    const imageDataUrl = e.target.result;
-                    
-                    // Send to AI for analysis
-                    const imagePart = {
-                        inlineData: { mimeType: 'image/jpeg', data: imageDataUrl.split(',')[1] }
-                    };
-                    
-                    let resultText = '';
-                    if (selectedModel.startsWith('gemini')) {
-                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-                        const payload = {
-                            contents: [{ parts: [{ text: prompt }, imagePart] }],
-                            generationConfig: { "response_mime_type": "application/json" }
-                        };
-                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                        const result = await response.json();
-                        resultText = result.candidates[0].content.parts[0].text;
-                    } else if (selectedModel === 'claude-4') {
-                        const apiUrl = 'https://api.anthropic.com/v1/messages';
-                        const payload = {
-                            model: 'claude-4-opus-20250514',
-                            max_tokens: 4096,
-                            messages: [
-                                {
-                                    role: 'user',
-                                    content: [
-                                        { type: 'text', text: prompt },
-                                        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageDataUrl.split(',')[1] } }
-                                    ]
-                                }
-                            ]
-                        };
-                        const response = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-api-key': apiKey,
-                                'anthropic-version': '2023-06-01'
-                            },
-                            body: JSON.stringify(payload)
-                        });
-                        if (!response.ok) throw new Error(`Claude 4 API Error: ${response.status} ${await response.text()}`);
-                        const result = await response.json();
-                        const textBlock = result.content.find(c => c.type === 'text');
-                        if (!textBlock) throw new Error('Claude 4 did not return a text response.');
-                        resultText = textBlock.text;
-                    } else {
-                        const apiUrl = "https://api.openai.com/v1/chat/completions";
-                        const payload = {
-                            model: selectedModel,
-                            response_format: { "type": "json_object" },
-                            messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, { type: 'image_url', image_url: { url: imageDataUrl } }]}]
-                        };
-                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
-                        if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                        const result = await response.json();
-                        resultText = result.choices[0].message.content;
-                    }
-                    
-                    // Parse the result and store as previous trailers
-                    const parsedData = JSON.parse(resultText);
-                    let trailers = [];
-                    if (Array.isArray(parsedData)) {
-                        trailers = parsedData;
-                    } else if (parsedData.trailers) {
-                        trailers = parsedData.trailers;
-                    } else if (parsedData.data) {
-                        trailers = parsedData.data;
-                    } else {
-                        for (const key in parsedData) {
-                            if (Array.isArray(parsedData[key])) {
-                                trailers = parsedData[key];
-                                break;
-                            }
-                        }
-                    }
-                    
-                    previousTrailers = trailers;
-                    
-                    // Show success message and enable comparison button
-                    const uploadSection = document.getElementById('compareUploadSection');
-                    uploadSection.innerHTML = `
-                        <div class="text-center p-4">
-                            <div class="text-green-600 font-semibold mb-2">✓ Image Processed Successfully</div>
-                            <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded image</div>
-                            <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
-                                Run Comparison
-                            </button>
-                        </div>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            } catch (error) {
-                displayMessage(`Error processing image: ${error.message}`);
-                // Re-enable CSV upload on error
-                csvUpload.disabled = false;
-                csvContainer.style.opacity = '1';
-                csvContainer.style.pointerEvents = 'auto';
-            }
-        }
-
         function handleCsvUpload(event) {
-            console.log('handleCsvUpload called');
             const file = event.target.files[0];
-            if (!file) {
-                console.log('No file selected');
-                return;
-            }
-            console.log('File selected:', file.name, file.type);
-            
-            // Get the current elements
-            const csvUpload = document.getElementById('compareCsvUpload');
-            const imageUpload = document.getElementById('compareImageUpload');
-            const imageContainer = imageUpload.parentElement;
-            
-            console.log('Elements found:', { csvUpload: !!csvUpload, imageUpload: !!imageUpload, imageContainer: !!imageContainer });
-            
-            // Disable image upload
-            imageUpload.disabled = true;
-            imageContainer.style.opacity = '0.5';
-            imageContainer.style.pointerEvents = 'none';
-            
+            if (!file) return;
+
+            const fileNameDisplay = document.getElementById('csvFileName');
+            fileNameDisplay.textContent = file.name;
+
+            const statusDiv = document.getElementById('comparisonApiStatus');
+            statusDiv.innerHTML = `<div class="flex items-center justify-center text-blue-600"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-2"></div>Processing CSV...</div>`;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -1871,33 +1715,278 @@ The very first character of your output must be [ and the very last character mu
                     }
                     
                     previousTrailers = trailers;
-                    
-                    // Show success message and enable comparison button
-                    const uploadSection = document.getElementById('compareUploadSection');
-                    uploadSection.innerHTML = `
-                        <div class="text-center p-4">
-                            <div class="text-green-600 font-semibold mb-2">✓ CSV Processed Successfully</div>
-                            <div class="text-sm text-gray-600">Found ${trailers.length} trailers in the uploaded CSV</div>
-                            <button id="runComparisonBtn" class="mt-4 bg-purple-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm">
-                                Run Comparison
-                            </button>
-                        </div>
-                    `;
+                    statusDiv.innerHTML = `<p class="text-green-600 font-semibold">✓ CSV processed successfully. Found ${trailers.length} trailers.</p>`;
+
+                    // Now that data is loaded, run the comparison
+                    runComparison();
+
                 } catch (error) {
-                    displayMessage(`Error processing CSV: ${error.message}`);
-                    // Re-enable image upload on error
-                    imageUpload.disabled = false;
-                    imageContainer.style.opacity = '1';
-                    imageContainer.style.pointerEvents = 'auto';
+                    statusDiv.innerHTML = `<p class="text-red-600 font-semibold">Error processing CSV: ${error.message}</p>`;
+                    console.error("CSV processing error:", error);
                 }
             };
             reader.readAsText(file);
         }
 
-        // Original event listeners (will be replaced by the functions above)
-        compareImageUpload.addEventListener('change', handleImageUpload);
-        compareCsvUpload.addEventListener('change', handleCsvUpload);
+        async function fetchComparisonData() {
+            const statusDiv = document.getElementById('comparisonApiStatus');
+            statusDiv.innerHTML = `<div class="flex items-center justify-center text-blue-600"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-2"></div>Fetching comparison data...</div>`;
 
+            // Get bearer token and API endpoint from the main UI section
+            const bearerToken = document.getElementById('mainBearerTokenInput').value;
+            const apiEndpoint = document.getElementById('apiEndpointInput').value;
+            
+            const requestBody = {
+              "computations": {},
+              "filters": [
+                {
+                  "type": "containsEdge",
+                  "path": "mixins.active",
+                  "values": [
+                    {
+                      "entityId": "1ad2e51a-74a8-41a8-b321-9f15332b6609"
+                    }
+                  ]
+                },
+                {
+                  "path": "core_yms_trailer.facility",
+                  "type": "matchEdge",
+                  "label": "Facility",
+                  "values": [
+                    {
+                      "entityId": "619cb73a-2ce0-4b93-b4a2-bc8f61de53cf",
+                      "displayName": "Council Bluffs",
+                      "denormalizedProperties": {
+                        "location.address": {
+                          "region": "IA",
+                          "locality": "Council Bluffs",
+                          "postalCode": "51503",
+                          "timezoneId": "America/Chicago",
+                          "countryName": "United States",
+                          "geolocation": {
+                            "latitude": 41.252221,
+                            "longitude": -95.850577
+                          },
+                          "streetAddress": "1023 S 4th St"
+                        },
+                        "core_yms_facility.map": {
+                          "files": [
+                            {
+                              "uri": "https://auth.withvector.com/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/component/image/1707945377632/11ed6c6b-52cf-4cc0-a260-8b70b371fddd/original.jpg",
+                              "name": "Council Bluffs Map Final 2.9.jpg",
+                              "text": "https://auth.withvector.com/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/component/image/1707945377632/11ed6c6b-52cf-4cc0-a260-8b70b371fddd/Council_Bluffs_Map_Final_2.9.txt",
+                              "type": "image",
+                              "width": 838,
+                              "height": 1602,
+                              "source": [
+                                {
+                                  "uri": "https://auth.withvector.com/fit-in/838x1602/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/component/image/1707945377632/11ed6c6b-52cf-4cc0-a260-8b70b371fddd/original.jpg",
+                                  "width": 838,
+                                  "height": 1602
+                                },
+                                {
+                                  "uri": "https://auth.withvector.com/fit-in/640x480/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/component/image/1707945377632/11ed6c6b-52cf-4cc0-a260-8b70b371fddd/original.jpg",
+                                  "width": 640,
+                                  "height": 480
+                                },
+                                {
+                                  "uri": "https://auth.withvector.com/fit-in/64x64/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/component/image/1707945377632/11ed6c6b-52cf-4cc0-a260-8b70b371fddd/original.jpg",
+                                  "width": 64,
+                                  "height": 64
+                                }
+                              ],
+                              "uniqueId": "11ed6c6b-52cf-4cc0-a260-8b70b371fddd"
+                            }
+                          ],
+                          "version": 1707945377,
+                          "aggregate": {
+                            "uri": "https://api.withvector.com/1.0/entities/actions/fileset/downloadPdf/619cb73a-2ce0-4b93-b4a2-bc8f61de53cf/core_yms_facility/map",
+                            "name": "aggregate.pdf",
+                            "type": "pdf",
+                            "pages": 0,
+                            "uniqueId": "f06fc2f5-14cf-4b0b-b248-127732061144"
+                          }
+                        },
+                        "core_yms_facility.isGiCiEnabled": true,
+                        "core_yms_facility.checkInPlanSettings": {
+                          "entityId": "a8d5ffae-f439-45ae-a856-ccd7b5be6df8",
+                          "displayName": "Council Bluffs Settings",
+                          "denormalizedProperties": {
+                            "basebowl_facility_settings.checkInPlan": {
+                              "plan": {
+                                "entityId": "640a766d-12a5-4af9-9bb2-a9b72a7a727b",
+                                "displayName": "Conagra Facility Check-In",
+                                "denormalizedProperties": {
+                                  "owner.firm": {
+                                    "entityId": "9cbd095e-2fb1-40e5-ae61-d33bb9f5bb92",
+                                    "displayName": "Conagra Brands, Inc."
+                                  }
+                                }
+                              },
+                              "container": {
+                                "entityId": "12189b3e-7322-419c-baaa-82fe2e86db2c",
+                                "displayName": "Conagra Facility Check-In Container",
+                                "denormalizedProperties": {
+                                  "core_storyboard_plansContainer.activePlan": {
+                                    "entityId": "640a766d-12a5-4af9-9bb2-a9b72a7a727b",
+                                    "displayName": "Conagra Facility Check-In",
+                                    "denormalizedProperties": {
+                                      "id": "/1.0/entities/metadata/conagra_brands_plan.json",
+                                      "owner.firm": {
+                                        "entityId": "9cbd095e-2fb1-40e5-ae61-d33bb9f5bb92",
+                                        "displayName": "Conagra Brands, Inc."
+                                      },
+                                      "core_storyboard_plan.execution": {
+                                        "entityId": "f1b2aa6f-cd52-42c9-85f0-6c563aa21dcf",
+                                        "displayName": "Conagra Facility Check-In"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "execution": {
+                                "entityId": "f1b2aa6f-cd52-42c9-85f0-6c563aa21dcf",
+                                "displayName": "Conagra Facility Check-In"
+                              }
+                            }
+                          }
+                        },
+                        "core_yms_facility.checkInPlanContainer": {
+                          "entityId": "12189b3e-7322-419c-baaa-82fe2e86db2c",
+                          "displayName": "Conagra Facility Check-In Container",
+                          "denormalizedProperties": {
+                            "core_storyboard_plansContainer.activePlan": {
+                              "entityId": "640a766d-12a5-4af9-9bb2-a9b72a7a727b",
+                              "displayName": "Conagra Facility Check-In",
+                              "denormalizedProperties": {
+                                "id": "/1.0/entities/metadata/conagra_brands_plan.json",
+                                "owner.firm": {
+                                  "entityId": "9cbd095e-2fb1-40e5-ae61-d33bb9f5bb92",
+                                  "displayName": "Conagra Brands, Inc."
+                                },
+                                "core_storyboard_plan.execution": {
+                                  "entityId": "f1b2aa6f-cd52-42c9-85f0-6c563aa21dcf",
+                                  "displayName": "Conagra Facility Check-In"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "core_yms_facility.enableSpotDriverInstructions": true
+                      }
+                    }
+                  ]
+                },
+                {
+                  "path": "core_yms_trailer.spot",
+                  "type": "notExists",
+                  "label": "Spot",
+                  "entityType": "/1.0/entities/metadata/core_yms_trailer.json",
+                  "isNegation": true
+                }
+              ],
+              "groups": [],
+              "orders": [
+                {
+                  "path": "modifiedDate",
+                  "type": "descending"
+                }
+              ],
+              "metadata": {
+                "offset": 0,
+                "shouldIncludeLeafEntities": true,
+                "size": 80,
+                "maxSizePerGroup": 10
+              },
+              "debug": {
+                "context": "view--Trailers"
+              }
+            };
+
+            try {
+                // Try direct API call first, then fallback to CORS proxy if needed
+                let response;
+                
+                try {
+                    response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${bearerToken}`,
+                            'Origin': 'localhost'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                } catch (corsError) {
+                    // If CORS fails, try with allorigins proxy
+                    statusDiv.innerHTML = `<div class="flex items-center justify-center text-blue-600"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-6 w-6 mr-2"></div>Retrying with CORS proxy...</div>`;
+                    
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiEndpoint)}`;
+                    response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${bearerToken}`,
+                            'Origin': 'localhost'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                }
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    if (response.status === 403 && errorText.includes('corsdemo')) {
+                        throw new Error(`CORS proxy access required. Please visit https://cors-anywhere.herokuapp.com/corsdemo to request temporary access, then try again.`);
+                    }
+                    throw new Error(`API call failed: ${response.status} ${errorText}`);
+                }
+
+                const responseData = await response.json();
+                previousTrailers = transformApiData(responseData);
+                
+                statusDiv.innerHTML = `<p class="text-green-600 font-semibold">✓ API data loaded successfully. Found ${previousTrailers.length} trailers.</p>`;
+
+                // Now that data is loaded, run the comparison
+                runComparison();
+
+            } catch (error) {
+                let errorMessage = error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    errorMessage = 'CORS error: The API server does not allow requests from this domain. Please try uploading a CSV file instead, or contact the API provider to whitelist this domain.';
+                } else if (error.message.includes('corsdemo')) {
+                    errorMessage = error.message + ' Alternatively, you can upload a CSV file for comparison.';
+                }
+                statusDiv.innerHTML = `<p class="text-red-600 font-semibold">Error: ${errorMessage}</p>`;
+                console.error("API call error:", error);
+            }
+        }
+        
+        function transformApiData(apiData) {
+            if (!apiData || !apiData.children) return [];
+
+            return apiData.children.map(child => {
+                const trailerData = child.data?.core_yms_trailer || {};
+                
+                let trailer_type = trailerData.type || '';
+                let trailer_size = null;
+
+                const sizeMatch = trailer_type.match(/\((\d+)/);
+                if (sizeMatch && sizeMatch[1]) {
+                    trailer_size = parseInt(sizeMatch[1], 10);
+                    trailer_type = trailer_type.replace(sizeMatch[0], '').replace('()', '').trim();
+                }
+
+                return {
+                    trailer_id: trailerData.name,
+                    carrier: trailerData.carrier?.displayName,
+                    is_loaded: trailerData.status !== 'Empty',
+                    location: trailerData.spot?.displayName,
+                    trailer_type: trailer_type,
+                    trailer_size: trailer_size
+                };
+            });
+        }
+        
         function runComparison() {
             console.log('runComparison called');
             console.log('Current trailers for comparison:', window.currentTrailersForComparison);
@@ -2114,7 +2203,8 @@ The very first character of your output must be [ and the very last character mu
         });
 
         // Add event listener for the original runComparisonBtn
-        runComparisonBtn.addEventListener('click', runComparison);
+        // runComparisonBtn.addEventListener('click', runComparison);
     </script>
 </body>
 </html>
+
