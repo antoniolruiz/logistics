@@ -8,9 +8,59 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Light mode colors */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --border-primary: #e5e7eb;
+            --border-secondary: #d1d5db;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode colors */
+            --bg-primary: #1f2937;
+            --bg-secondary: #111827;
+            --bg-tertiary: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --border-primary: #374151;
+            --border-secondary: #4b5563;
+            --accent-primary: #60a5fa;
+            --accent-secondary: #3b82f6;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+        
+        .bg-white { background-color: var(--bg-primary) !important; }
+        .bg-gray-50 { background-color: var(--bg-secondary) !important; }
+        .bg-gray-100 { background-color: var(--bg-tertiary) !important; }
+        .text-gray-900 { color: var(--text-primary) !important; }
+        .text-gray-700 { color: var(--text-secondary) !important; }
+        .text-gray-600 { color: var(--text-secondary) !important; }
+        .text-gray-500 { color: var(--text-tertiary) !important; }
+        .border-gray-200 { border-color: var(--border-primary) !important; }
+        .border-gray-300 { border-color: var(--border-secondary) !important; }
+        
         .font-google-sans {
             font-family: 'Roboto', sans-serif;
         }
@@ -98,6 +148,357 @@
             content: "";
             animation: dotAnimation 1.5s infinite;
         }
+        
+        /* Coordinate overlay styles */
+        .coordinate-overlay {
+            position: absolute;
+            border: 4px solid #ef4444;
+            background-color: rgba(239, 68, 68, 0.4);
+            pointer-events: none;
+            z-index: 15;
+            transition: opacity 0.2s ease-in-out;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), inset 0 0 10px rgba(239, 68, 68, 0.3);
+            border-radius: 4px;
+        }
+        
+        .field-with-coordinates {
+            position: relative;
+        }
+        
+        .field-with-coordinates:hover .coordinate-overlay {
+            opacity: 1;
+        }
+        
+        .carousel-container {
+            position: relative;
+            overflow: visible;
+        }
+        
+        /* Compact UI styles */
+        .compact-field {
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .compact-field label {
+            margin-bottom: 0.25rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        .compact-field .field-container {
+            padding: 0.5rem !important;
+            min-height: 2.25rem;
+        }
+        
+        /* Ensure full visibility */
+        .grid-container {
+            min-height: fit-content;
+        }
+        
+        /* Table cell hover effects */
+        .editable-table-cell:hover {
+            background-color: #f3f4f6 !important;
+            cursor: pointer;
+        }
+        
+        /* Enhanced table styling */
+        .data-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .data-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        .data-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        .data-table tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+        
+        .data-table tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+
+        /* Modern Settings Panel Styles */
+        .settings-panel {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            box-shadow: 0 20px 25px -5px var(--shadow), 0 10px 10px -5px var(--shadow);
+        }
+
+        .settings-tab {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 2px solid transparent;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .settings-tab:hover {
+            color: var(--text-secondary);
+            background-color: var(--bg-secondary);
+        }
+
+        .settings-tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+            background-color: var(--bg-secondary);
+        }
+
+        .settings-section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-section h3 {
+            color: var(--text-primary);
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-section p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-secondary);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+
+
+        .confidence-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Modern Range Slider Styles */
+        .range-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-tertiary);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .range-slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .confidence-range-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .confidence-range-container:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .confidence-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            min-width: 80px;
+            justify-content: center;
+        }
+
+        .confidence-preview {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border-primary);
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-primary);
+        }
+
+        .range-value-display {
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* Compact Mode Styles */
+        body.compact-mode .container {
+            padding: 1rem !important;
+        }
+        
+        body.compact-mode .settings-section {
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        body.compact-mode .space-y-4 > * + * {
+            margin-top: 0.75rem !important;
+        }
+        
+        body.compact-mode .mb-8 {
+            margin-bottom: 1.5rem !important;
+        }
+
+        /* Dark mode specific overrides */
+        [data-theme="dark"] .bg-gray-100 {
+            background-color: var(--bg-tertiary) !important;
+        }
+        
+        [data-theme="dark"] .border-gray-200 {
+            border-color: var(--border-primary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-900 {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-700 {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-600 {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .text-gray-500 {
+            color: var(--text-tertiary) !important;
+        }
+
+        /* Dark mode form inputs */
+        [data-theme="dark"] .form-input {
+            background: var(--bg-tertiary) !important;
+            border-color: var(--border-secondary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        /* Dark mode select elements */
+        [data-theme="dark"] select {
+            background: var(--bg-tertiary) !important;
+            border-color: var(--border-secondary) !important;
+            color: var(--text-primary) !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -105,44 +506,267 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
             <header class="mb-8">
-                <div class="flex items-center justify-between relative mb-6">
-                    <div class="flex-1"></div>
-                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-d91b495/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                <div class="flex items-center justify-between mb-6">
+                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-d91b495/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                    <button id="settingsBtn" class="p-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition-all duration-200 hover:scale-105" title="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                        </svg>
+                    </button>
                 </div>
-                <div class="text-center mt-2">
+                <div class="text-center">
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">BoL Report Generator</h1>
                     <p class="mt-2 text-gray-600">Upload a Bill of Lading PDF, and the AI will parse the details into a structured format.</p>
                 </div>
             </header>
 
-            <div id="aiConfigSection" class="space-y-6 hidden">
+            <div id="aiConfigSection" class="settings-panel rounded-xl p-6 mb-8 hidden">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
+                    <p class="text-gray-600">Manage your account settings and preferences.</p>
+                </div>
+
+                <!-- Settings Navigation Tabs -->
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="flex space-x-8" aria-label="Settings Tabs">
+                        <button id="settingsTabGeneral" class="settings-tab active">General</button>
+                        <button id="settingsTabAI" class="settings-tab">AI Models</button>
+                        <button id="settingsTabConfidence" class="settings-tab">Confidence</button>
+                        <button id="settingsTabAppearance" class="settings-tab">Appearance</button>
+                    </nav>
+                </div>
+
+                <!-- General Settings Tab -->
+                <div id="settingsContentGeneral" class="settings-content">
+                    <div class="settings-section">
+                        <h3>Application Preferences</h3>
+                        <p>Configure general application behavior and preferences.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
                  <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label for="modelSelector" class="block text-lg font-medium text-gray-700 font-google-sans">Choose AI Model</label>
-                        <button id="editBolPromptBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors ml-4">Edit Prompt</button>
+                                    <label class="text-sm font-medium text-gray-700">Auto-save results</label>
+                                    <p class="text-xs text-gray-500">Automatically save parsed results to local storage</p>
                     </div>
-                    <select id="modelSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoSaveToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Show coordinate overlays</label>
+                                    <p class="text-xs text-gray-500">Display red rectangles when hovering over extracted fields</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="coordinateOverlaysToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Models Settings Tab -->
+                <div id="settingsContentAI" class="settings-content hidden">
+                    <div class="settings-section">
+                        <h3>AI Model Configuration</h3>
+                        <p>Choose your preferred AI model and configure API access for document parsing.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="modelSelector" class="block text-sm font-medium text-gray-700 mb-2">Selected AI Model</label>
+                                <select id="modelSelector" class="form-input w-full">
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
-                        <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro</option>
+                                    <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro (Recommended)</option>
                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                         <option value="gpt-4o">OpenAI GPT-4o</option>
                         <option value="claude-4">Claude 4</option>
                     </select>
                 </div>
-                <div id="googleKeyContainer">
-                    <div class="flex items-center justify-between mb-2">
-                         <label for="googleApiKeyInput" class="block text-lg font-medium text-gray-700 font-google-sans">Google AI API Key</label>
-                         <button id="howToBtn" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">How to get a key?</button>
+                            
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Use custom parsing prompt</label>
+                                    <p class="text-xs text-gray-500">Customize the AI instructions for document parsing</p>
                     </div>
-                    <input type="password" id="googleApiKeyInput" placeholder="Enter your Google AI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                                <button id="editBolPromptBtn" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                                    Edit Prompt
+                                </button>
                 </div>
-                <div id="openaiKeyContainer" class="hidden">
-                    <div class="flex items-center justify-between mb-2">
-                        <label for="openaiApiKeyInput" class="block text-lg font-medium text-gray-700 font-google-sans">OpenAI API Key</label>
-                        <button id="howToBtnOpenAI" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">How to get a key?</button>
                     </div>
-                    <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    <div id="googleKeyContainer" class="settings-section">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3>Google AI API Key</h3>
+                                <p class="text-xs text-gray-500 mt-1">Required for Gemini models</p>
+                            </div>
+                            <button id="howToBtn" class="bg-green-100 text-green-700 px-3 py-1 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
+                                Get Key
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <input type="password" id="googleApiKeyInput" placeholder="Enter your Google AI API Key" class="form-input w-full">
+                        </div>
+                    </div>
+
+                    <div id="openaiKeyContainer" class="settings-section hidden">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3>OpenAI API Key</h3>
+                                <p class="text-xs text-gray-500 mt-1">Required for GPT and Claude models</p>
+                            </div>
+                            <button id="howToBtnOpenAI" class="bg-green-100 text-green-700 px-3 py-1 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
+                                Get Key
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="form-input w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confidence Settings Tab -->
+                <div id="settingsContentConfidence" class="settings-content hidden">
+                    <div class="settings-section">
+                        <h3>Confidence Level Settings</h3>
+                        <p>Adjust confidence thresholds to control how extracted data accuracy is displayed.</p>
+                        
+                        <!-- High Confidence Setting -->
+                        <div class="confidence-range-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="confidence-color bg-green-500"></div>
+                                    <div>
+                                        <label for="highConfidenceSlider" class="text-sm font-medium text-gray-700">High Confidence</label>
+                                        <p class="text-xs text-gray-500">Fields with excellent extraction accuracy</p>
+                                    </div>
+                                </div>
+                                <div class="range-value-display" id="highValueDisplay">95%</div>
+                            </div>
+                            <div class="mt-3">
+                                <input type="range" id="highConfidenceSlider" min="85" max="100" value="95" class="range-slider">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>85%</span>
+                                    <span>Perfect (100%)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medium Confidence Setting -->
+                        <div class="confidence-range-container">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="confidence-color bg-orange-500"></div>
+                                    <div>
+                                        <label for="mediumConfidenceSlider" class="text-sm font-medium text-gray-700">Medium Confidence</label>
+                                        <p class="text-xs text-gray-500">Fields with good extraction accuracy</p>
+                                    </div>
+                                </div>
+                                <div class="range-value-display" id="mediumValueDisplay">80%</div>
+                            </div>
+                            <div class="mt-3">
+                                <input type="range" id="mediumConfidenceSlider" min="60" max="94" value="80" class="range-slider">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>60%</span>
+                                    <span>94%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Low Confidence Info -->
+                        <div class="confidence-range-container">
+                            <div class="flex items-center gap-3">
+                                <div class="confidence-color bg-red-500"></div>
+                                <div class="flex-1">
+                                    <label class="text-sm font-medium text-gray-700">Low Confidence</label>
+                                    <p class="text-xs text-gray-500">Fields below medium threshold - requires manual review</p>
+                                </div>
+                                <div class="confidence-badge bg-red-500">
+                                    <span id="lowRangeDisplay">&lt; 80%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Preview -->
+                        <div class="mt-6">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">Preview</h4>
+                            <div class="confidence-preview">
+                                <div class="preview-item">
+                                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span>High: <span id="previewHigh">95%+</span></span>
+                                </div>
+                                <div class="preview-item">
+                                    <div class="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                    <span>Medium: <span id="previewMedium">80%-94%</span></span>
+                                </div>
+                                <div class="preview-item">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span>Low: <span id="previewLow">&lt;80%</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Show confidence indicators</label>
+                                    <p class="text-xs text-gray-500">Display colored dots next to extracted fields</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="showConfidenceIndicators" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-between items-center">
+                            <button id="resetConfidenceDefaults" class="text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                                Reset to Defaults
+                            </button>
+                            <button id="saveConfidenceSettings" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance Settings Tab -->
+                <div id="settingsContentAppearance" class="settings-content hidden">
+                    <div class="settings-section">
+                        <h3>Theme Preferences</h3>
+                        <p>Customize the appearance of the application.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Dark Mode</label>
+                                    <p class="text-xs text-gray-500">Switch between light and dark themes</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="darkModeToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Compact Mode</label>
+                                    <p class="text-xs text-gray-500">Reduce spacing for more content on screen</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="compactModeToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -167,7 +791,7 @@
         </div>
     </div>
     
-    <div id="loading" class="text-center my-4 hidden">
+    <div id="loading" class="text-center my-4 hidden px-4 sm:px-6 lg:px-8">
         <div class="w-full max-w-2xl mx-auto">
             <div class="flex items-center justify-center mb-2">
                 <span id="progressLabel" class="text-xl font-semibold text-blue-600">Loading...</span>
@@ -177,26 +801,23 @@
             </div>
         </div>
     </div>
-    <div id="messageContainer" class="hidden">
+    <div id="messageContainer" class="hidden px-4 sm:px-6 lg:px-8">
          <div id="message" class="text-red-600 font-medium"></div>
     </div>
     
     <div id="resultsWrapper" class="hidden">
-         <div id="bolResultContainer" class="hidden mt-6">
-             <div class="flex justify-between items-center mb-4">
-                 <h2 class="text-2xl font-bold text-gray-800 font-google-sans">Bill of Lading Details</h2>
-                 <div class="flex gap-2">
-                     <button id="printBolBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="13" width="12" height="8" rx="2"/><path d="M6 17h0"/></svg>
+         <div id="bolResultContainer" class="hidden mt-6 px-4 sm:px-6 lg:px-8">
+             <div class="flex justify-between items-center mb-6 py-4 border-b border-gray-200">
+                 <h2 class="text-xl font-semibold text-gray-800">Bill of Lading Details</h2>
+                 <div class="flex items-center gap-3">
+                     <button id="rawResultsBtn" class="text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors bg-white">
+                        Raw Results
+                     </button>
+                     <button id="printBolBtn" class="text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors bg-white">
                          Print Results
                      </button>
-                     <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                     <button id="exportBolBtn" class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                          Export Data
-                     </button>
-                     <button id="rawResultsBtn" class="bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-2"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-                        Raw Results
                      </button>
                  </div>
              </div>
@@ -340,6 +961,64 @@
         const message = document.getElementById('message');
         const resultsWrapper = document.getElementById('resultsWrapper');
         
+        // Settings Elements
+        const settingsBtn = document.getElementById('settingsBtn');
+        const aiConfigSectionElement = document.getElementById('aiConfigSection');
+        const highConfidenceThreshold = document.getElementById('highConfidenceSlider');
+        const mediumConfidenceThreshold = document.getElementById('mediumConfidenceSlider');
+        const saveConfidenceSettings = document.getElementById('saveConfidenceSettings');
+        const resetConfidenceDefaults = document.getElementById('resetConfidenceDefaults');
+        
+        // Settings Tab Elements
+        const settingsTabGeneral = document.getElementById('settingsTabGeneral');
+        const settingsTabAI = document.getElementById('settingsTabAI');
+        const settingsTabConfidence = document.getElementById('settingsTabConfidence');
+        const settingsTabAppearance = document.getElementById('settingsTabAppearance');
+        const settingsContentGeneral = document.getElementById('settingsContentGeneral');
+        const settingsContentAI = document.getElementById('settingsContentAI');
+        const settingsContentConfidence = document.getElementById('settingsContentConfidence');
+        const settingsContentAppearance = document.getElementById('settingsContentAppearance');
+        
+        // Theme and Preference Elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const compactModeToggle = document.getElementById('compactModeToggle');
+        const autoSaveToggle = document.getElementById('autoSaveToggle');
+        const coordinateOverlaysToggle = document.getElementById('coordinateOverlaysToggle');
+        const showConfidenceIndicators = document.getElementById('showConfidenceIndicators');
+        // Confidence Settings
+        let confidenceSettings = {
+            high: 95,
+            medium: 80
+        };
+        
+        // Load saved settings
+        const savedSettings = localStorage.getItem('confidenceSettings');
+        if (savedSettings) {
+            confidenceSettings = JSON.parse(savedSettings);
+            if (highConfidenceThreshold) highConfidenceThreshold.value = confidenceSettings.high;
+            if (mediumConfidenceThreshold) mediumConfidenceThreshold.value = confidenceSettings.medium;
+        }
+        
+        // Load theme and preference settings
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        const savedCompactMode = localStorage.getItem('compactMode') === 'true';
+        const savedAutoSave = localStorage.getItem('autoSave') === 'true';
+        const savedCoordinateOverlays = localStorage.getItem('coordinateOverlays') !== 'false'; // default true
+        const savedShowConfidenceIndicators = localStorage.getItem('showConfidenceIndicators') !== 'false'; // default true
+        
+        // Apply saved settings
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            if (darkModeToggle) darkModeToggle.checked = true;
+        }
+        if (savedCompactMode) {
+            document.body.classList.add('compact-mode');
+            if (compactModeToggle) compactModeToggle.checked = true;
+        }
+        if (savedAutoSave && autoSaveToggle) autoSaveToggle.checked = true;
+        if (coordinateOverlaysToggle) coordinateOverlaysToggle.checked = savedCoordinateOverlays;
+        if (showConfidenceIndicators) showConfidenceIndicators.checked = savedShowConfidenceIndicators;
+        
         // BoL Elements
         const bolUpload = document.getElementById('bolUpload');
         const bolPromptText = document.getElementById('bol-prompt-text');
@@ -392,12 +1071,26 @@ Aggregate the data from all provided pages to find the most complete information
 
 Extract the following fields and return them in one JSON object. If a field is not present across any of the pages, use "N/A" as the value.
 
-- "appointment_number": The appointment or pickup number.
+For EACH field, you must provide:
+1. The extracted value
+2. Bounding box coordinates in PIXELS from the image provided. The image origin (0,0) is at the TOP-LEFT.
+3. Confidence score (0-100) representing how certain you are about the accuracy of the extracted value
+
+Use this format: {"value": "extracted_text", "coordinates": {"page": 1, "x": 150, "y": 300, "width": 225, "height": 30}, "confidence": 95}. The coordinates are in pixels of the image for that page.
+
+COORDINATE SYSTEM: Use standard image coordinates where:
+- Origin (0,0) is at the TOP-LEFT of the page
+- X increases going RIGHT
+- Y increases going DOWN
+- Measure coordinates precisely from the visible text location
+
+- "order_number": The order, appointment, or pickup number.
 - "seal_number": The seal number for the trailer.
 - "date": The pickup or shipping date.
 - "carrier": The name of the carrier.
 - "origin": The full address of the shipper/origin.
 - "destination": The full address of the consignee/destination.
+- "signed": Whether the BoL shows evidence of being signed by the driver (look for signatures, signature lines that are filled, or "Signature" fields with names/marks). Return true/false.
 - "contents": An array of objects, where each object represents a unique line item found across all pages. Each object should contain:
     - "item_number": The item or SKU number for the product (if available).
     - "description": The description of the goods.
@@ -409,6 +1102,33 @@ Extract the following fields and return them in one JSON object. If a field is n
 - "bol_number": The primary Bill of Lading number.
 - "shipment_number": The shipment ID or number.
 - "temperature": The required transit temperature (e.g., 34-40°F).
+
+For fields where coordinates cannot be determined, use {"page": 0, "x": 0, "y": 0, "width": 0, "height": 0} and confidence: 0.
+
+Return the JSON in this exact structure:
+{
+  "order_number": {"value": "...", "coordinates": {...}, "confidence": 95},
+  "seal_number": {"value": "...", "coordinates": {...}, "confidence": 85},
+  "date": {"value": "...", "coordinates": {...}, "confidence": 90},
+  "carrier": {"value": "...", "coordinates": {...}, "confidence": 88},
+  "origin": {"value": "...", "coordinates": {...}, "confidence": 92},
+  "destination": {"value": "...", "coordinates": {...}, "confidence": 91},
+  "signed": {"value": true/false, "coordinates": {...}, "confidence": 75},
+  "scac": {"value": "...", "coordinates": {...}, "confidence": 80},
+  "delivery_number": {"value": "...", "coordinates": {...}, "confidence": 87},
+  "bol_number": {"value": "...", "coordinates": {...}, "confidence": 98},
+  "shipment_number": {"value": "...", "coordinates": {...}, "confidence": 89},
+  "temperature": {"value": "...", "coordinates": {...}, "confidence": 70},
+  "contents": [
+    {
+      "item_number": {"value": "...", "coordinates": {...}, "confidence": 85},
+      "description": {"value": "...", "coordinates": {...}, "confidence": 90},
+      "amount": {"value": "...", "coordinates": {...}, "confidence": 88},
+      "weight": {"value": "...", "coordinates": {...}, "confidence": 82},
+      "use_by_date": {"value": "...", "coordinates": {...}, "confidence": 75}
+    }
+  ]
+}
 
 Only output the final, consolidated JSON object. Do not include any other text, explanations, or markdown formatting.`;
 
@@ -822,6 +1542,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         // --- Update handleBolParsing and PDF rendering to use progress bar ---
         async function handleBolParsing() {
             resetUI();
+            document.getElementById('bolContent').classList.add('hidden');
             loading.classList.remove('hidden');
             currentProgress = 0;
             setProgress(0, 'Ingesting BoL PDF');
@@ -933,6 +1654,8 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     clearInterval(backgroundProgressInterval);
                 }
                 stopMessageRotation();
+                loading.classList.add('hidden');
+                document.getElementById('bolContent').classList.remove('hidden');
                 displayMessage(error.message);
                 setProgress(0, 'Error');
             } finally {
@@ -985,6 +1708,9 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             bolResultCard.innerHTML = '';
             currentBolPageIndex = 0; // Reset page index
 
+            // Store coordinate data globally for coordinate overlay functionality
+            window.coordinateData = data;
+
             const updateBolCarousel = () => {
                 const img = bolResultCard.querySelector('#carouselImage');
                 const pageCounter = bolResultCard.querySelector('#pageCounter');
@@ -992,6 +1718,9 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     img.src = bolPageImages[currentBolPageIndex];
                     img.alt = `Bill of Lading Page ${currentBolPageIndex + 1}`;
                     pageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
+                    
+                    // Update coordinate overlays when page changes
+                    updateCoordinateOverlays();
                 }
                 const zoomImg = document.getElementById('zoomedImage');
                 if(zoomImg) {
@@ -1001,7 +1730,8 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             
             const createCarousel = () => {
                 const carouselContainer = document.createElement('div');
-                carouselContainer.className = 'md:col-span-1 relative';
+                carouselContainer.className = 'md:col-span-1 relative carousel-container';
+                carouselContainer.id = 'carouselContainer';
 
                 const img = document.createElement('img');
                 img.id = 'carouselImage';
@@ -1009,9 +1739,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 img.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer';
                 img.alt = 'Bill of Lading Page 1';
                 img.addEventListener('click', () => openImageZoomModal());
+                img.addEventListener('load', () => {
+                    // Update overlays when image loads
+                    setTimeout(() => updateCoordinateOverlays(), 100);
+                });
 
                 const prevBtn = document.createElement('button');
-                prevBtn.className = 'absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                prevBtn.className = 'absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 z-20';
                 prevBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
                 prevBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1020,7 +1754,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 });
                 
                 const nextBtn = document.createElement('button');
-                nextBtn.className = 'absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75';
+                nextBtn.className = 'absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 z-20';
                 nextBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
                  nextBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1030,7 +1764,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
 
                 const pageCounter = document.createElement('div');
                 pageCounter.id = 'pageCounter';
-                pageCounter.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full';
+                pageCounter.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full z-20';
                 
                 carouselContainer.append(img, prevBtn, nextBtn, pageCounter);
 
@@ -1043,29 +1777,67 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 return carouselContainer;
             };
 
+            // Helper function to extract value from coordinate object or use direct value
+            const getValue = (field) => {
+                if (typeof field === 'object' && field.value !== undefined) {
+                    return field.value;
+                }
+                return field || 'N/A';
+            };
+
+            // Helper function to extract coordinates
+            const getCoordinates = (field) => {
+                if (typeof field === 'object' && field.coordinates) {
+                    return field.coordinates;
+                }
+                return null;
+            };
+
+            // Helper function to extract confidence score
+            const getConfidence = (field) => {
+                if (typeof field === 'object' && field.confidence !== undefined) {
+                    return field.confidence;
+                }
+                return 0;
+            };
+
             let contentsHtml = `
-                    <table class="w-full text-sm mt-1 border-collapse" id="contentsTable">
+                    <table class="w-full text-sm mt-1 data-table border border-gray-300 rounded-lg overflow-hidden" id="contentsTable">
                         <thead>
-                           <tr class="border-b bg-gray-50">
-                                <th class="p-2 text-left font-semibold text-gray-700">Item #</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Description</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Amount</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Weight</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Use By Date</th>
-                                <th class="p-2"></th>
+                           <tr class="border-b-2 border-gray-300 bg-gray-100">
+                                <th class="p-3 text-left font-semibold text-gray-700 border-r border-gray-300">Item #</th>
+                                <th class="p-3 text-left font-semibold text-gray-700 border-r border-gray-300">Description</th>
+                                <th class="p-3 text-left font-semibold text-gray-700 border-r border-gray-300">Amount</th>
+                                <th class="p-3 text-left font-semibold text-gray-700 border-r border-gray-300">Weight</th>
+                                <th class="p-3 text-left font-semibold text-gray-700 border-r border-gray-300">Use By Date</th>
+                                <th class="p-3 text-center font-semibold text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                        ${data.contents.map((item, idx) => `
-                            <tr class="border-b" data-row="${idx}">
-                                <td class="p-2 editable-table-cell" data-col="item_number">${item.item_number || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="description">${item.description || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="amount">${item.amount || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="weight">${item.weight || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="use_by_date">${item.use_by_date || 'N/A'}</td>
-                                <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
-                            </tr>
-                        `).join('')}
+                        ${data.contents.map((item, idx) => {
+                            const getConfidenceIndicator = (field) => {
+                                const confidence = getConfidence(field);
+                                const hasCoords = getCoordinates(field) && getCoordinates(field).x > 0;
+                                if (!hasCoords) return '';
+                                
+                                let indicatorColor = 'bg-gray-400';
+                                if (confidence >= confidenceSettings.high) indicatorColor = 'bg-green-500';
+                                else if (confidence >= confidenceSettings.medium) indicatorColor = 'bg-orange-500';
+                                else if (confidence > 0) indicatorColor = 'bg-red-500';
+                                
+                                return `<span class="w-2 h-2 ${indicatorColor} rounded-full inline-block mr-2" title="Confidence: ${confidence}%"></span>`;
+                            };
+                            
+                            return `
+                            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" data-row="${idx}">
+                                <td class="p-3 editable-table-cell field-with-coordinates border-r border-gray-200" data-col="item_number" data-coordinates='${getCoordinates(item.item_number) ? JSON.stringify(getCoordinates(item.item_number)) : ''}'>${getConfidenceIndicator(item.item_number)}${getValue(item.item_number)}</td>
+                                <td class="p-3 editable-table-cell field-with-coordinates border-r border-gray-200" data-col="description" data-coordinates='${getCoordinates(item.description) ? JSON.stringify(getCoordinates(item.description)) : ''}'>${getConfidenceIndicator(item.description)}${getValue(item.description)}</td>
+                                <td class="p-3 editable-table-cell field-with-coordinates border-r border-gray-200" data-col="amount" data-coordinates='${getCoordinates(item.amount) ? JSON.stringify(getCoordinates(item.amount)) : ''}'>${getConfidenceIndicator(item.amount)}${getValue(item.amount)}</td>
+                                <td class="p-3 editable-table-cell field-with-coordinates border-r border-gray-200" data-col="weight" data-coordinates='${getCoordinates(item.weight) ? JSON.stringify(getCoordinates(item.weight)) : ''}'>${getConfidenceIndicator(item.weight)}${getValue(item.weight)}</td>
+                                <td class="p-3 editable-table-cell field-with-coordinates border-r border-gray-200" data-col="use_by_date" data-coordinates='${getCoordinates(item.use_by_date) ? JSON.stringify(getCoordinates(item.use_by_date)) : ''}'>${getConfidenceIndicator(item.use_by_date)}${getValue(item.use_by_date)}</td>
+                                <td class="p-3 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg transition-colors" title="Remove row">&minus;</button></td>
+                            </tr>`;
+                        }).join('')}
                         </tbody>
                     </table>
                     <div class="mt-2 text-right">
@@ -1074,27 +1846,41 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             `;
 
             const mainDiv = document.createElement('div');
-            mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
+            mainDiv.className = 'grid grid-cols-1 lg:grid-cols-5 gap-4 grid-container';
             mainDiv.innerHTML = `
-                <div class="md:col-span-1">
+                <div class="lg:col-span-2">
                     <div id="mainCarouselContainer" class="relative">
                         </div>
                 </div>
-                <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    ${createDisplayField('bol_number', 'BoL Number', data.bol_number)}
-                    ${createDisplayField('appointment_number', 'Appointment Number', data.appointment_number)}
-                    ${createDisplayField('seal_number', 'Seal Number', data.seal_number)}
-                    ${createDisplayField('shipment_number', 'Shipment Number', data.shipment_number)}
-                    ${createDisplayField('delivery_number', 'Delivery Number', data.delivery_number)}
-                    ${createDisplayField('scac', 'SCAC', data.scac)}
-                    ${createDisplayField('date', 'Date', data.date)}
-                    ${createDisplayField('carrier', 'Carrier', data.carrier)}
-                    ${createDisplayField('temperature', 'Temperature', data.temperature)}
-                    <div class="sm:col-span-2">${createDisplayField('origin', 'Origin', data.origin)}</div>
-                    <div class="sm:col-span-2">${createDisplayField('destination', 'Destination', data.destination)}</div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Contents</label>
-                        <div class="p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">${contentsHtml}</div>
+                <div class="lg:col-span-3">
+                    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm mb-4">
+                        <table class="w-full data-table">
+                            <thead>
+                                <tr class="bg-gray-100 border-b-2 border-gray-300">
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">Order Information</th>
+                                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">Value</th>
+                                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Confidence(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${createDisplayField('bol_number', 'BoL Number', getValue(data.bol_number), getCoordinates(data.bol_number), getConfidence(data.bol_number))}
+                                ${createDisplayField('order_number', 'Order #', getValue(data.order_number), getCoordinates(data.order_number), getConfidence(data.order_number))}
+                                ${createDisplayField('seal_number', 'Seal Number', getValue(data.seal_number), getCoordinates(data.seal_number), getConfidence(data.seal_number))}
+                                ${createDisplayField('shipment_number', 'Shipment #', getValue(data.shipment_number), getCoordinates(data.shipment_number), getConfidence(data.shipment_number))}
+                                ${createDisplayField('delivery_number', 'Delivery #', getValue(data.delivery_number), getCoordinates(data.delivery_number), getConfidence(data.delivery_number))}
+                                ${createDisplayField('scac', 'SCAC', getValue(data.scac), getCoordinates(data.scac), getConfidence(data.scac))}
+                                ${createDisplayField('date', 'Date', getValue(data.date), getCoordinates(data.date), getConfidence(data.date))}
+                                ${createDisplayField('carrier', 'Carrier', getValue(data.carrier), getCoordinates(data.carrier), getConfidence(data.carrier))}
+                                ${createDisplayField('temperature', 'Temperature', getValue(data.temperature), getCoordinates(data.temperature), getConfidence(data.temperature))}
+                                ${createDisplayField('signed', 'Signed?', getValue(data.signed) === true ? 'Yes' : getValue(data.signed) === false ? 'No' : getValue(data.signed), getCoordinates(data.signed), getConfidence(data.signed))}
+                                ${createDisplayField('origin', 'Origin', getValue(data.origin), getCoordinates(data.origin), getConfidence(data.origin))}
+                                ${createDisplayField('destination', 'Destination', getValue(data.destination), getCoordinates(data.destination), getConfidence(data.destination))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg bg-white shadow-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 px-3 pt-3">Contents</label>
+                        <div class="p-3 pt-1 overflow-x-auto">${contentsHtml}</div>
                     </div>
                 </div>
             `;
@@ -1123,14 +1909,44 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             attachContentsTableListeners();
         }
 
-        function createDisplayField(id, label, value) {
+        function createDisplayField(id, label, value, coordinates = null, confidence = 0) {
+            const coordsData = coordinates ? JSON.stringify(coordinates) : '';
+            const coordsClass = coordinates ? 'field-with-coordinates' : '';
+            const hasCoords = coordinates && coordinates.x > 0 && coordinates.y > 0;
+            
+            // Determine confidence indicator color using configurable thresholds
+            let indicatorColor = 'bg-gray-400';
+            let confidenceTextColor = 'text-gray-600';
+            
+            if (confidence >= confidenceSettings.high) {
+                indicatorColor = 'bg-green-500';
+                confidenceTextColor = 'text-green-700';
+            } else if (confidence >= confidenceSettings.medium) {
+                indicatorColor = 'bg-orange-500';
+                confidenceTextColor = 'text-orange-700';
+            } else if (confidence > 0) {
+                indicatorColor = 'bg-red-500';
+                confidenceTextColor = 'text-red-700';
+            }
+            
+            const confidenceDisplay = confidence > 0 ? `${confidence.toFixed(1)}%` : 'N/A';
+            const coordsIndicator = hasCoords ? `<span class="w-2 h-2 ${indicatorColor} rounded-full inline-block" title="Hover field to see source location"></span>` : '';
+            
             return `
-                <div>
-                    <label for="${id}" class="block text-sm font-medium text-gray-700">${label}</label>
-                    <div class="mt-1 flex items-center p-2 border bg-gray-50 rounded-md">
-                        <span class="text-sm text-gray-900 editable-field" data-field-id="${id}" tabindex="0">${value || 'N/A'}</span>
-                    </div>
-                </div>`;
+                <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                    <td class="px-4 py-3 border-r border-gray-200 bg-gray-50">
+                        <div class="flex items-center gap-2">
+                            ${coordsIndicator}
+                            <span class="text-sm font-medium text-gray-700">${label}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 border-r border-gray-200 ${coordsClass}">
+                        <span class="text-sm text-gray-900 editable-field" data-field-id="${id}" data-coordinates='${coordsData}' tabindex="0" title="${value || 'N/A'}">${value || 'N/A'}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="text-sm font-medium ${confidenceTextColor}">${confidenceDisplay}</span>
+                    </td>
+                </tr>`;
         }
         
         function openEditModal(fieldId, fieldLabel, currentValue) {
@@ -1145,6 +1961,134 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             zoomedImage.src = bolPageImages[currentBolPageIndex];
             imageZoomModal.classList.remove('hidden');
             imageZoomModal.classList.add('flex');
+        }
+
+        // Coordinate overlay functionality
+        function updateCoordinateOverlays() {
+            // Remove existing overlays
+            document.querySelectorAll('.coordinate-overlay').forEach(overlay => overlay.remove());
+            
+            // Check if coordinate overlays are enabled
+            const showOverlays = localStorage.getItem('coordinateOverlays') !== 'false';
+            if (!showOverlays) return;
+            
+            const carouselContainer = document.getElementById('carouselContainer');
+            const carouselImage = document.getElementById('carouselImage');
+            
+            if (!carouselContainer || !carouselImage || !window.coordinateData) {
+                return;
+            }
+            
+            // Wait for image to load completely
+            if (!carouselImage.complete || carouselImage.naturalWidth === 0) {
+                setTimeout(() => updateCoordinateOverlays(), 200);
+                return;
+            }
+            
+            // Get the image's actual position and dimensions relative to the viewport
+            const imageRect = carouselImage.getBoundingClientRect();
+            const containerRect = carouselContainer.getBoundingClientRect();
+            
+            // Calculate the image's position within its container
+            const imageOffsetX = imageRect.left - containerRect.left;
+            const imageOffsetY = imageRect.top - containerRect.top;
+            
+            // Get actual displayed image dimensions
+            const displayWidth = carouselImage.clientWidth;
+            const displayHeight = carouselImage.clientHeight;
+            
+            // Get natural image dimensions (original source image size)
+            const naturalWidth = carouselImage.naturalWidth;
+            const naturalHeight = carouselImage.naturalHeight;
+            
+            if (naturalWidth === 0 || naturalHeight === 0) {
+                return;
+            }
+            
+            // Calculate scale factors from source image pixels to displayed pixels
+            const scaleX = displayWidth / naturalWidth;
+            const scaleY = displayHeight / naturalHeight;
+            
+            // Create overlays for all fields that have coordinates for the current page
+            document.querySelectorAll('[data-coordinates]').forEach(element => {
+                const coordsData = element.getAttribute('data-coordinates');
+                if (!coordsData) return;
+                
+                try {
+                    const coordinates = JSON.parse(coordsData);
+                    if (coordinates.page === currentBolPageIndex + 1 && coordinates.x > 0 && coordinates.y > 0) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'coordinate-overlay';
+                        overlay.style.opacity = '0';
+                        
+                        // AI provides coordinates in pixels of the natural-sized source image.
+                        // We scale them to the on-screen display size of the image.
+                        const pixelX = coordinates.x;
+                        const pixelY = coordinates.y;
+                        const pixelWidth = coordinates.width;
+                        const pixelHeight = coordinates.height;
+                        
+                        // Scale coordinates from natural image space to display space
+                        // Add padding to ensure full text coverage
+                        const padding = 8; // pixels of padding around the text
+                        const scaledX = pixelX * scaleX;
+                        const scaledY = pixelY * scaleY;
+                        const scaledWidth = pixelWidth * scaleX;
+                        const scaledHeight = pixelHeight * scaleY;
+                        
+                        // Position relative to the image's actual position within the container
+                        const left = Math.max(0, imageOffsetX + scaledX - padding);
+                        const top = Math.max(0, imageOffsetY + scaledY - padding);
+                        const width = Math.max(scaledWidth + (padding * 2), 40);
+                        const height = Math.max(scaledHeight + (padding * 2), 25);
+                        
+                        // Position relative to the container
+                        overlay.style.left = `${left}px`;
+                        overlay.style.top = `${top}px`;
+                        overlay.style.width = `${width}px`;
+                        overlay.style.height = `${height}px`;
+                        
+                        // Add debug info as data attributes
+                        overlay.setAttribute('data-debug', `PIXEL: ${pixelX},${pixelY},${pixelWidth}x${pixelHeight} | Scaled: ${scaledX.toFixed(1)},${scaledY.toFixed(1)},${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)} | Final: ${left.toFixed(1)},${top.toFixed(1)},${width.toFixed(1)}x${height.toFixed(1)} | ImageOffset: ${imageOffsetX.toFixed(1)},${imageOffsetY.toFixed(1)}`);
+                        
+                        carouselContainer.appendChild(overlay);
+                        
+                        // Store reference to overlay on element for easy access
+                        element._coordinateOverlay = overlay;
+                        
+                        // Add hover event listeners (remove old ones first)
+                        element.removeEventListener('mouseenter', element._mouseEnterHandler);
+                        element.removeEventListener('mouseleave', element._mouseLeaveHandler);
+                        
+                        element._mouseEnterHandler = () => {
+                            overlay.style.opacity = '1';
+                        };
+                        element._mouseLeaveHandler = () => {
+                            overlay.style.opacity = '0';
+                        };
+                        
+                        element.addEventListener('mouseenter', element._mouseEnterHandler);
+                        element.addEventListener('mouseleave', element._mouseLeaveHandler);
+                    }
+                } catch (e) {
+                    console.error('Error parsing coordinates:', e, coordsData);
+                }
+            });
+        }
+
+        // Add resize observer to update overlays when image size changes
+        if (window.ResizeObserver) {
+            const resizeObserver = new ResizeObserver(() => {
+                setTimeout(() => updateCoordinateOverlays(), 100);
+            });
+            
+            // Observe the carousel container
+            setTimeout(() => {
+                const carouselContainer = document.getElementById('carouselContainer');
+                if (carouselContainer) {
+                    resizeObserver.observe(carouselContainer);
+                }
+            }, 1000);
         }
 
         zoomPrevBtn.addEventListener('click', (e) => {
@@ -1166,7 +2110,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const card = document.getElementById('bolResultCard');
             if (!card) return;
 
-            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Item #", "Content Description", "Content Amount", "Content Weight", "Use By Date"];
+            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Signed", "Item #", "Content Description", "Content Amount", "Content Weight", "Use By Date"];
             const rows = [];
             
             const getValue = (id) => card.querySelector(`[data-field-id="${id}"]`) ? card.querySelector(`[data-field-id="${id}"]`).textContent : 'N/A';
@@ -1183,13 +2127,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 bol_number: getValue('bol_number'),
                 shipment_number: getValue('shipment_number'),
                 temperature: getValue('temperature'),
+                signed: getValue('signed'),
             };
 
             const contentRows = card.querySelectorAll('tbody > tr');
             if (contentRows.length > 0 && contentRows[0].cells.length > 1) {
                  contentRows.forEach(row => {
                     rows.push([
-                        baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature,
+                        baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, baseData.signed,
                         row.cells[0] ? row.cells[0].innerText : 'N/A', // Item #
                         row.cells[1] ? row.cells[1].innerText : 'N/A', // Description
                         row.cells[2] ? row.cells[2].innerText : 'N/A', // Amount
@@ -1198,7 +2143,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, baseData.signed, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
             }
 
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
@@ -1297,13 +2242,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             if (e.target.id === 'addRowBtn') {
                 const table = document.getElementById('contentsTable').getElementsByTagName('tbody')[0];
                 const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 transition-colors';
                 row.innerHTML = `
-                    <td class="p-2 editable-table-cell" data-col="item_number">N/A</td>
-                    <td class="p-2 editable-table-cell" data-col="description">N/A</td>
-                    <td class="p-2 editable-table-cell" data-col="amount">N/A</td>
-                    <td class="p-2 editable-table-cell" data-col="weight">N/A</td>
-                    <td class="p-2 editable-table-cell" data-col="use_by_date">N/A</td>
-                    <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
+                    <td class="p-3 editable-table-cell border-r border-gray-200" data-col="item_number">N/A</td>
+                    <td class="p-3 editable-table-cell border-r border-gray-200" data-col="description">N/A</td>
+                    <td class="p-3 editable-table-cell border-r border-gray-200" data-col="amount">N/A</td>
+                    <td class="p-3 editable-table-cell border-r border-gray-200" data-col="weight">N/A</td>
+                    <td class="p-3 editable-table-cell border-r border-gray-200" data-col="use_by_date">N/A</td>
+                    <td class="p-3 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg transition-colors" title="Remove row">&minus;</button></td>
                 `;
                 table.appendChild(row);
             }
@@ -1349,13 +2295,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 if (e.target.id === 'addRowBtn') {
                     const tbody = newTable.getElementsByTagName('tbody')[0];
                     const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-50 transition-colors';
                     row.innerHTML = `
-                        <td class="p-2 editable-table-cell" data-col="item_number">N/A</td>
-                        <td class="p-2 editable-table-cell" data-col="description">N/A</td>
-                        <td class="p-2 editable-table-cell" data-col="amount">N/A</td>
-                        <td class="p-2 editable-table-cell" data-col="weight">N/A</td>
-                        <td class="p-2 editable-table-cell" data-col="use_by_date">N/A</td>
-                        <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
+                        <td class="p-3 editable-table-cell border-r border-gray-200" data-col="item_number">N/A</td>
+                        <td class="p-3 editable-table-cell border-r border-gray-200" data-col="description">N/A</td>
+                        <td class="p-3 editable-table-cell border-r border-gray-200" data-col="amount">N/A</td>
+                        <td class="p-3 editable-table-cell border-r border-gray-200" data-col="weight">N/A</td>
+                        <td class="p-3 editable-table-cell border-r border-gray-200" data-col="use_by_date">N/A</td>
+                        <td class="p-3 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg transition-colors" title="Remove row">&minus;</button></td>
                     `;
                     tbody.appendChild(row);
                 }
@@ -1416,6 +2363,163 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 }
             });
         }
+
+        // Settings functionality - replaces old logo triple-click functionality
+        if (settingsBtn && aiConfigSection) {
+            settingsBtn.addEventListener('click', function() {
+                aiConfigSection.classList.toggle('hidden');
+            });
+        }
+        
+        // Settings Tab Navigation
+        function switchSettingsTab(activeTab) {
+            // Remove active class from all tabs and hide all content
+            [settingsTabGeneral, settingsTabAI, settingsTabConfidence, settingsTabAppearance].forEach(tab => {
+                if (tab) tab.classList.remove('active');
+            });
+            [settingsContentGeneral, settingsContentAI, settingsContentConfidence, settingsContentAppearance].forEach(content => {
+                if (content) content.classList.add('hidden');
+            });
+            
+            // Show active tab and content
+            if (activeTab && document.getElementById(activeTab)) {
+                document.getElementById(activeTab).classList.add('active');
+                const contentId = activeTab.replace('Tab', 'Content');
+                const content = document.getElementById(contentId);
+                if (content) content.classList.remove('hidden');
+            }
+        }
+        
+        // Settings Tab Event Listeners
+        if (settingsTabGeneral) settingsTabGeneral.addEventListener('click', () => switchSettingsTab('settingsTabGeneral'));
+        if (settingsTabAI) settingsTabAI.addEventListener('click', () => switchSettingsTab('settingsTabAI'));
+        if (settingsTabConfidence) settingsTabConfidence.addEventListener('click', () => switchSettingsTab('settingsTabConfidence'));
+        if (settingsTabAppearance) settingsTabAppearance.addEventListener('click', () => switchSettingsTab('settingsTabAppearance'));
+        
+        // Dark Mode Toggle
+        if (darkModeToggle) {
+            darkModeToggle.addEventListener('change', function() {
+                const isDark = this.checked;
+                if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+        
+        // Compact Mode Toggle
+        if (compactModeToggle) {
+            compactModeToggle.addEventListener('change', function() {
+                const isCompact = this.checked;
+                localStorage.setItem('compactMode', isCompact.toString());
+                // Apply compact mode styles
+                if (isCompact) {
+                    document.body.classList.add('compact-mode');
+                } else {
+                    document.body.classList.remove('compact-mode');
+                }
+            });
+        }
+        
+        // Auto Save Toggle
+        if (autoSaveToggle) {
+            autoSaveToggle.addEventListener('change', function() {
+                const isAutoSave = this.checked;
+                localStorage.setItem('autoSave', isAutoSave.toString());
+            });
+        }
+        
+        // Coordinate Overlays Toggle
+        if (coordinateOverlaysToggle) {
+            coordinateOverlaysToggle.addEventListener('change', function() {
+                const showOverlays = this.checked;
+                localStorage.setItem('coordinateOverlays', showOverlays.toString());
+                // Update overlay visibility
+                const overlays = document.querySelectorAll('.coordinate-overlay');
+                overlays.forEach(overlay => {
+                    overlay.style.display = showOverlays ? 'block' : 'none';
+                });
+            });
+        }
+        
+        // Show Confidence Indicators Toggle
+        if (showConfidenceIndicators) {
+            showConfidenceIndicators.addEventListener('change', function() {
+                const showIndicators = this.checked;
+                localStorage.setItem('showConfidenceIndicators', showIndicators.toString());
+                // Update confidence indicator visibility
+                const indicators = document.querySelectorAll('.w-2.h-2.rounded-full');
+                indicators.forEach(indicator => {
+                    indicator.style.display = showIndicators ? 'inline-block' : 'none';
+                });
+            });
+        }
+        
+        // Confidence slider functionality
+        function updateConfidenceDisplay() {
+            const highValue = parseInt(highConfidenceThreshold.value);
+            const mediumValue = parseInt(mediumConfidenceThreshold.value);
+            
+            // Update value displays
+            document.getElementById('highValueDisplay').textContent = `${highValue}%`;
+            document.getElementById('mediumValueDisplay').textContent = `${mediumValue}%`;
+            document.getElementById('lowRangeDisplay').textContent = `< ${mediumValue}%`;
+            
+            // Update preview
+            document.getElementById('previewHigh').textContent = `${highValue}%+`;
+            document.getElementById('previewMedium').textContent = `${mediumValue}%-${highValue - 1}%`;
+            document.getElementById('previewLow').textContent = `<${mediumValue}%`;
+            
+            // Ensure medium is always less than high
+            if (mediumValue >= highValue) {
+                mediumConfidenceThreshold.value = highValue - 1;
+                updateConfidenceDisplay();
+            }
+        }
+        
+        // Add event listeners for sliders
+        if (highConfidenceThreshold) {
+            highConfidenceThreshold.addEventListener('input', updateConfidenceDisplay);
+        }
+        if (mediumConfidenceThreshold) {
+            mediumConfidenceThreshold.addEventListener('input', updateConfidenceDisplay);
+        }
+        
+        // Reset to defaults functionality
+        if (resetConfidenceDefaults) {
+            resetConfidenceDefaults.addEventListener('click', function() {
+                highConfidenceThreshold.value = 95;
+                mediumConfidenceThreshold.value = 80;
+                updateConfidenceDisplay();
+            });
+        }
+        
+        // Save confidence settings
+        if (saveConfidenceSettings) {
+            saveConfidenceSettings.addEventListener('click', function() {
+                confidenceSettings.high = parseInt(highConfidenceThreshold.value);
+                confidenceSettings.medium = parseInt(mediumConfidenceThreshold.value);
+                localStorage.setItem('confidenceSettings', JSON.stringify(confidenceSettings));
+                
+                // Show success message
+                const originalText = saveConfidenceSettings.textContent;
+                saveConfidenceSettings.textContent = 'Saved!';
+                saveConfidenceSettings.classList.add('bg-green-600');
+                saveConfidenceSettings.classList.remove('bg-blue-600');
+                
+                setTimeout(() => {
+                    saveConfidenceSettings.textContent = originalText;
+                    saveConfidenceSettings.classList.remove('bg-green-600');
+                    saveConfidenceSettings.classList.add('bg-blue-600');
+                }, 2000);
+            });
+        }
+        
+        // Initialize confidence display on page load
+        updateConfidenceDisplay();
 
     </script>
 </body>
