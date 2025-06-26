@@ -347,6 +347,111 @@
             height: 6px;
             border-radius: 3px;
             background: var(--bg-tertiary);
+
+        /* Upload Method Button Styles */
+        .upload-method-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .upload-method-btn.active {
+            border-color: #3b82f6 !important;
+            background-color: #dbeafe !important;
+            color: #1d4ed8 !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .upload-method-btn:not(.active):hover {
+            border-color: #9ca3af;
+            background-color: #f9fafb;
+        }
+
+        /* Upload Section Styles */
+        .upload-section {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        /* Camera specific styles */
+        #cameraVideo {
+            transform: scaleX(-1); /* Mirror effect for better user experience */
+            border: 2px solid #e5e7eb;
+        }
+        
+        #capturedImagePreview {
+            border: 2px solid #10b981;
+        }
+        
+        /* Vector API Document Card Styles */
+        .document-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+        }
+        
+        .document-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .document-card.selected {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+        
+        .document-card .document-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+            font-size: 14px;
+            line-height: 1.25;
+        }
+        
+        .document-card .document-meta {
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .document-card .document-type {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        /* Status message styles */
+        .status-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .status-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .status-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        .status-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
             outline: none;
             transition: all 0.2s ease;
         }
@@ -651,6 +756,39 @@
                             <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="form-input w-full">
                         </div>
                     </div>
+
+                    <div class="settings-section">
+                        <h3>Vector API Configuration</h3>
+                        <p class="text-xs text-gray-500 mt-1">Configure Vector API for document retrieval</p>
+                        
+                        <div class="space-y-4 mt-4">
+                            <div>
+                                <label for="settingsVectorApiEndpoint" class="block text-sm font-medium text-gray-700 mb-2">API Endpoint</label>
+                                <input type="text" id="settingsVectorApiEndpoint" value="https://api.withvector.com/1.0/entities/query?DEBUG=view--Documents" class="form-input w-full" placeholder="Enter Vector API endpoint">
+                            </div>
+                            <div>
+                                <label for="settingsVectorBearerToken" class="block text-sm font-medium text-gray-700 mb-2">Bearer Token</label>
+                                <input type="password" id="settingsVectorBearerToken" value="563dc9a9e9815e25980552197fa2b9e5" class="form-input w-full" placeholder="Enter bearer token">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="settingsVectorDateRange" class="block text-sm font-medium text-gray-700 mb-2">Date Range (days)</label>
+                                    <input type="number" id="settingsVectorDateRange" value="30" min="1" max="365" class="form-input w-full" placeholder="Number of days">
+                                    <p class="text-xs text-gray-500 mt-1">Documents from the past X days</p>
+                                </div>
+                                <div>
+                                    <label for="settingsVectorResultSize" class="block text-sm font-medium text-gray-700 mb-2">Result Size</label>
+                                    <input type="number" id="settingsVectorResultSize" value="100" min="1" max="1000" class="form-input w-full" placeholder="Maximum results">
+                                    <p class="text-xs text-gray-500 mt-1">Maximum number of documents to load</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                <button id="saveVectorApiSettings" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                    Save Vector API Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Confidence Settings Tab -->
@@ -792,18 +930,136 @@
             </div>
 
             <div id="bolContent">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Document (PDF)</label>
+                <!-- Document Upload Method Selector -->
+                <div class="mb-6">
+                    <label class="block text-lg font-medium text-gray-700 font-google-sans mb-4">Select Document Source</label>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button id="uploadMethodPdf" class="upload-method-btn active px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all duration-200 hover:bg-blue-100">
+                            <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
+                            Upload PDF
+                        </button>
+                        <button id="uploadMethodCamera" class="upload-method-btn px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50">
+                            <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                            Take Photo
+                        </button>
+                        <button id="uploadMethodVector" class="upload-method-btn px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50">
+                            <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/></svg>
+                            Vector API
+                        </button>
+                    </div>
                 </div>
-                 <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
-                     <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
-                         <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
-                         <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
-                         <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
-                     </div>
-                     <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
-                     <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
-                 </label>
+
+                <!-- PDF Upload Section -->
+                <div id="pdfUploadSection" class="upload-section">
+                    <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
+                        <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
+                            <svg class="w-10 h-10 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a PDF</span></p>
+                            <p id="pdfFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
+                        </div>
+                        <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                        <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
+                    </label>
+                </div>
+
+                <!-- Camera Capture Section -->
+                <div id="cameraSection" class="upload-section hidden">
+                    <div class="border-2 border-gray-300 border-dashed rounded-lg p-6 bg-gray-50">
+                        <div id="cameraControls" class="text-center">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Document Camera</h3>
+                            <p class="text-sm text-gray-600 mb-4">Take a photo of your document for analysis</p>
+                            <button id="startCamera" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                </svg>
+                                Start Camera
+                            </button>
+                        </div>
+                        <div id="cameraPreview" class="hidden">
+                            <video id="cameraVideo" class="w-full max-w-md mx-auto rounded-lg mb-4" autoplay playsinline></video>
+                            <div class="text-center space-x-4">
+                                <button id="capturePhoto" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                                    <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Capture
+                                </button>
+                                <button id="stopCamera" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
+                                    <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Stop
+                                </button>
+                            </div>
+                        </div>
+                        <canvas id="captureCanvas" class="hidden"></canvas>
+                        <div id="capturedImage" class="hidden mt-4">
+                            <img id="capturedImagePreview" class="w-full max-w-md mx-auto rounded-lg border" />
+                            <div class="text-center mt-4 space-x-4">
+                                <button id="retakePhoto" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition">
+                                    <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Retake
+                                </button>
+                                <button id="usePhoto" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                                    <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Use Photo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vector API Section -->
+                <div id="vectorApiSection" class="upload-section hidden">
+                    <div class="border-2 border-gray-300 border-dashed rounded-lg p-6 bg-gray-50">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Vector API Configuration</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="vectorApiEndpoint" class="block text-sm font-medium text-gray-600 mb-2">API Endpoint</label>
+                                    <input type="text" id="vectorApiEndpoint" value="https://api.withvector.com/1.0/entities/query?DEBUG=view--Documents" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter Vector API endpoint">
+                                </div>
+                                <div>
+                                    <label for="vectorBearerToken" class="block text-sm font-medium text-gray-600 mb-2">Bearer Token</label>
+                                    <input type="password" id="vectorBearerToken" value="563dc9a9e9815e25980552197fa2b9e5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter bearer token">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="vectorDateRange" class="block text-sm font-medium text-gray-600 mb-2">Date Range (days)</label>
+                                    <input type="number" id="vectorDateRange" value="30" min="1" max="365" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Number of days">
+                                    <p class="text-xs text-gray-500 mt-1">Documents from the past X days</p>
+                                </div>
+                                <div>
+                                    <label for="vectorResultSize" class="block text-sm font-medium text-gray-600 mb-2">Result Size</label>
+                                    <input type="number" id="vectorResultSize" value="100" min="1" max="1000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Maximum results">
+                                    <p class="text-xs text-gray-500 mt-1">Maximum number of documents to load</p>
+                                </div>
+                            </div>
+                            <button id="loadVectorDocuments" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                                <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/>
+                                </svg>
+                                Load Documents
+                            </button>
+                        </div>
+                        <div id="vectorApiStatus" class="hidden mb-4 p-3 rounded-lg"></div>
+                        <div id="vectorDocumentsList" class="hidden">
+                            <h4 class="text-md font-medium text-gray-900 mb-3">Available Documents</h4>
+                            <div id="documentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
+                                <!-- Documents will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="text-center mt-8 mb-8">
                     <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Analyze Document</button>
                 </div>
@@ -1050,6 +1306,46 @@
         const exportBolBtn = document.getElementById('exportBolBtn');
         const bolResultCard = document.getElementById('bolResultCard');
 
+        // Upload Method Elements
+        const uploadMethodPdf = document.getElementById('uploadMethodPdf');
+        const uploadMethodCamera = document.getElementById('uploadMethodCamera');
+        const uploadMethodVector = document.getElementById('uploadMethodVector');
+        const pdfUploadSection = document.getElementById('pdfUploadSection');
+        const cameraSection = document.getElementById('cameraSection');
+        const vectorApiSection = document.getElementById('vectorApiSection');
+
+        // Camera Elements
+        const startCamera = document.getElementById('startCamera');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const cameraControls = document.getElementById('cameraControls');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const capturePhoto = document.getElementById('capturePhoto');
+        const stopCamera = document.getElementById('stopCamera');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const capturedImagePreview = document.getElementById('capturedImagePreview');
+        const retakePhoto = document.getElementById('retakePhoto');
+        const usePhoto = document.getElementById('usePhoto');
+
+        // Vector API Elements
+        const vectorApiEndpoint = document.getElementById('vectorApiEndpoint');
+        const vectorBearerToken = document.getElementById('vectorBearerToken');
+        const loadVectorDocuments = document.getElementById('loadVectorDocuments');
+        const vectorApiStatus = document.getElementById('vectorApiStatus');
+        const vectorDocumentsList = document.getElementById('vectorDocumentsList');
+        const documentsGrid = document.getElementById('documentsGrid');
+
+        // Vector API Settings Elements
+        const settingsVectorApiEndpoint = document.getElementById('settingsVectorApiEndpoint');
+        const settingsVectorBearerToken = document.getElementById('settingsVectorBearerToken');
+        const settingsVectorDateRange = document.getElementById('settingsVectorDateRange');
+        const settingsVectorResultSize = document.getElementById('settingsVectorResultSize');
+        const saveVectorApiSettings = document.getElementById('saveVectorApiSettings');
+
+        // Vector API Section Elements (additional)
+        const vectorDateRange = document.getElementById('vectorDateRange');
+        const vectorResultSize = document.getElementById('vectorResultSize');
+
         // Modal Elements
         const imageZoomModal = document.getElementById('imageZoomModal');
         const zoomedImage = document.getElementById('zoomedImage');
@@ -1086,6 +1382,9 @@
         let bolPageImages = [];
         let currentBolPageIndex = 0;
         let rawJsonResult = '';
+        let currentUploadMethod = 'pdf';
+        let cameraStream = null;
+        let selectedVectorDocument = null;
 
         const defaultBolPrompt = `You are an expert at parsing shipping documents. Your task is to analyze all the following pages from a single Bill of Lading (BoL) and consolidate all information into a single JSON object.
 Aggregate the data from all provided pages to find the most complete information for each field. Scrutinize every page for line items under tables like "Shipping Details" to create a comprehensive list of all unique items.
@@ -1349,6 +1648,22 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         
         parseBolBtn.addEventListener('click', handleBolParsing);
         exportBolBtn.addEventListener('click', handleExportBolData);
+
+        // Upload Method Event Listeners
+        uploadMethodPdf.addEventListener('click', () => switchUploadMethod('pdf'));
+        uploadMethodCamera.addEventListener('click', () => switchUploadMethod('camera'));
+        uploadMethodVector.addEventListener('click', () => switchUploadMethod('vector'));
+
+        // Camera Event Listeners
+        startCamera.addEventListener('click', startCameraCapture);
+        capturePhoto.addEventListener('click', capturePhotoFromCamera);
+        stopCamera.addEventListener('click', stopCameraCapture);
+        retakePhoto.addEventListener('click', retakePhotoCapture);
+        usePhoto.addEventListener('click', useCapturedPhoto);
+
+        // Vector API Event Listeners
+        loadVectorDocuments.addEventListener('click', loadDocumentsFromVector);
+        if (saveVectorApiSettings) saveVectorApiSettings.addEventListener('click', saveVectorSettings);
 
         howToBtn.addEventListener('click', () => {
             updateKeyHelpPanel();
@@ -2637,6 +2952,510 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         
         // Initialize confidence display on page load
         updateConfidenceDisplay();
+
+        // ===== NEW UPLOAD METHOD FUNCTIONALITY =====
+
+        // Upload Method Switching
+        function switchUploadMethod(method) {
+            currentUploadMethod = method;
+            
+            // Update button states - remove active from all buttons first
+            document.querySelectorAll('.upload-method-btn').forEach(btn => {
+                btn.classList.remove('active');
+                // Reset to default styling
+                btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+                btn.classList.add('border-gray-300', 'bg-white', 'text-gray-700');
+            });
+            
+            // Add active state to selected button
+            const activeButton = document.getElementById(`uploadMethod${method.charAt(0).toUpperCase() + method.slice(1)}`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+                // Apply active styling
+                activeButton.classList.remove('border-gray-300', 'bg-white', 'text-gray-700');
+                activeButton.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            }
+            
+            // Show/hide sections
+            document.querySelectorAll('.upload-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            if (method === 'pdf') {
+                pdfUploadSection.classList.remove('hidden');
+            } else if (method === 'camera') {
+                cameraSection.classList.remove('hidden');
+            } else if (method === 'vector') {
+                vectorApiSection.classList.remove('hidden');
+            }
+            
+            // Reset states
+            resetUploadStates();
+        }
+
+        function resetUploadStates() {
+            // Reset PDF
+            bolFile = null;
+            bolPageImages = [];
+            pdfFileNameDisplay.textContent = '';
+            bolPreviewContainer.innerHTML = '';
+            
+            // Reset camera
+            if (cameraStream) {
+                stopCameraCapture();
+            }
+            
+            // Reset Vector API
+            selectedVectorDocument = null;
+            vectorApiStatus.classList.add('hidden');
+            vectorDocumentsList.classList.add('hidden');
+            
+            // Reset UI states
+            parseBolBtn.disabled = true;
+            resultsWrapper.classList.add('hidden');
+            messageContainer.classList.add('hidden');
+            bolResultContainer.classList.add('hidden');
+        }
+
+        // ===== CAMERA FUNCTIONALITY =====
+
+        async function startCameraCapture() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment', // Use back camera if available
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    } 
+                });
+                
+                cameraVideo.srcObject = cameraStream;
+                cameraControls.classList.add('hidden');
+                cameraPreview.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showVectorStatus('error', 'Camera access denied. Please ensure camera permissions are granted and try again.');
+            }
+        }
+
+        function capturePhotoFromCamera() {
+            const canvas = captureCanvas;
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match video
+            canvas.width = cameraVideo.videoWidth;
+            canvas.height = cameraVideo.videoHeight;
+            
+            // Draw the video frame to canvas (flip horizontally to match preview)
+            context.scale(-1, 1);
+            context.drawImage(cameraVideo, -canvas.width, 0, canvas.width, canvas.height);
+            context.scale(-1, 1); // Reset scale
+            
+            // Convert to blob and create image
+            canvas.toBlob((blob) => {
+                const imageUrl = URL.createObjectURL(blob);
+                capturedImagePreview.src = imageUrl;
+                
+                // Store the image data for processing
+                canvas.toBlob((blob) => {
+                    const file = new File([blob], 'captured-document.jpg', { type: 'image/jpeg' });
+                    bolFile = file;
+                    
+                    // Convert to image for processing
+                    const img = new Image();
+                    img.onload = () => {
+                        bolPageImages = [canvas.toDataURL('image/jpeg', 0.9)];
+                        parseBolBtn.disabled = false;
+                        URL.revokeObjectURL(imageUrl);
+                    };
+                    img.src = imageUrl;
+                }, 'image/jpeg', 0.9);
+                
+                cameraPreview.classList.add('hidden');
+                capturedImage.classList.remove('hidden');
+            }, 'image/jpeg', 0.9);
+        }
+
+        function stopCameraCapture() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            cameraPreview.classList.add('hidden');
+            cameraControls.classList.remove('hidden');
+            capturedImage.classList.add('hidden');
+        }
+
+        function retakePhotoCapture() {
+            capturedImage.classList.add('hidden');
+            startCameraCapture();
+        }
+
+        function useCapturedPhoto() {
+            // Photo is already processed in capturePhotoFromCamera
+            showVectorStatus('success', 'Photo captured successfully! Ready for analysis.');
+        }
+
+        // ===== VECTOR API FUNCTIONALITY =====
+
+        async function loadDocumentsFromVector() {
+            const endpoint = vectorApiEndpoint.value.trim();
+            const token = vectorBearerToken.value.trim();
+            const dateRange = parseInt(vectorDateRange.value) || 30;
+            const resultSize = parseInt(vectorResultSize.value) || 100;
+            
+            if (!endpoint || !token) {
+                showVectorStatus('error', 'Please provide both API endpoint and bearer token.');
+                return;
+            }
+            
+            showVectorStatus('info', 'Loading documents from Vector API...');
+            
+            // Calculate date range
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - dateRange);
+            
+            const gteDate = startDate.toISOString();
+            const lteDate = endDate.toISOString();
+            
+            // Construct request body for document query
+            const requestBody = {
+                "filters": [
+                    {
+                        "type": "containsEdge",
+                        "path": "mixins.active",
+                        "values": [
+                            {
+                                "entityId": "11111111-0000-0000-0000-000000000011"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "range",
+                        "entityType": "/1.0/entities/metadata/entity.json",
+                        "label": "Posted Date",
+                        "path": "creationDate",
+                        "gte": gteDate,
+                        "lte": lteDate
+                    }
+                ],
+                "orders": [
+                    {
+                        "path": "creationDate",
+                        "type": "descending",
+                        "label": "Posted Date"
+                    }
+                ],
+                "metadata": {
+                    "size": resultSize,
+                    "offset": 0,
+                    "maxSizePerGroup": 10,
+                    "shouldIncludeLeafEntities": true
+                }
+            };
+            
+            try {
+                let response;
+                
+                try {
+                    // Try direct API call first
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                            'Origin': 'localhost'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                } catch (corsError) {
+                    // Fallback to CORS proxy
+                    showVectorStatus('info', 'Retrying with CORS proxy...');
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(endpoint)}`;
+                    response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                            'Origin': 'localhost'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+                }
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let errorMessage = `API call failed: ${response.status}`;
+                    
+                    if (response.status === 401) {
+                        errorMessage = 'Authentication failed. Please check your bearer token.';
+                    } else if (response.status === 403) {
+                        errorMessage = 'Access forbidden. Your token may not have the required permissions.';
+                    } else if (response.status === 404) {
+                        errorMessage = 'API endpoint not found. Please verify the endpoint URL.';
+                    } else if (response.status === 429) {
+                        errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+                    } else if (errorText.includes('corsdemo')) {
+                        errorMessage = 'CORS proxy access required. Please visit https://cors-anywhere.herokuapp.com/corsdemo to request temporary access.';
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+                
+                const responseData = await response.json();
+                const documents = transformVectorDocuments(responseData);
+                
+                if (documents.length === 0) {
+                    showVectorStatus('warning', 'No documents found in Vector API response.');
+                    return;
+                }
+                
+                displayVectorDocuments(documents);
+                showVectorStatus('success', `Successfully loaded ${documents.length} documents.`);
+                
+            } catch (error) {
+                console.error('Vector API error:', error);
+                let errorMessage = error.message;
+                
+                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                    errorMessage = 'Network error: Unable to connect to the Vector API. Please check your internet connection and API endpoint.';
+                }
+                
+                showVectorStatus('error', errorMessage);
+            }
+        }
+
+        function transformVectorDocuments(apiData) {
+            if (!apiData || !apiData.children) return [];
+            
+            return apiData.children.map(child => {
+                const documentData = child.data?.core_document || {};
+                
+                return {
+                    id: documentData.id || child.id,
+                    name: documentData.name || documentData.title || 'Untitled Document',
+                    type: documentData.type || 'Document',
+                    size: documentData.size || 'Unknown',
+                    modifiedDate: documentData.modifiedDate || child.modifiedDate,
+                    url: documentData.url || documentData.downloadUrl,
+                    metadata: documentData
+                };
+            }).filter(doc => doc.url); // Only include documents with download URLs
+        }
+
+        function displayVectorDocuments(documents) {
+            documentsGrid.innerHTML = '';
+            
+            documents.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = 'document-card';
+                card.dataset.documentId = doc.id;
+                
+                const modifiedDate = doc.modifiedDate ? new Date(doc.modifiedDate).toLocaleDateString() : 'Unknown';
+                const fileSize = formatFileSize(doc.size);
+                
+                card.innerHTML = `
+                    <div class="document-title">${doc.name}</div>
+                    <div class="document-meta">
+                        <span class="document-type">${doc.type}</span>
+                        <span>${fileSize}</span>
+                    </div>
+                    <div class="document-meta mt-1">
+                        <span>Modified: ${modifiedDate}</span>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => selectVectorDocument(doc, card));
+                documentsGrid.appendChild(card);
+            });
+            
+            vectorDocumentsList.classList.remove('hidden');
+        }
+
+        async function selectVectorDocument(document, cardElement) {
+            // Update UI selection
+            document.querySelectorAll('.document-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            cardElement.classList.add('selected');
+            
+            selectedVectorDocument = document;
+            
+            try {
+                showVectorStatus('info', 'Downloading document...');
+                
+                // Download the document
+                const response = await fetch(document.url);
+                if (!response.ok) {
+                    throw new Error(`Failed to download document: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const file = new File([blob], document.name, { type: blob.type });
+                
+                // Process based on file type
+                if (document.name.toLowerCase().endsWith('.pdf') || blob.type === 'application/pdf') {
+                    bolFile = file;
+                    bolPageImages = await renderPdfToImages(file);
+                    parseBolBtn.disabled = false;
+                    showVectorStatus('success', `Document "${document.name}" loaded successfully!`);
+                } else {
+                    // Try to process as image
+                    const imageUrl = URL.createObjectURL(blob);
+                    const img = new Image();
+                    
+                    img.onload = () => {
+                        bolPageImages = [imageUrl];
+                        bolFile = file;
+                        parseBolBtn.disabled = false;
+                        showVectorStatus('success', `Document "${document.name}" loaded successfully!`);
+                    };
+                    
+                    img.onerror = () => {
+                        URL.revokeObjectURL(imageUrl);
+                        showVectorStatus('error', 'Unsupported file format. Please select a PDF or image file.');
+                    };
+                    
+                    img.src = imageUrl;
+                }
+                
+            } catch (error) {
+                console.error('Document download error:', error);
+                showVectorStatus('error', `Failed to download document: ${error.message}`);
+            }
+        }
+
+        function showVectorStatus(type, message) {
+            vectorApiStatus.className = `mb-4 p-3 rounded-lg status-${type}`;
+            vectorApiStatus.textContent = message;
+            vectorApiStatus.classList.remove('hidden');
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    vectorApiStatus.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 'Unknown') return 'Unknown size';
+            if (typeof bytes === 'string') return bytes;
+            
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            if (bytes === 0) return '0 Bytes';
+            
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
+            return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // ===== VECTOR API SETTINGS MANAGEMENT =====
+
+        // Load saved Vector API settings
+        function loadVectorApiSettings() {
+            const savedEndpoint = localStorage.getItem('vectorApiEndpoint');
+            const savedToken = localStorage.getItem('vectorBearerToken');
+            const savedDateRange = localStorage.getItem('vectorDateRange') || '30';
+            const savedResultSize = localStorage.getItem('vectorResultSize') || '100';
+            
+            if (savedEndpoint) {
+                if (vectorApiEndpoint) vectorApiEndpoint.value = savedEndpoint;
+                if (settingsVectorApiEndpoint) settingsVectorApiEndpoint.value = savedEndpoint;
+            }
+            
+            if (savedToken) {
+                if (vectorBearerToken) vectorBearerToken.value = savedToken;
+                if (settingsVectorBearerToken) settingsVectorBearerToken.value = savedToken;
+            }
+            
+            if (vectorDateRange) vectorDateRange.value = savedDateRange;
+            if (settingsVectorDateRange) settingsVectorDateRange.value = savedDateRange;
+            
+            if (vectorResultSize) vectorResultSize.value = savedResultSize;
+            if (settingsVectorResultSize) settingsVectorResultSize.value = savedResultSize;
+        }
+
+        // Save Vector API settings
+        function saveVectorSettings() {
+            const endpoint = settingsVectorApiEndpoint.value.trim();
+            const token = settingsVectorBearerToken.value.trim();
+            const dateRange = settingsVectorDateRange.value || '30';
+            const resultSize = settingsVectorResultSize.value || '100';
+            
+            if (!endpoint || !token) {
+                showVectorStatus('error', 'Please provide both API endpoint and bearer token.');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('vectorApiEndpoint', endpoint);
+            localStorage.setItem('vectorBearerToken', token);
+            localStorage.setItem('vectorDateRange', dateRange);
+            localStorage.setItem('vectorResultSize', resultSize);
+            
+            // Update the Vector API section inputs
+            if (vectorApiEndpoint) vectorApiEndpoint.value = endpoint;
+            if (vectorBearerToken) vectorBearerToken.value = token;
+            if (vectorDateRange) vectorDateRange.value = dateRange;
+            if (vectorResultSize) vectorResultSize.value = resultSize;
+            
+            // Show success message
+            const originalText = saveVectorApiSettings.textContent;
+            saveVectorApiSettings.textContent = 'Saved!';
+            saveVectorApiSettings.classList.add('bg-green-600');
+            saveVectorApiSettings.classList.remove('bg-blue-600');
+            
+            setTimeout(() => {
+                saveVectorApiSettings.textContent = originalText;
+                saveVectorApiSettings.classList.remove('bg-green-600');
+                saveVectorApiSettings.classList.add('bg-blue-600');
+            }, 2000);
+        }
+
+        // Sync Vector API settings between sections
+        function syncVectorApiSettings() {
+            // When Vector API section values change, update settings
+            if (vectorApiEndpoint) {
+                vectorApiEndpoint.addEventListener('input', () => {
+                    if (settingsVectorApiEndpoint) {
+                        settingsVectorApiEndpoint.value = vectorApiEndpoint.value;
+                    }
+                });
+            }
+            
+            if (vectorBearerToken) {
+                vectorBearerToken.addEventListener('input', () => {
+                    if (settingsVectorBearerToken) {
+                        settingsVectorBearerToken.value = vectorBearerToken.value;
+                    }
+                });
+            }
+            
+            if (vectorDateRange) {
+                vectorDateRange.addEventListener('input', () => {
+                    if (settingsVectorDateRange) {
+                        settingsVectorDateRange.value = vectorDateRange.value;
+                    }
+                });
+            }
+            
+            if (vectorResultSize) {
+                vectorResultSize.addEventListener('input', () => {
+                    if (settingsVectorResultSize) {
+                        settingsVectorResultSize.value = vectorResultSize.value;
+                    }
+                });
+            }
+        }
+
+        // Initialize Vector API settings
+        loadVectorApiSettings();
+        syncVectorApiSettings();
+
+        // Initialize with PDF method selected
+        switchUploadMethod('pdf');
 
     </script>
 </body>
