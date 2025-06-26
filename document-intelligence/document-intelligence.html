@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoL Report Generator</title>
+    <title>Document Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -443,6 +443,27 @@
             text-align: center;
         }
 
+        .confidence-col.collapsed {
+            display: none;
+        }
+
+        th.confidence-col.collapsed {
+            display: table-cell !important; /* Override to keep header visible */
+            width: 60px; /* Shrink the header width */
+        }
+
+        th.confidence-col.collapsed > div > span {
+            display: none; /* Hide only the text in the header */
+        }
+
+        #confidenceChevron {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        #confidenceChevron.collapsed {
+            transform: rotate(-90deg);
+        }
+
         /* Compact Mode Styles */
         body.compact-mode .container {
             padding: 1rem !important;
@@ -515,8 +536,8 @@
                     </button>
                 </div>
                 <div class="text-center">
-                    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">BoL Report Generator</h1>
-                    <p class="mt-2 text-gray-600">Upload a Bill of Lading PDF, and the AI will parse the details into a structured format.</p>
+                    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">Document Intelligence</h1>
+                    <p class="mt-2 text-gray-600">Upload a document, and our AI will extract key details into a structured format.</p>
                 </div>
             </header>
 
@@ -772,7 +793,7 @@
 
             <div id="bolContent">
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Bill of Lading (PDF)</label>
+                    <label class="block text-lg font-medium text-gray-700 font-google-sans">Upload Document (PDF)</label>
                 </div>
                  <label for="bolUpload" class="flex flex-col items-center justify-center w-full min-h-[16rem] border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition p-4">
                      <div id="bol-prompt-text" class="flex flex-col items-center justify-center text-center">
@@ -784,7 +805,7 @@
                      <input id="bolUpload" type="file" class="hidden" accept="application/pdf" />
                  </label>
                 <div class="text-center mt-8 mb-8">
-                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Parse Bill of Lading</button>
+                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Analyze Document</button>
                 </div>
             </div>
 
@@ -808,7 +829,7 @@
     <div id="resultsWrapper" class="hidden">
          <div id="bolResultContainer" class="hidden mt-6 px-4 sm:px-6 lg:px-8">
              <div class="flex justify-between items-center mb-6 py-4 border-b border-gray-200">
-                 <h2 class="text-xl font-semibold text-gray-800">Bill of Lading Details</h2>
+                 <h2 class="text-xl font-semibold text-gray-800">Extracted Details</h2>
                  <div class="flex items-center gap-3">
                      <button id="rawResultsBtn" class="text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors bg-white">
                         Raw Results
@@ -907,7 +928,7 @@
                 </button>
             </div>
             <div id="promptPanelContentBol" class="p-6 overflow-y-auto flex-grow flex flex-col">
-                <label for="bolPromptTextarea" class="font-semibold mb-2">Bill of Lading Prompt</label>
+                <label for="bolPromptTextarea" class="font-semibold mb-2">Document Prompt</label>
                 <textarea id="bolPromptTextarea" class="w-full flex-grow p-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500"></textarea>
                  <div class="mt-4 flex gap-4">
                      <button id="saveBolPromptBtn" class="flex-1 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Save</button>
@@ -1102,6 +1123,8 @@ COORDINATE SYSTEM: Use standard image coordinates where:
 - "bol_number": The primary Bill of Lading number.
 - "shipment_number": The shipment ID or number.
 - "temperature": The required transit temperature (e.g., 34-40°F).
+- "customer": The name of the receiving company (the consignee, distinct from the destination address).
+- "vendor": The name of the shipping company (the shipper, distinct from the origin address).
 
 For fields where coordinates cannot be determined, use {"page": 0, "x": 0, "y": 0, "width": 0, "height": 0} and confidence: 0.
 
@@ -1113,6 +1136,8 @@ Return the JSON in this exact structure:
   "carrier": {"value": "...", "coordinates": {...}, "confidence": 88},
   "origin": {"value": "...", "coordinates": {...}, "confidence": 92},
   "destination": {"value": "...", "coordinates": {...}, "confidence": 91},
+  "customer": {"value": "...", "coordinates": {...}, "confidence": 90},
+  "vendor": {"value": "...", "coordinates": {...}, "confidence": 90},
   "signed": {"value": true/false, "coordinates": {...}, "confidence": 75},
   "scac": {"value": "...", "coordinates": {...}, "confidence": 80},
   "delivery_number": {"value": "...", "coordinates": {...}, "confidence": 87},
@@ -1406,47 +1431,104 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         if (printBolBtn) {
             printBolBtn.addEventListener('click', () => {
                 const printContents = bolResultCard.cloneNode(true);
-                // Remove carousel/image section if present
+
+                // --- Modify content for printing ---
+                
+                // 1. Remove image carousel
                 const carousel = printContents.querySelector('#mainCarouselContainer');
                 if (carousel) carousel.remove();
-                // Remove edit buttons
-                printContents.querySelectorAll('[data-action="edit"]').forEach(btn => btn.remove());
-                // Remove remove-row and add-row buttons
-                printContents.querySelectorAll('.remove-row-btn').forEach(btn => btn.remove());
-                const addRowBtn = printContents.querySelector('#addRowBtn');
-                if (addRowBtn) addRowBtn.remove();
-                // Create a print window
+
+                // 2. Remove all buttons (add/remove row, etc.)
+                printContents.querySelectorAll('button').forEach(btn => btn.remove());
+
+                // 3. Remove Confidence column from the main details table
+                const mainTable = printContents.querySelector('.lg\\:col-span-3 .data-table');
+                if (mainTable) {
+                    const header = mainTable.querySelector('thead tr');
+                    if(header && header.children[2]) header.children[2].remove(); // Remove 3rd TH
+                    
+                    mainTable.querySelectorAll('tbody tr').forEach(row => {
+                        if(row.children[2]) row.children[2].remove(); // Remove 3rd TD
+                    });
+                }
+                
+                // 4. Remove Actions column from Contents table
+                const contentsTable = printContents.querySelector('#contentsTable');
+                if (contentsTable) {
+                    const contentHeader = contentsTable.querySelector('thead tr');
+                    if(contentHeader && contentHeader.lastElementChild) contentHeader.lastElementChild.remove();
+                    
+                    contentsTable.querySelectorAll('tbody tr').forEach(row => {
+                         if(row.lastElementChild) row.lastElementChild.remove();
+                    });
+                }
+
+                // 5. Style the 'Contents' label as a proper heading
+                const contentsLabel = printContents.querySelector('label.block');
+                if (contentsLabel && contentsLabel.textContent === 'Contents') {
+                    const newHeading = document.createElement('h3');
+                    newHeading.textContent = 'Contents';
+                    contentsLabel.replaceWith(newHeading);
+                }
+
+                // --- Create print-friendly window ---
+
                 const printWindow = window.open('', '', 'width=900,height=700');
                 printWindow.document.write(`
                     <html>
                     <head>
-                        <title>Print BoL Results</title>
-                        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+                        <title>Print Document Analysis</title>
                         <style>
-                            body { font-family: 'Inter', sans-serif; background: #fff; color: #222; margin: 0; padding: 2rem; }
-                            h2 { font-size: 2rem; font-weight: 700; margin-bottom: 2.5rem; }
-                            label { font-weight: 600; color: #374151; }
-                            .field-block, .mt-1.flex.items-center.p-2.border.bg-gray-50.rounded-md { margin-bottom: 1.1rem !important; }
-                            .field-label { display: block; font-size: 1rem; margin-bottom: 0.2rem; color: #555; }
-                            .field-value { font-size: 1.1rem; background: #f3f4f6; padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; }
-                            .print-section { margin-bottom: 2.5rem; }
-                            .section-title { font-size: 1.2rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1.2rem; color: #2563eb; }
-                            .data-point { margin-bottom: 2.2rem; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 2.5rem; margin-bottom: 2.5rem; font-size: 80%; }
-                            th, td { border: 1px solid #e5e7eb; padding: 0.6rem 0.8rem; text-align: left; }
-                            th { background: #f1f5f9; font-weight: 700; }
-                            tr:nth-child(even) { background: #f9fafb; }
+                            @page {
+                                size: A4 portrait;
+                                margin: 0.75in;
+                            }
+                            body { 
+                                font-family: 'Inter', sans-serif; 
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+                            h2, h3 { 
+                                font-family: 'Roboto', sans-serif;
+                                font-weight: 600;
+                                margin-top: 0;
+                                margin-bottom: 1.5rem;
+                                color: #111;
+                            }
+                            h2 { font-size: 22pt; }
+                            h3 { font-size: 14pt; margin-top: 2rem; }
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                font-size: 9pt; 
+                                page-break-inside: avoid;
+                            }
+                            th, td { 
+                                border: 1px solid #999; 
+                                padding: 0.5rem; 
+                                text-align: left;
+                                vertical-align: top;
+                            }
+                            th { 
+                                background-color: #f2f2f2 !important;
+                                font-weight: 600;
+                            }
+                            /* The 'about:blank' footer is a browser setting. This stylesheet provides a clean layout for printing. */
                         </style>
                     </head>
                     <body>
-                        <h2>Bill of Lading Details</h2>
+                        <h2>Extracted Details</h2>
                         ${printContents.innerHTML}
                     </body>
                     </html>
                 `);
+                
                 printWindow.document.close();
                 printWindow.focus();
-                setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+                setTimeout(() => { 
+                    printWindow.print(); 
+                    printWindow.close(); 
+                }, 500);
             });
         }
 
@@ -1716,7 +1798,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const pageCounter = bolResultCard.querySelector('#pageCounter');
                 if (img && pageCounter) {
                     img.src = bolPageImages[currentBolPageIndex];
-                    img.alt = `Bill of Lading Page ${currentBolPageIndex + 1}`;
+                    img.alt = `Document Page ${currentBolPageIndex + 1}`;
                     pageCounter.textContent = `${currentBolPageIndex + 1} / ${bolPageImages.length}`;
                     
                     // Update coordinate overlays when page changes
@@ -1737,7 +1819,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 img.id = 'carouselImage';
                 img.src = bolPageImages.length > 0 ? bolPageImages[0] : '';
                 img.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer';
-                img.alt = 'Bill of Lading Page 1';
+                img.alt = 'Document Page 1';
                 img.addEventListener('click', () => openImageZoomModal());
                 img.addEventListener('load', () => {
                     // Update overlays when image loads
@@ -1814,7 +1896,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                             </tr>
                         </thead>
                         <tbody>
-                        ${data.contents.map((item, idx) => {
+                        ${(data.contents || []).map((item, idx) => {
                             const getConfidenceIndicator = (field) => {
                                 const confidence = getConfidence(field);
                                 const hasCoords = getCoordinates(field) && getCoordinates(field).x > 0;
@@ -1859,7 +1941,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                                 <tr class="bg-gray-100 border-b-2 border-gray-300">
                                     <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">Order Information</th>
                                     <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 border-r border-gray-300">Value</th>
-                                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Confidence(%)</th>
+                                    <th id="confidenceHeader" class="px-4 py-3 text-center text-sm font-semibold text-gray-700 confidence-col cursor-pointer group" title="Toggle Confidence Column">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <span>Confidence(%)</span>
+                                            <svg id="confidenceChevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 group-hover:text-gray-800">
+                                                <path d="m6 9 6 6 6-6"/>
+                                            </svg>
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1875,6 +1964,8 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                                 ${createDisplayField('signed', 'Signed?', getValue(data.signed) === true ? 'Yes' : getValue(data.signed) === false ? 'No' : getValue(data.signed), getCoordinates(data.signed), getConfidence(data.signed))}
                                 ${createDisplayField('origin', 'Origin', getValue(data.origin), getCoordinates(data.origin), getConfidence(data.origin))}
                                 ${createDisplayField('destination', 'Destination', getValue(data.destination), getCoordinates(data.destination), getConfidence(data.destination))}
+                                ${createDisplayField('vendor', 'Vendor', getValue(data.vendor), getCoordinates(data.vendor), getConfidence(data.vendor))}
+                                ${createDisplayField('customer', 'Customer', getValue(data.customer), getCoordinates(data.customer), getConfidence(data.customer))}
                             </tbody>
                         </table>
                     </div>
@@ -1889,6 +1980,30 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 bolResultCard.querySelector('#mainCarouselContainer').appendChild(createCarousel());
             }
             
+            // Collapsible confidence column logic
+            const confidenceHeader = bolResultCard.querySelector('#confidenceHeader');
+            if (confidenceHeader) {
+                const confidenceChevron = bolResultCard.querySelector('#confidenceChevron');
+                const allConfidenceCells = bolResultCard.querySelectorAll('.confidence-col');
+
+                const setConfidenceCollapsed = (isCollapsed) => {
+                    if (confidenceChevron) {
+                        confidenceChevron.classList.toggle('collapsed', isCollapsed);
+                    }
+                    allConfidenceCells.forEach(col => {
+                        col.classList.toggle('collapsed', isCollapsed);
+                    });
+                };
+
+                // Collapse by default
+                setConfidenceCollapsed(true);
+
+                confidenceHeader.addEventListener('click', () => {
+                    const isCurrentlyCollapsed = confidenceChevron ? confidenceChevron.classList.contains('collapsed') : true;
+                    setConfidenceCollapsed(!isCurrentlyCollapsed);
+                });
+            }
+
             // Re-attach listeners for dynamically created elements
             bolResultCard.querySelectorAll('[data-action="edit"]').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1943,7 +2058,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     <td class="px-4 py-3 border-r border-gray-200 ${coordsClass}">
                         <span class="text-sm text-gray-900 editable-field" data-field-id="${id}" data-coordinates='${coordsData}' tabindex="0" title="${value || 'N/A'}">${value || 'N/A'}</span>
                     </td>
-                    <td class="px-4 py-3 text-center">
+                    <td class="px-4 py-3 text-center confidence-col">
                         <span class="text-sm font-medium ${confidenceTextColor}">${confidenceDisplay}</span>
                     </td>
                 </tr>`;
@@ -2110,31 +2225,33 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const card = document.getElementById('bolResultCard');
             if (!card) return;
 
-            const headers = ["Appointment Number", "Seal Number", "Date", "Carrier", "Origin", "Destination", "SCAC", "Delivery Number", "BoL Number", "Shipment Number", "Temperature", "Signed", "Item #", "Content Description", "Content Amount", "Content Weight", "Use By Date"];
+            const headers = ["BoL Number", "Order Number", "Seal Number", "Shipment Number", "Delivery Number", "SCAC", "Date", "Carrier", "Temperature", "Signed", "Origin", "Destination", "Vendor", "Customer", "Item #", "Content Description", "Content Amount", "Content Weight", "Use By Date"];
             const rows = [];
             
             const getValue = (id) => card.querySelector(`[data-field-id="${id}"]`) ? card.querySelector(`[data-field-id="${id}"]`).textContent : 'N/A';
             
             const baseData = {
-                appointment_number: getValue('appointment_number'),
+                bol_number: getValue('bol_number'),
+                order_number: getValue('order_number'),
                 seal_number: getValue('seal_number'),
+                shipment_number: getValue('shipment_number'),
+                delivery_number: getValue('delivery_number'),
+                scac: getValue('scac'),
                 date: getValue('date'),
                 carrier: getValue('carrier'),
-                origin: getValue('origin'),
-                destination: getValue('destination'),
-                scac: getValue('scac'),
-                delivery_number: getValue('delivery_number'),
-                bol_number: getValue('bol_number'),
-                shipment_number: getValue('shipment_number'),
                 temperature: getValue('temperature'),
                 signed: getValue('signed'),
+                origin: getValue('origin'),
+                destination: getValue('destination'),
+                vendor: getValue('vendor'),
+                customer: getValue('customer'),
             };
 
             const contentRows = card.querySelectorAll('tbody > tr');
             if (contentRows.length > 0 && contentRows[0].cells.length > 1) {
                  contentRows.forEach(row => {
                     rows.push([
-                        baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, baseData.signed,
+                        baseData.bol_number, baseData.order_number, baseData.seal_number, baseData.shipment_number, baseData.delivery_number, baseData.scac, baseData.date, baseData.carrier, baseData.temperature, baseData.signed, baseData.origin, baseData.destination, baseData.vendor, baseData.customer,
                         row.cells[0] ? row.cells[0].innerText : 'N/A', // Item #
                         row.cells[1] ? row.cells[1].innerText : 'N/A', // Description
                         row.cells[2] ? row.cells[2].innerText : 'N/A', // Amount
@@ -2143,7 +2260,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                 rows.push([baseData.appointment_number, baseData.seal_number, baseData.date, baseData.carrier, baseData.origin, baseData.destination, baseData.scac, baseData.delivery_number, baseData.bol_number, baseData.shipment_number, baseData.temperature, baseData.signed, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                 rows.push([baseData.bol_number, baseData.order_number, baseData.seal_number, baseData.shipment_number, baseData.delivery_number, baseData.scac, baseData.date, baseData.carrier, baseData.temperature, baseData.signed, baseData.origin, baseData.destination, baseData.vendor, baseData.customer, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
             }
 
             let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
