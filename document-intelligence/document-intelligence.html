@@ -380,55 +380,185 @@
             border: 2px solid #10b981;
         }
         
-        /* Vector API Document Card Styles */
-        .document-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            background-color: white;
+        /* Professional Documents Table Styles */
+        #documentsTable {
+            font-size: 14px;
         }
         
-        .document-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        #documentsTable tbody tr {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        
+        #documentsTable tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        #documentsTable tbody tr.selected {
+            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+            color: white;
+            border-left: 6px solid #fbbf24;
+            border-right: 3px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            transform: scale(1.02);
+            z-index: 10;
+        }
+        
+        #documentsTable tbody tr.selected::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            bottom: 0;
+            width: 6px;
+            background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+            border-radius: 0 3px 3px 0;
+        }
+        
+        #documentsTable tbody tr.selected::after {
+            content: '✓ SELECTED FOR ANALYSIS';
+            position: absolute;
+            right: 120px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(251, 191, 36, 0.95);
+            color: #1e40af;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 20;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(30, 64, 175, 0.2);
+        }
+        
+        #documentsTable tbody tr.selected .document-name {
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        #documentsTable tbody tr.selected .type-badge {
+            background-color: #fbbf24;
+            color: #1e40af;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        #documentsTable tbody tr.selected .type-badge.inbound,
+        #documentsTable tbody tr.selected .type-badge.outbound,
+        #documentsTable tbody tr.selected .type-badge.unknown {
+            background-color: #fbbf24;
+            color: #1e40af;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+
+        
+        .document-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .document-id {
+            font-size: 12px;
+            color: #6b7280;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .type-badge.inbound {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .type-badge.outbound {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .type-badge.unknown {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .preview-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 90px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .preview-btn:hover {
+            background: linear-gradient(to bottom, #3b82f6, #2563eb);
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
             transform: translateY(-1px);
         }
         
-        .document-card.selected {
-            border-color: #10b981;
-            background-color: #ecfdf5;
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        .preview-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(59, 130, 246, 0.25);
         }
         
-        .document-card .document-title {
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 4px;
-            font-size: 14px;
-            line-height: 1.25;
-        }
-        
-        .document-card .document-meta {
-            font-size: 12px;
-            color: #6b7280;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .document-card .document-type {
-            background-color: #f3f4f6;
+        #documentsTable tbody tr.selected .preview-btn {
+            background: linear-gradient(to bottom, #ffffff, #f8fafc);
             color: #374151;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 500;
-            text-transform: uppercase;
+            border-color: #d1d5db;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
         
-        /* Status message styles */
+        #documentsTable tbody tr.selected .preview-btn:hover {
+            background: linear-gradient(to bottom, #f59e0b, #d97706);
+            color: white;
+            border-color: #d97706;
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            #documentsTable th:nth-child(2),
+            #documentsTable th:nth-child(3),
+            #documentsTable td:nth-child(2),
+            #documentsTable td:nth-child(3) {
+                display: none;
+            }
+        }
+        
         .status-success {
             background-color: #d1fae5;
             color: #065f46;
@@ -656,9 +786,9 @@
                 <div class="border-b border-gray-200 mb-6">
                     <nav class="flex space-x-8" aria-label="Settings Tabs">
                         <button id="settingsTabGeneral" class="settings-tab active">General</button>
-                        <button id="settingsTabAI" class="settings-tab">AI Models</button>
+                        <button id="settingsTabAI" class="settings-tab">AI Configuration</button>
+                        <button id="settingsTabAPI" class="settings-tab">API Configuration</button>
                         <button id="settingsTabConfidence" class="settings-tab">Confidence</button>
-                        <button id="settingsTabAppearance" class="settings-tab">Appearance</button>
                     </nav>
                 </div>
 
@@ -670,10 +800,10 @@
                         
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                 <div>
+                                <div>
                                     <label class="text-sm font-medium text-gray-700">Auto-save results</label>
                                     <p class="text-xs text-gray-500">Automatically save parsed results to local storage</p>
-                    </div>
+                                </div>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="autoSaveToggle">
                                     <span class="toggle-slider"></span>
@@ -692,9 +822,38 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="settings-section">
+                        <h3>Theme Preferences</h3>
+                        <p>Customize the appearance of the application.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Dark Mode</label>
+                                    <p class="text-xs text-gray-500">Switch between light and dark themes</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="darkModeToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Compact Mode</label>
+                                    <p class="text-xs text-gray-500">Reduce spacing for more content on screen</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="compactModeToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- AI Models Settings Tab -->
+                <!-- AI Configuration Settings Tab -->
                 <div id="settingsContentAI" class="settings-content hidden">
                     <div class="settings-section">
                         <h3>AI Model Configuration</h3>
@@ -704,25 +863,25 @@
                             <div>
                                 <label for="modelSelector" class="block text-sm font-medium text-gray-700 mb-2">Selected AI Model</label>
                                 <select id="modelSelector" class="form-input w-full">
-                        <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
+                                    <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
+                                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
                                     <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro (Recommended)</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                        <option value="gpt-4o">OpenAI GPT-4o</option>
-                        <option value="claude-4">Claude 4</option>
-                    </select>
-                </div>
+                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                    <option value="gpt-4o">OpenAI GPT-4o</option>
+                                    <option value="claude-4">Claude 4</option>
+                                </select>
+                            </div>
                             
                             <div class="flex items-center justify-between">
                                 <div>
                                     <label class="text-sm font-medium text-gray-700">Use custom parsing prompt</label>
                                     <p class="text-xs text-gray-500">Customize the AI instructions for document parsing</p>
-                    </div>
+                                </div>
                                 <button id="editBolPromptBtn" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
                                     Edit Prompt
                                 </button>
-                </div>
-                    </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="googleKeyContainer" class="settings-section">
@@ -741,7 +900,7 @@
                         </div>
                     </div>
 
-                    <div id="openaiKeyContainer" class="settings-section hidden">
+                    <div id="openaiKeyContainer" class="settings-section">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3>OpenAI API Key</h3>
@@ -756,7 +915,10 @@
                             <input type="password" id="openaiApiKeyInput" placeholder="Enter your OpenAI API Key" class="form-input w-full">
                         </div>
                     </div>
+                </div>
 
+                <!-- API Configuration Settings Tab -->
+                <div id="settingsContentAPI" class="settings-content hidden">
                     <div class="settings-section">
                         <h3>Vector API Configuration</h3>
                         <p class="text-xs text-gray-500 mt-1">Configure Vector API for document retrieval</p>
@@ -896,37 +1058,7 @@
                     </div>
                 </div>
 
-                <!-- Appearance Settings Tab -->
-                <div id="settingsContentAppearance" class="settings-content hidden">
-                    <div class="settings-section">
-                        <h3>Theme Preferences</h3>
-                        <p>Customize the appearance of the application.</p>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-700">Dark Mode</label>
-                                    <p class="text-xs text-gray-500">Switch between light and dark themes</p>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="darkModeToggle">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                            
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <label class="text-sm font-medium text-gray-700">Compact Mode</label>
-                                    <p class="text-xs text-gray-500">Reduce spacing for more content on screen</p>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="compactModeToggle">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             <div id="bolContent">
@@ -934,17 +1066,17 @@
                 <div class="mb-6">
                     <label class="block text-lg font-medium text-gray-700 font-google-sans mb-4">Select Document Source</label>
                     <div class="flex flex-wrap gap-2 mb-4">
-                        <button id="uploadMethodPdf" class="upload-method-btn active px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all duration-200 hover:bg-blue-100">
+                        <button id="uploadMethodVector" class="upload-method-btn active px-4 py-2 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium transition-all duration-200 hover:bg-blue-100">
+                            <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/></svg>
+                            Vector API
+                        </button>
+                        <button id="uploadMethodPdf" class="upload-method-btn px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50">
                             <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
                             Upload PDF
                         </button>
                         <button id="uploadMethodCamera" class="upload-method-btn px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50">
                             <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
                             Take Photo
-                        </button>
-                        <button id="uploadMethodVector" class="upload-method-btn px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50">
-                            <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/></svg>
-                            Vector API
                         </button>
                     </div>
                 </div>
@@ -1019,30 +1151,12 @@
                 <!-- Vector API Section -->
                 <div id="vectorApiSection" class="upload-section hidden">
                     <div class="border-2 border-gray-300 border-dashed rounded-lg p-6 bg-gray-50">
-                        <div class="mb-6">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Vector API Configuration</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label for="vectorApiEndpoint" class="block text-sm font-medium text-gray-600 mb-2">API Endpoint</label>
-                                    <input type="text" id="vectorApiEndpoint" value="https://api.withvector.com/1.0/entities/query?DEBUG=view--Documents" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter Vector API endpoint">
-                                </div>
-                                <div>
-                                    <label for="vectorBearerToken" class="block text-sm font-medium text-gray-600 mb-2">Bearer Token</label>
-                                    <input type="password" id="vectorBearerToken" value="563dc9a9e9815e25980552197fa2b9e5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter bearer token">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label for="vectorDateRange" class="block text-sm font-medium text-gray-600 mb-2">Date Range (days)</label>
-                                    <input type="number" id="vectorDateRange" value="30" min="1" max="365" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Number of days">
-                                    <p class="text-xs text-gray-500 mt-1">Documents from the past X days</p>
-                                </div>
-                                <div>
-                                    <label for="vectorResultSize" class="block text-sm font-medium text-gray-600 mb-2">Result Size</label>
-                                    <input type="number" id="vectorResultSize" value="100" min="1" max="1000" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Maximum results">
-                                    <p class="text-xs text-gray-500 mt-1">Maximum number of documents to load</p>
-                                </div>
-                            </div>
+                        <div class="text-center mb-6">
+                            <svg class="mx-auto h-12 w-12 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Vector API Documents</h3>
+                            <p class="text-sm text-gray-600 mb-4">Load documents from Vector API. Configure API settings in the Settings panel.</p>
                             <button id="loadVectorDocuments" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
                                 <svg class="w-5 h-5 inline mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/>
@@ -1052,16 +1166,55 @@
                         </div>
                         <div id="vectorApiStatus" class="hidden mb-4 p-3 rounded-lg"></div>
                         <div id="vectorDocumentsList" class="hidden">
-                            <h4 class="text-md font-medium text-gray-900 mb-3">Available Documents</h4>
-                            <div id="documentsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
-                                <!-- Documents will be populated here -->
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900">Available Documents</h4>
+                                    <p id="documentsCount" class="text-sm text-gray-600"></p>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" id="documentSearchInput" placeholder="Search documents..." class="pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64">
+                                    <svg class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                                <div class="max-h-96 overflow-y-auto">
+                                    <table id="documentsTable" class="w-full">
+                                        <thead class="bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Document</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="documentsTableBody" class="bg-white divide-y divide-gray-200">
+                                            <!-- Documents will be populated here -->
+                                        </tbody>
+                                    </table>
+                                    <div id="noDocumentsMessage" class="hidden text-center py-8 text-gray-500">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <p>No documents found</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="text-center mt-8 mb-8">
-                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Analyze Document</button>
+                <div class="flex flex-col items-center mt-8 mb-8">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 mb-4">
+                        <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Analyze Document</button>
+                        <div id="analyzeStatusMessage" class="hidden">
+                            <div class="flex items-center gap-2 px-4 py-2 rounded-lg">
+                                <div id="statusIcon" class="flex-shrink-0"></div>
+                                <span id="statusText" class="text-sm font-medium whitespace-nowrap"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1094,7 +1247,7 @@
                          Print Results
                      </button>
                      <button id="exportBolBtn" class="bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                         Export Data
+                         Download CSV
                      </button>
                  </div>
              </div>
@@ -1249,12 +1402,12 @@
         // Settings Tab Elements
         const settingsTabGeneral = document.getElementById('settingsTabGeneral');
         const settingsTabAI = document.getElementById('settingsTabAI');
+        const settingsTabAPI = document.getElementById('settingsTabAPI');
         const settingsTabConfidence = document.getElementById('settingsTabConfidence');
-        const settingsTabAppearance = document.getElementById('settingsTabAppearance');
         const settingsContentGeneral = document.getElementById('settingsContentGeneral');
         const settingsContentAI = document.getElementById('settingsContentAI');
+        const settingsContentAPI = document.getElementById('settingsContentAPI');
         const settingsContentConfidence = document.getElementById('settingsContentConfidence');
-        const settingsContentAppearance = document.getElementById('settingsContentAppearance');
         
         // Theme and Preference Elements
         const darkModeToggle = document.getElementById('darkModeToggle');
@@ -1302,6 +1455,9 @@
         const pdfFileNameDisplay = document.getElementById('pdfFileName');
         const bolPreviewContainer = document.getElementById('bol-preview-container');
         const parseBolBtn = document.getElementById('parseBolBtn');
+        const analyzeStatusMessage = document.getElementById('analyzeStatusMessage');
+        const statusIcon = document.getElementById('statusIcon');
+        const statusText = document.getElementById('statusText');
         const bolResultContainer = document.getElementById('bolResultContainer');
         const exportBolBtn = document.getElementById('exportBolBtn');
         const bolResultCard = document.getElementById('bolResultCard');
@@ -1328,12 +1484,12 @@
         const usePhoto = document.getElementById('usePhoto');
 
         // Vector API Elements
-        const vectorApiEndpoint = document.getElementById('vectorApiEndpoint');
-        const vectorBearerToken = document.getElementById('vectorBearerToken');
         const loadVectorDocuments = document.getElementById('loadVectorDocuments');
         const vectorApiStatus = document.getElementById('vectorApiStatus');
         const vectorDocumentsList = document.getElementById('vectorDocumentsList');
-        const documentsGrid = document.getElementById('documentsGrid');
+        const documentsTableBody = document.getElementById('documentsTableBody');
+        const noDocumentsMessage = document.getElementById('noDocumentsMessage');
+        const documentSearchInput = document.getElementById('documentSearchInput');
 
         // Vector API Settings Elements
         const settingsVectorApiEndpoint = document.getElementById('settingsVectorApiEndpoint');
@@ -1341,10 +1497,6 @@
         const settingsVectorDateRange = document.getElementById('settingsVectorDateRange');
         const settingsVectorResultSize = document.getElementById('settingsVectorResultSize');
         const saveVectorApiSettings = document.getElementById('saveVectorApiSettings');
-
-        // Vector API Section Elements (additional)
-        const vectorDateRange = document.getElementById('vectorDateRange');
-        const vectorResultSize = document.getElementById('vectorResultSize');
 
         // Modal Elements
         const imageZoomModal = document.getElementById('imageZoomModal');
@@ -1602,16 +1754,20 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         }
 
         modelSelector.addEventListener('input', () => {
-            const isGpt = modelSelector.value.startsWith('gpt');
-            const isClaude = modelSelector.value.startsWith('claude');
-            googleKeyContainer.classList.toggle('hidden', isGpt || isClaude);
-            openaiKeyContainer.classList.toggle('hidden', !(isGpt || isClaude));
+            // Since API keys are now in separate tabs, we don't need to hide/show them
+            // Just update the button state and help panel
             checkAllInputs();
             updateKeyHelpPanel();
         });
 
-        googleApiKeyInput.addEventListener('input', checkAllInputs);
-        openaiApiKeyInput.addEventListener('input', checkAllInputs);
+        googleApiKeyInput.addEventListener('input', () => {
+            checkAllInputs();
+            updateAnalyzeButtonState();
+        });
+        openaiApiKeyInput.addEventListener('input', () => {
+            checkAllInputs();
+            updateAnalyzeButtonState();
+        });
 
         bolUpload.addEventListener('change', async (event) => {
             if (event.target.files.length === 0) return;
@@ -1635,6 +1791,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     img.addEventListener('click', () => openImageZoomModal());
                     bolPreviewContainer.appendChild(img);
                 });
+                
+                // Show success status
+                showAnalyzeStatus('success', `Document "${bolFile.name}" ready for analysis!`);
+                updateAnalyzeButtonState();
             } catch (error) {
                 displayMessage(`Error rendering PDF: ${error.message}`);
                 bolPreviewContainer.innerHTML = '';
@@ -1642,6 +1802,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 pdfFileNameDisplay.textContent = '';
                 bolFile = null; // Reset the file on failure
                 bolPageImages = []; // Reset images
+                hideAnalyzeStatus(); // Clear any status messages
                 checkAllInputs(); // Disable button on failure
             }
         });
@@ -1938,11 +2099,14 @@ Only output the final, consolidated JSON object. Do not include any other text, 
 
         // --- Update handleBolParsing and PDF rendering to use progress bar ---
         async function handleBolParsing() {
-            resetUI();
-            document.getElementById('bolContent').classList.add('hidden');
+            // Don't reset UI completely - allow multiple runs
             loading.classList.remove('hidden');
             currentProgress = 0;
-            setProgress(0, 'Ingesting BoL PDF');
+            setProgress(0, 'Analyzing Document');
+            
+            // Update button state during analysis
+            parseBolBtn.disabled = true;
+            parseBolBtn.textContent = 'Analyzing...';
             
             // Start message rotation
             startMessageRotation();
@@ -2043,20 +2207,25 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 setProgress(90, 'Finalizing output');
                 const consolidatedData = JSON.parse(resultText);
                 stopMessageRotation();
-                setProgress(100, 'Done');
+                setProgress(100, 'Analysis Complete');
                 displayBolResults(consolidatedData);
-                setTimeout(() => { loading.classList.add('hidden'); }, 800);
+                setTimeout(() => { 
+                    loading.classList.add('hidden');
+                    // Re-enable button for multiple runs
+                    updateAnalyzeButtonState();
+                    // Show success message briefly
+                    showAnalyzeStatus('success', 'Analysis completed! You can run another analysis or select a different document.');
+                }, 800);
             } catch (error) {
                 if (backgroundProgressInterval) {
                     clearInterval(backgroundProgressInterval);
                 }
                 stopMessageRotation();
                 loading.classList.add('hidden');
-                document.getElementById('bolContent').classList.remove('hidden');
                 displayMessage(error.message);
                 setProgress(0, 'Error');
-            } finally {
-                // loading.classList.add('hidden');
+                // Re-enable button after error
+                updateAnalyzeButtonState();
             }
         }
 
@@ -2806,10 +2975,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         // Settings Tab Navigation
         function switchSettingsTab(activeTab) {
             // Remove active class from all tabs and hide all content
-            [settingsTabGeneral, settingsTabAI, settingsTabConfidence, settingsTabAppearance].forEach(tab => {
+            [settingsTabGeneral, settingsTabAI, settingsTabAPI, settingsTabConfidence].forEach(tab => {
                 if (tab) tab.classList.remove('active');
             });
-            [settingsContentGeneral, settingsContentAI, settingsContentConfidence, settingsContentAppearance].forEach(content => {
+            [settingsContentGeneral, settingsContentAI, settingsContentAPI, settingsContentConfidence].forEach(content => {
                 if (content) content.classList.add('hidden');
             });
             
@@ -2825,8 +2994,8 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         // Settings Tab Event Listeners
         if (settingsTabGeneral) settingsTabGeneral.addEventListener('click', () => switchSettingsTab('settingsTabGeneral'));
         if (settingsTabAI) settingsTabAI.addEventListener('click', () => switchSettingsTab('settingsTabAI'));
+        if (settingsTabAPI) settingsTabAPI.addEventListener('click', () => switchSettingsTab('settingsTabAPI'));
         if (settingsTabConfidence) settingsTabConfidence.addEventListener('click', () => switchSettingsTab('settingsTabConfidence'));
-        if (settingsTabAppearance) settingsTabAppearance.addEventListener('click', () => switchSettingsTab('settingsTabAppearance'));
         
         // Dark Mode Toggle
         if (darkModeToggle) {
@@ -3010,6 +3179,9 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             vectorApiStatus.classList.add('hidden');
             vectorDocumentsList.classList.add('hidden');
             
+            // Reset analyze status
+            hideAnalyzeStatus();
+            
             // Reset UI states
             parseBolBtn.disabled = true;
             resultsWrapper.classList.add('hidden');
@@ -3094,16 +3266,16 @@ Only output the final, consolidated JSON object. Do not include any other text, 
 
         function useCapturedPhoto() {
             // Photo is already processed in capturePhotoFromCamera
-            showVectorStatus('success', 'Photo captured successfully! Ready for analysis.');
+                            showAnalyzeStatus('success', 'Photo captured successfully! Ready for analysis!');
         }
 
         // ===== VECTOR API FUNCTIONALITY =====
 
         async function loadDocumentsFromVector() {
-            const endpoint = vectorApiEndpoint.value.trim();
-            const token = vectorBearerToken.value.trim();
-            const dateRange = parseInt(vectorDateRange.value) || 30;
-            const resultSize = parseInt(vectorResultSize.value) || 100;
+            const endpoint = settingsVectorApiEndpoint.value.trim();
+            const token = settingsVectorBearerToken.value.trim();
+            const dateRange = parseInt(settingsVectorDateRange.value) || 30;
+            const resultSize = parseInt(settingsVectorResultSize.value) || 100;
             
             if (!endpoint || !token) {
                 showVectorStatus('error', 'Please provide both API endpoint and bearer token.');
@@ -3165,8 +3337,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                            'Origin': 'localhost'
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify(requestBody)
                     });
@@ -3178,8 +3349,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                            'Origin': 'localhost'
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify(requestBody)
                     });
@@ -3208,7 +3378,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const documents = transformVectorDocuments(responseData);
                 
                 if (documents.length === 0) {
-                    showVectorStatus('warning', 'No documents found in Vector API response.');
+                    showVectorStatus('warning', 'No documents found in Vector API response. Please check your API configuration in Settings.');
                     return;
                 }
                 
@@ -3230,77 +3400,220 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         function transformVectorDocuments(apiData) {
             if (!apiData || !apiData.children) return [];
             
-            return apiData.children.map(child => {
-                const documentData = child.data?.core_document || {};
+            return apiData.children.map((item, index) => {
                 
-                return {
-                    id: documentData.id || child.id,
-                    name: documentData.name || documentData.title || 'Untitled Document',
-                    type: documentData.type || 'Document',
-                    size: documentData.size || 'Unknown',
-                    modifiedDate: documentData.modifiedDate || child.modifiedDate,
-                    url: documentData.url || documentData.downloadUrl,
-                    metadata: documentData
+                // Extract document data from the nested structure
+                const itemData = item.data || {};
+                const documentInfo = itemData.document || {};
+                const attachments = documentInfo.attachments || {};
+                const precomputation = itemData.precomputation || {};
+                
+                // Get document name from precomputation.displayName or document.name
+                const documentName = precomputation.displayName || documentInfo.name || `Document ${index + 1}`;
+                
+                // Get document URLs - try multiple sources
+                let documentUrl = null;
+                
+                // First try the aggregate PDF URL
+                if (attachments.aggregate && attachments.aggregate.uri) {
+                    documentUrl = attachments.aggregate.uri;
+                } else if (attachments.files && attachments.files.length > 0) {
+                    // Try to get the first file's URL
+                    const firstFile = attachments.files[0];
+                    documentUrl = firstFile.uri || firstFile.transformUri;
+                }
+                
+                // Get file type
+                let fileType = 'Document';
+                if (attachments.aggregate) {
+                    fileType = attachments.aggregate.type === 'pdf' ? 'PDF' : attachments.aggregate.type;
+                } else if (attachments.files && attachments.files.length > 0) {
+                    fileType = attachments.files[0].type || 'Document';
+                }
+                
+                // Get dates
+                const creationDate = itemData.creationDate;
+                const modifiedDate = itemData.modifiedDate || creationDate;
+                
+                const doc = {
+                    id: itemData.uniqueId || `doc_${index}`,
+                    name: documentName,
+                    type: fileType,
+                    size: attachments.aggregate ? 'PDF Document' : 'Unknown',
+                    modifiedDate: modifiedDate,
+                    creationDate: creationDate,
+                    url: documentUrl,
+                    metadata: {
+                        originalData: itemData,
+                        attachments: attachments,
+                        precomputation: precomputation
+                    }
                 };
+                
+                return doc;
             }).filter(doc => doc.url); // Only include documents with download URLs
         }
 
+        let allVectorDocuments = []; // Store all documents for search
+
         function displayVectorDocuments(documents) {
-            documentsGrid.innerHTML = '';
+            allVectorDocuments = documents; // Store for search functionality
+            renderDocuments(documents);
             
-            documents.forEach(doc => {
-                const card = document.createElement('div');
-                card.className = 'document-card';
-                card.dataset.documentId = doc.id;
-                
-                const modifiedDate = doc.modifiedDate ? new Date(doc.modifiedDate).toLocaleDateString() : 'Unknown';
-                const fileSize = formatFileSize(doc.size);
-                
-                card.innerHTML = `
-                    <div class="document-title">${doc.name}</div>
-                    <div class="document-meta">
-                        <span class="document-type">${doc.type}</span>
-                        <span>${fileSize}</span>
-                    </div>
-                    <div class="document-meta mt-1">
-                        <span>Modified: ${modifiedDate}</span>
-                    </div>
-                `;
-                
-                card.addEventListener('click', () => selectVectorDocument(doc, card));
-                documentsGrid.appendChild(card);
-            });
+            // Setup search functionality (remove existing listener first)
+            if (documentSearchInput) {
+                // Clear any existing value and remove old listeners
+                documentSearchInput.value = '';
+                documentSearchInput.removeEventListener('input', handleDocumentSearch);
+                documentSearchInput.addEventListener('input', handleDocumentSearch);
+            }
             
             vectorDocumentsList.classList.remove('hidden');
         }
 
-        async function selectVectorDocument(document, cardElement) {
-            // Update UI selection
-            document.querySelectorAll('.document-card').forEach(card => {
-                card.classList.remove('selected');
+        function handleDocumentSearch(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            if (searchTerm === '') {
+                renderDocuments(allVectorDocuments);
+            } else {
+                const filteredDocs = allVectorDocuments.filter(doc => 
+                    doc.name.toLowerCase().includes(searchTerm) ||
+                    doc.type.toLowerCase().includes(searchTerm) ||
+                    (doc.id && doc.id.toLowerCase().includes(searchTerm))
+                );
+                renderDocuments(filteredDocs);
+            }
+        }
+
+        function renderDocuments(documents) {
+            documentsTableBody.innerHTML = '';
+            
+            const documentsCount = document.getElementById('documentsCount');
+            if (documentsCount) {
+                const totalCount = allVectorDocuments.length;
+                const filteredCount = documents.length;
+                documentsCount.textContent = filteredCount === totalCount ? `${totalCount} documents` : `${filteredCount} of ${totalCount} documents`;
+            }
+            
+            if (documents.length === 0) {
+                noDocumentsMessage.classList.remove('hidden');
+                return;
+            } else {
+                noDocumentsMessage.classList.add('hidden');
+            }
+
+            documents.forEach(doc => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.dataset.documentId = doc.id;
+                
+                const modifiedDate = doc.modifiedDate ? new Date(doc.modifiedDate).toLocaleDateString() : 'Unknown';
+                
+                // Determine document type based on name content
+                let docType = 'Unknown';
+                let typeClass = 'unknown';
+                if (doc.name.toLowerCase().includes('inbound') || doc.name.toLowerCase().includes('in-bound')) {
+                    docType = 'Inbound';
+                    typeClass = 'inbound';
+                } else if (doc.name.toLowerCase().includes('outbound') || doc.name.toLowerCase().includes('out-bound')) {
+                    docType = 'Outbound';
+                    typeClass = 'outbound';
+                } else if (doc.type && doc.type.toLowerCase().includes('inbound')) {
+                    docType = 'Inbound';
+                    typeClass = 'inbound';
+                } else if (doc.type && doc.type.toLowerCase().includes('outbound')) {
+                    docType = 'Outbound';
+                    typeClass = 'outbound';
+                } else {
+                    // Default based on common patterns or fallback
+                    docType = doc.name.includes('-') && doc.name.split('-').length > 1 ? 'Inbound' : 'Outbound';
+                    typeClass = doc.name.includes('-') && doc.name.split('-').length > 1 ? 'inbound' : 'outbound';
+                }
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="document-name" title="${doc.name}">${doc.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="type-badge ${typeClass}">${docType}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${modifiedDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="action-buttons" style="position: relative; z-index: 30;">
+                            <button class="preview-btn" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
+                                Preview
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                row.addEventListener('click', () => selectDocumentForAnalysis(doc.id));
+                documentsTableBody.appendChild(row);
             });
-            cardElement.classList.add('selected');
+
+            // Restore selection state
+            if (selectedVectorDocument) {
+                const selectedRow = document.querySelector(`tr[data-document-id="${selectedVectorDocument.id}"]`);
+                if (selectedRow) {
+                    selectedRow.classList.add('selected');
+                }
+            }
+        }
+
+        // Global function for selecting document for analysis
+        window.selectDocumentForAnalysis = function(documentId) {
+            const documentObj = allVectorDocuments.find(doc => doc.id === documentId);
+            if (!documentObj) return;
+
+            // If the same document is clicked, do nothing
+            if (selectedVectorDocument && selectedVectorDocument.id === documentId) {
+                return;
+            }
             
-            selectedVectorDocument = document;
+            // Update UI selection
+            document.querySelectorAll('#documentsTableBody tr').forEach(row => {
+                row.classList.remove('selected');
+            });
             
+            const selectedRow = document.querySelector(`tr[data-document-id="${documentId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('selected');
+            }
+            
+            selectedVectorDocument = documentObj;
+            
+            // Load document for analysis
+            loadDocumentForAnalysis(documentObj);
+        };
+
+        // Global function for previewing document
+        window.previewDocument = function(documentId) {
+            const documentObj = allVectorDocuments.find(doc => doc.id === documentId);
+            if (!documentObj) return;
+            
+            // Open PDF in new tab/window
+            window.open(documentObj.url, '_blank');
+        };
+
+        async function loadDocumentForAnalysis(documentObj) {
             try {
-                showVectorStatus('info', 'Downloading document...');
+                showAnalyzeStatus('info', 'Loading document for analysis...');
                 
                 // Download the document
-                const response = await fetch(document.url);
+                const response = await fetch(documentObj.url);
                 if (!response.ok) {
                     throw new Error(`Failed to download document: ${response.status}`);
                 }
                 
                 const blob = await response.blob();
-                const file = new File([blob], document.name, { type: blob.type });
+                const file = new File([blob], documentObj.name, { type: blob.type });
                 
                 // Process based on file type
-                if (document.name.toLowerCase().endsWith('.pdf') || blob.type === 'application/pdf') {
+                if (documentObj.name.toLowerCase().endsWith('.pdf') || blob.type === 'application/pdf') {
                     bolFile = file;
                     bolPageImages = await renderPdfToImages(file);
-                    parseBolBtn.disabled = false;
-                    showVectorStatus('success', `Document "${document.name}" loaded successfully!`);
+                    updateAnalyzeButtonState();
+                    showAnalyzeStatus('success', `Document "${documentObj.name}" ready for analysis!`);
                 } else {
                     // Try to process as image
                     const imageUrl = URL.createObjectURL(blob);
@@ -3309,13 +3622,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     img.onload = () => {
                         bolPageImages = [imageUrl];
                         bolFile = file;
-                        parseBolBtn.disabled = false;
-                        showVectorStatus('success', `Document "${document.name}" loaded successfully!`);
+                        updateAnalyzeButtonState();
+                        showAnalyzeStatus('success', `Document "${documentObj.name}" ready for analysis!`);
                     };
                     
                     img.onerror = () => {
                         URL.revokeObjectURL(imageUrl);
-                        showVectorStatus('error', 'Unsupported file format. Please select a PDF or image file.');
+                        showAnalyzeStatus('error', 'Unsupported file format. Please select a PDF or image file.');
                     };
                     
                     img.src = imageUrl;
@@ -3323,7 +3636,63 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 
             } catch (error) {
                 console.error('Document download error:', error);
-                showVectorStatus('error', `Failed to download document: ${error.message}`);
+                showAnalyzeStatus('error', `Failed to load document: ${error.message}`);
+            }
+        }
+
+        // Show status message beside the analyze button
+        function showAnalyzeStatus(type, message) {
+            analyzeStatusMessage.classList.remove('hidden');
+            statusText.textContent = message;
+            
+            // Remove existing classes
+            analyzeStatusMessage.querySelector('div').className = 'flex items-center gap-2 px-4 py-2 rounded-lg';
+            statusIcon.innerHTML = '';
+            
+            if (type === 'info') {
+                analyzeStatusMessage.querySelector('div').classList.add('bg-blue-50', 'text-blue-700', 'border', 'border-blue-200');
+                statusIcon.innerHTML = `
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                `;
+            } else if (type === 'success') {
+                analyzeStatusMessage.querySelector('div').classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+                statusIcon.innerHTML = `
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                `;
+            } else if (type === 'error') {
+                analyzeStatusMessage.querySelector('div').classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+                statusIcon.innerHTML = `
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                `;
+            }
+        }
+
+        // Hide status message beside the analyze button
+        function hideAnalyzeStatus() {
+            analyzeStatusMessage.classList.add('hidden');
+        }
+
+        // Update analyze button state based on requirements
+        function updateAnalyzeButtonState() {
+            const hasKey = googleApiKeyInput.value.trim() !== '';
+            parseBolBtn.disabled = !(hasKey && bolFile);
+            
+            if (hasKey && bolFile) {
+                // Include document name in button text
+                const docName = selectedVectorDocument ? selectedVectorDocument.name : (bolFile ? bolFile.name : 'Document');
+                parseBolBtn.textContent = `Analyze "${docName}"`;
+                parseBolBtn.classList.remove('bg-gray-400');
+                parseBolBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                parseBolBtn.textContent = 'Select Document & Configure API';
+                parseBolBtn.classList.add('bg-gray-400');
+                parseBolBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
             }
         }
 
@@ -3360,20 +3729,15 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const savedDateRange = localStorage.getItem('vectorDateRange') || '30';
             const savedResultSize = localStorage.getItem('vectorResultSize') || '100';
             
-            if (savedEndpoint) {
-                if (vectorApiEndpoint) vectorApiEndpoint.value = savedEndpoint;
-                if (settingsVectorApiEndpoint) settingsVectorApiEndpoint.value = savedEndpoint;
+            if (savedEndpoint && settingsVectorApiEndpoint) {
+                settingsVectorApiEndpoint.value = savedEndpoint;
             }
             
-            if (savedToken) {
-                if (vectorBearerToken) vectorBearerToken.value = savedToken;
-                if (settingsVectorBearerToken) settingsVectorBearerToken.value = savedToken;
+            if (savedToken && settingsVectorBearerToken) {
+                settingsVectorBearerToken.value = savedToken;
             }
             
-            if (vectorDateRange) vectorDateRange.value = savedDateRange;
             if (settingsVectorDateRange) settingsVectorDateRange.value = savedDateRange;
-            
-            if (vectorResultSize) vectorResultSize.value = savedResultSize;
             if (settingsVectorResultSize) settingsVectorResultSize.value = savedResultSize;
         }
 
@@ -3385,7 +3749,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const resultSize = settingsVectorResultSize.value || '100';
             
             if (!endpoint || !token) {
-                showVectorStatus('error', 'Please provide both API endpoint and bearer token.');
+                alert('Please provide both API endpoint and bearer token.');
                 return;
             }
             
@@ -3394,12 +3758,6 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             localStorage.setItem('vectorBearerToken', token);
             localStorage.setItem('vectorDateRange', dateRange);
             localStorage.setItem('vectorResultSize', resultSize);
-            
-            // Update the Vector API section inputs
-            if (vectorApiEndpoint) vectorApiEndpoint.value = endpoint;
-            if (vectorBearerToken) vectorBearerToken.value = token;
-            if (vectorDateRange) vectorDateRange.value = dateRange;
-            if (vectorResultSize) vectorResultSize.value = resultSize;
             
             // Show success message
             const originalText = saveVectorApiSettings.textContent;
@@ -3414,48 +3772,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             }, 2000);
         }
 
-        // Sync Vector API settings between sections
-        function syncVectorApiSettings() {
-            // When Vector API section values change, update settings
-            if (vectorApiEndpoint) {
-                vectorApiEndpoint.addEventListener('input', () => {
-                    if (settingsVectorApiEndpoint) {
-                        settingsVectorApiEndpoint.value = vectorApiEndpoint.value;
-                    }
-                });
-            }
-            
-            if (vectorBearerToken) {
-                vectorBearerToken.addEventListener('input', () => {
-                    if (settingsVectorBearerToken) {
-                        settingsVectorBearerToken.value = vectorBearerToken.value;
-                    }
-                });
-            }
-            
-            if (vectorDateRange) {
-                vectorDateRange.addEventListener('input', () => {
-                    if (settingsVectorDateRange) {
-                        settingsVectorDateRange.value = vectorDateRange.value;
-                    }
-                });
-            }
-            
-            if (vectorResultSize) {
-                vectorResultSize.addEventListener('input', () => {
-                    if (settingsVectorResultSize) {
-                        settingsVectorResultSize.value = vectorResultSize.value;
-                    }
-                });
-            }
-        }
-
         // Initialize Vector API settings
         loadVectorApiSettings();
-        syncVectorApiSettings();
 
-        // Initialize with PDF method selected
-        switchUploadMethod('pdf');
+        // Initialize with Vector API method selected
+        switchUploadMethod('vector');
 
     </script>
 </body>
