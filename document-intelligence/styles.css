@@ -190,10 +190,75 @@ body {
     cursor: pointer;
 }
 
+/* Modern Settings Panel Styles */
 .settings-panel {
     background: var(--bg-primary);
     border: 1px solid var(--border-primary);
-    box-shadow: 0 4px 6px var(--shadow);
+    box-shadow: 0 20px 25px -5px var(--shadow), 0 10px 10px -5px var(--shadow);
+}
+
+.settings-tab {
+    padding: 0.75rem 1.5rem;
+    border-bottom: 2px solid transparent;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.settings-tab:hover {
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+}
+
+.settings-tab.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+    background-color: var(--bg-secondary);
+}
+
+.settings-section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-section h3 {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.settings-section p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.settings-content {
+    display: block;
+}
+
+.settings-content.hidden {
+    display: none;
+}
+
+.form-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .toggle-slider {
@@ -351,19 +416,20 @@ input:checked + .toggle-slider:before {
 #documentsTable tbody tr.selected::after {
     content: '✓ SELECTED FOR ANALYSIS';
     position: absolute;
-    right: 120px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: rgba(251, 191, 36, 0.95);
     color: #1e40af;
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.5px;
     z-index: 20;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(30, 64, 175, 0.2);
+    white-space: nowrap;
 }
 
 #documentsTable tbody tr.selected .document-name {
