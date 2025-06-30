@@ -402,6 +402,10 @@ input:checked + .toggle-slider:before {
     z-index: 10;
 }
 
+#documentsTable tbody tr.selected td {
+    padding-right: 180px !important;
+}
+
 #documentsTable tbody tr.selected::before {
     content: '';
     position: absolute;
@@ -416,20 +420,22 @@ input:checked + .toggle-slider:before {
 #documentsTable tbody tr.selected::after {
     content: '✓ SELECTED FOR ANALYSIS';
     position: absolute;
-    right: 10px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
     background: rgba(251, 191, 36, 0.95);
     color: #1e40af;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 9px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.5px;
-    z-index: 20;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(30, 64, 175, 0.2);
+    z-index: 25;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(30, 64, 175, 0.3);
     white-space: nowrap;
+    min-width: 160px;
+    text-align: center;
 }
 
 #documentsTable tbody tr.selected .document-name {
