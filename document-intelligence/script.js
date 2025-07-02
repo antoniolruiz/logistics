@@ -32,7 +32,6 @@
         
         // Theme and Preference Elements
         const darkModeToggle = document.getElementById('darkModeToggle');
-        const compactModeToggle = document.getElementById('compactModeToggle');
         const autoSaveToggle = document.getElementById('autoSaveToggle');
         const coordinateOverlaysToggle = document.getElementById('coordinateOverlaysToggle');
         const showConfidenceIndicators = document.getElementById('showConfidenceIndicators');
@@ -52,7 +51,6 @@
         
         // Load theme and preference settings
         const savedTheme = localStorage.getItem('theme') || 'light';
-        const savedCompactMode = localStorage.getItem('compactMode') === 'true';
         const savedAutoSave = localStorage.getItem('autoSave') === 'true';
         const savedCoordinateOverlays = localStorage.getItem('coordinateOverlays') !== 'false'; // default true
         const savedShowConfidenceIndicators = localStorage.getItem('showConfidenceIndicators') !== 'false'; // default true
@@ -61,10 +59,6 @@
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             if (darkModeToggle) darkModeToggle.checked = true;
-        }
-        if (savedCompactMode) {
-            document.body.classList.add('compact-mode');
-            if (compactModeToggle) compactModeToggle.checked = true;
         }
         if (savedAutoSave && autoSaveToggle) autoSaveToggle.checked = true;
         if (coordinateOverlaysToggle) coordinateOverlaysToggle.checked = savedCoordinateOverlays;
@@ -155,7 +149,7 @@
         let bolPageImages = [];
         let currentBolPageIndex = 0;
         let rawJsonResult = '';
-        let currentUploadMethod = 'pdf';
+        let currentUploadMethod = 'vector';
         let cameraStream = null;
         let selectedVectorDocument = null;
 
@@ -1205,11 +1199,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 return;
             }
             
-            // Get the image's actual position and dimensions relative to the viewport
-            const imageRect = carouselImage.getBoundingClientRect();
+            // Get the actual bounding rectangles to get precise positioning
             const containerRect = carouselContainer.getBoundingClientRect();
+            const imageRect = carouselImage.getBoundingClientRect();
             
-            // Calculate the image's position within its container
+            // Calculate the image's position within the container
             const imageOffsetX = imageRect.left - containerRect.left;
             const imageOffsetY = imageRect.top - containerRect.top;
             
@@ -1221,7 +1215,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             const naturalWidth = carouselImage.naturalWidth;
             const naturalHeight = carouselImage.naturalHeight;
             
-            if (naturalWidth === 0 || naturalHeight === 0) {
+            if (naturalWidth === 0 || naturalHeight === 0 || displayWidth === 0 || displayHeight === 0) {
                 return;
             }
             
@@ -1245,31 +1239,46 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         // We scale them to the on-screen display size of the image.
                         const pixelX = coordinates.x;
                         const pixelY = coordinates.y;
-                        const pixelWidth = coordinates.width;
-                        const pixelHeight = coordinates.height;
+                        const pixelWidth = coordinates.width || 100; // Default width if not provided
+                        const pixelHeight = coordinates.height || 25; // Default height if not provided
                         
                         // Scale coordinates from natural image space to display space
-                        // Add padding to ensure full text coverage
-                        const padding = 8; // pixels of padding around the text
                         const scaledX = pixelX * scaleX;
                         const scaledY = pixelY * scaleY;
                         const scaledWidth = pixelWidth * scaleX;
                         const scaledHeight = pixelHeight * scaleY;
                         
-                        // Position relative to the image's actual position within the container
-                        const left = Math.max(0, imageOffsetX + scaledX - padding);
-                        const top = Math.max(0, imageOffsetY + scaledY - padding);
-                        const width = Math.max(scaledWidth + (padding * 2), 40);
-                        const height = Math.max(scaledHeight + (padding * 2), 25);
+                        // Add small padding around the highlighted area
+                        const padding = 2;
                         
-                        // Position relative to the container
-                        overlay.style.left = `${left}px`;
-                        overlay.style.top = `${top}px`;
-                        overlay.style.width = `${width}px`;
-                        overlay.style.height = `${height}px`;
+                        // Calculate final position relative to the container
+                        // Position overlay at the exact scaled coordinates on the image
+                        const left = imageOffsetX + scaledX - padding;
+                        const top = imageOffsetY + scaledY - padding;
+                        const width = scaledWidth + (padding * 2);
+                        const height = scaledHeight + (padding * 2);
+                        
+                        // Ensure overlay stays within image bounds
+                        const finalLeft = Math.max(imageOffsetX, Math.min(left, imageOffsetX + displayWidth - width));
+                        const finalTop = Math.max(imageOffsetY, Math.min(top, imageOffsetY + displayHeight - height));
+                        const finalWidth = Math.min(width, imageOffsetX + displayWidth - finalLeft);
+                        const finalHeight = Math.min(height, imageOffsetY + displayHeight - finalTop);
+                        
+                        // Ensure minimum size for visibility
+                        const minWidth = Math.max(finalWidth, 20);
+                        const minHeight = Math.max(finalHeight, 15);
+                        
+                        // Position the overlay absolutely within the carousel container
+                        overlay.style.position = 'absolute';
+                        overlay.style.left = `${finalLeft}px`;
+                        overlay.style.top = `${finalTop}px`;
+                        overlay.style.width = `${minWidth}px`;
+                        overlay.style.height = `${minHeight}px`;
+                        overlay.style.pointerEvents = 'none'; // Don't interfere with image interaction
+                        overlay.style.zIndex = '20'; // Ensure it appears above the image
                         
                         // Add debug info as data attributes
-                        overlay.setAttribute('data-debug', `PIXEL: ${pixelX},${pixelY},${pixelWidth}x${pixelHeight} | Scaled: ${scaledX.toFixed(1)},${scaledY.toFixed(1)},${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)} | Final: ${left.toFixed(1)},${top.toFixed(1)},${width.toFixed(1)}x${height.toFixed(1)} | ImageOffset: ${imageOffsetX.toFixed(1)},${imageOffsetY.toFixed(1)}`);
+                        overlay.setAttribute('data-debug', `Source: ${pixelX},${pixelY},${pixelWidth}x${pixelHeight} | Scaled: ${scaledX.toFixed(1)},${scaledY.toFixed(1)},${scaledWidth.toFixed(1)}x${scaledHeight.toFixed(1)} | ImageOffset: ${imageOffsetX.toFixed(1)},${imageOffsetY.toFixed(1)} | Final: ${finalLeft.toFixed(1)},${finalTop.toFixed(1)},${minWidth.toFixed(1)}x${minHeight.toFixed(1)}`);
                         
                         carouselContainer.appendChild(overlay);
                         
@@ -1632,19 +1641,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             });
         }
         
-        // Compact Mode Toggle
-        if (compactModeToggle) {
-            compactModeToggle.addEventListener('change', function() {
-                const isCompact = this.checked;
-                localStorage.setItem('compactMode', isCompact.toString());
-                // Apply compact mode styles
-                if (isCompact) {
-                    document.body.classList.add('compact-mode');
-                } else {
-                    document.body.classList.remove('compact-mode');
-                }
-            });
-        }
+
         
         // Auto Save Toggle
         if (autoSaveToggle) {
@@ -2076,9 +2073,12 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         }
 
         let allVectorDocuments = []; // Store all documents for search
+        let currentPage = 0;
+        const documentsPerPage = 10;
 
         function displayVectorDocuments(documents) {
             allVectorDocuments = documents; // Store for search functionality
+            currentPage = 0; // Reset to first page
             renderDocuments(documents);
             
             // Setup search functionality (remove existing listener first)
@@ -2094,6 +2094,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
 
         function handleDocumentSearch(e) {
             const searchTerm = e.target.value.toLowerCase().trim();
+            currentPage = 0; // Reset to first page on search
             if (searchTerm === '') {
                 renderDocuments(allVectorDocuments);
             } else {
@@ -2109,21 +2110,40 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         function renderDocuments(documents) {
             documentsTableBody.innerHTML = '';
             
+            // Calculate pagination
+            const totalCount = documents.length;
+            const totalPages = Math.ceil(totalCount / documentsPerPage);
+            const startIndex = currentPage * documentsPerPage;
+            const endIndex = Math.min(startIndex + documentsPerPage, totalCount);
+            const currentPageDocs = documents.slice(startIndex, endIndex);
+            
+            // Update document count and pagination info
             const documentsCount = document.getElementById('documentsCount');
             if (documentsCount) {
-                const totalCount = allVectorDocuments.length;
-                const filteredCount = documents.length;
-                documentsCount.textContent = filteredCount === totalCount ? `${totalCount} documents` : `${filteredCount} of ${totalCount} documents`;
+                const allDocsCount = allVectorDocuments.length;
+                let countText = '';
+                if (documents.length === allDocsCount) {
+                    countText = `${startIndex + 1}-${endIndex} of ${totalCount} documents`;
+                } else {
+                    countText = `${startIndex + 1}-${endIndex} of ${totalCount} filtered documents (${allDocsCount} total)`;
+                }
+                if (totalPages > 1) {
+                    countText += ` • Page ${currentPage + 1} of ${totalPages}`;
+                }
+                documentsCount.textContent = countText;
             }
             
-            if (documents.length === 0) {
+            // Update pagination controls
+            updatePaginationControls(totalPages);
+            
+            if (currentPageDocs.length === 0) {
                 noDocumentsMessage.classList.remove('hidden');
                 return;
             } else {
                 noDocumentsMessage.classList.add('hidden');
             }
 
-            documents.forEach(doc => {
+            currentPageDocs.forEach(doc => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 row.dataset.documentId = doc.id;
@@ -2152,19 +2172,17 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 }
 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="document-name" title="${doc.name}">${doc.name}</div>
+                    <td class="px-3 py-3 w-1/2">
+                        <div class="document-name truncate pr-2" title="${doc.name}">${doc.name}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-3 py-3 w-1/6">
                         <span class="type-badge ${typeClass}">${docType}</span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${modifiedDate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="action-buttons" style="position: relative; z-index: 30;">
-                            <button class="preview-btn" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
-                                Preview
-                            </button>
-                        </div>
+                    <td class="px-3 py-3 w-1/6 text-sm text-gray-500">${modifiedDate}</td>
+                    <td class="px-3 py-3 w-1/6">
+                        <button class="preview-btn text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
+                            Preview
+                        </button>
                     </td>
                 `;
 
@@ -2178,6 +2196,92 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 if (selectedRow) {
                     selectedRow.classList.add('selected');
                 }
+            }
+        }
+
+        function updatePaginationControls(totalPages) {
+            // Remove existing pagination controls
+            const existingPagination = document.getElementById('documentsPagination');
+            if (existingPagination) {
+                existingPagination.remove();
+            }
+            
+            if (totalPages <= 1) return;
+            
+            // Create pagination container
+            const paginationContainer = document.createElement('div');
+            paginationContainer.id = 'documentsPagination';
+            paginationContainer.className = 'flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200';
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = `px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentPage === 0 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+            }`;
+            prevButton.innerHTML = `
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+            `;
+            prevButton.disabled = currentPage === 0;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    const searchTerm = documentSearchInput.value.toLowerCase().trim();
+                    const docsToRender = searchTerm === '' ? allVectorDocuments : 
+                        allVectorDocuments.filter(doc => 
+                            doc.name.toLowerCase().includes(searchTerm) ||
+                            doc.type.toLowerCase().includes(searchTerm) ||
+                            (doc.id && doc.id.toLowerCase().includes(searchTerm))
+                        );
+                    renderDocuments(docsToRender);
+                }
+            });
+            
+            // Page info
+            const pageInfo = document.createElement('span');
+            pageInfo.className = 'text-sm text-gray-700';
+            pageInfo.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = `px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                currentPage === totalPages - 1 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+            }`;
+            nextButton.innerHTML = `
+                Next
+                <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            `;
+            nextButton.disabled = currentPage === totalPages - 1;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    const searchTerm = documentSearchInput.value.toLowerCase().trim();
+                    const docsToRender = searchTerm === '' ? allVectorDocuments : 
+                        allVectorDocuments.filter(doc => 
+                            doc.name.toLowerCase().includes(searchTerm) ||
+                            doc.type.toLowerCase().includes(searchTerm) ||
+                            (doc.id && doc.id.toLowerCase().includes(searchTerm))
+                        );
+                    renderDocuments(docsToRender);
+                }
+            });
+            
+            paginationContainer.appendChild(prevButton);
+            paginationContainer.appendChild(pageInfo);
+            paginationContainer.appendChild(nextButton);
+            
+            // Insert pagination after the table
+            const tableContainer = document.querySelector('#vectorDocumentsList .bg-white.border');
+            if (tableContainer) {
+                tableContainer.appendChild(paginationContainer);
             }
         }
 
@@ -2397,3 +2501,4 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         loadVectorApiSettings();
 
         // Initialize with Vector API method selected
+        switchUploadMethod('vector');
