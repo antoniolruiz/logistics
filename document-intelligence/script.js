@@ -99,7 +99,7 @@
         const usePhoto = document.getElementById('usePhoto');
 
         // Vector API Elements
-        const loadVectorDocuments = document.getElementById('loadVectorDocuments');
+        const refreshVectorDocuments = document.getElementById('refreshVectorDocuments');
         const vectorApiStatus = document.getElementById('vectorApiStatus');
         const vectorDocumentsList = document.getElementById('vectorDocumentsList');
         const documentsTableBody = document.getElementById('documentsTableBody');
@@ -109,6 +109,7 @@
         // Vector API Settings Elements
         const settingsVectorApiEndpoint = document.getElementById('settingsVectorApiEndpoint');
         const settingsVectorBearerToken = document.getElementById('settingsVectorBearerToken');
+        const settingsVectorFacility = document.getElementById('settingsVectorFacility');
         const settingsVectorDateRange = document.getElementById('settingsVectorDateRange');
         const settingsVectorResultSize = document.getElementById('settingsVectorResultSize');
         const saveVectorApiSettings = document.getElementById('saveVectorApiSettings');
@@ -152,6 +153,7 @@
         let currentUploadMethod = 'vector';
         let cameraStream = null;
         let selectedVectorDocument = null;
+        let vectorAutoRefreshInterval = null;
 
         const defaultBolPrompt = `You are an expert at parsing shipping documents. Your task is to analyze all the following pages from a single Bill of Lading (BoL) and consolidate all information into a single JSON object.
 Aggregate the data from all provided pages to find the most complete information for each field. Scrutinize every page for line items under tables like "Shipping Details" to create a comprehensive list of all unique items.
@@ -438,7 +440,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         usePhoto.addEventListener('click', useCapturedPhoto);
 
         // Vector API Event Listeners
-        loadVectorDocuments.addEventListener('click', loadDocumentsFromVector);
+        refreshVectorDocuments.addEventListener('click', loadDocumentsFromVector);
         if (saveVectorApiSettings) saveVectorApiSettings.addEventListener('click', saveVectorSettings);
 
         howToBtn.addEventListener('click', () => {
@@ -1774,6 +1776,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 cameraSection.classList.remove('hidden');
             } else if (method === 'vector') {
                 vectorApiSection.classList.remove('hidden');
+                // Load documents automatically and start auto-refresh
+                setTimeout(() => {
+                    loadDocumentsFromVector();
+                    startVectorAutoRefresh();
+                }, 100);
             }
             
             // Reset states
@@ -1796,6 +1803,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             selectedVectorDocument = null;
             vectorApiStatus.classList.add('hidden');
             vectorDocumentsList.classList.add('hidden');
+            stopVectorAutoRefresh();
             
             // Reset analyze status
             hideAnalyzeStatus();
@@ -1904,8 +1912,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             
             // Calculate date range
             const endDate = new Date();
+            console.log('End date:', endDate);
             const startDate = new Date();
             startDate.setDate(endDate.getDate() - dateRange);
+            console.log('Start date:', startDate, 'Date range:', dateRange, 'days');
             
             const gteDate = startDate.toISOString();
             const lteDate = endDate.toISOString();
@@ -1929,6 +1939,11 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                         "path": "creationDate",
                         "gte": gteDate,
                         "lte": lteDate
+                    },
+                    {
+                        "type": "match",
+                        "path": "core_documents_shipment.facility.displayName",
+                        "value": localStorage.getItem('vectorFacility') || 'US Cold Lumberton'
                     }
                 ],
                 "orders": [
@@ -1941,24 +1956,34 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 "metadata": {
                     "size": resultSize,
                     "offset": 0,
-                    "maxSizePerGroup": 10,
+                    "maxSizePerGroup": 25,
                     "shouldIncludeLeafEntities": true
                 }
             };
+            
+            console.log('Making API request to:', endpoint);
+            console.log('Request body:', JSON.stringify(requestBody, null, 2));
+            console.log('Using facility:', localStorage.getItem('vectorFacility') || 'US Cold Lumberton');
             
             try {
                 let response;
                 
                 try {
                     // Try direct API call first
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                    
                     response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify(requestBody)
+                        body: JSON.stringify(requestBody),
+                        signal: controller.signal
                     });
+                    
+                    clearTimeout(timeoutId);
                 } catch (corsError) {
                     // Fallback to CORS proxy
                     showVectorStatus('info', 'Retrying with CORS proxy...');
@@ -1993,10 +2018,15 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 }
                 
                 const responseData = await response.json();
+                console.log('Vector API Response:', responseData);
+                console.log('Response children count:', responseData?.children?.length || 0);
+                
                 const documents = transformVectorDocuments(responseData);
+                console.log('Transformed documents count:', documents.length);
                 
                 if (documents.length === 0) {
                     showVectorStatus('warning', 'No documents found in Vector API response. Please check your API configuration in Settings.');
+                    console.log('No documents after transformation. Check facility name, date range, and API response structure.');
                     return;
                 }
                 
@@ -2007,7 +2037,9 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 console.error('Vector API error:', error);
                 let errorMessage = error.message;
                 
-                if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out after 30 seconds. Please try reducing the date range or result size.';
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
                     errorMessage = 'Network error: Unable to connect to the Vector API. Please check your internet connection and API endpoint.';
                 }
                 
@@ -2016,7 +2048,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         }
 
         function transformVectorDocuments(apiData) {
-            if (!apiData || !apiData.children) return [];
+            console.log('Transforming Vector documents...', apiData);
+            if (!apiData || !apiData.children) {
+                console.log('No children found in API data');
+                return [];
+            }
+            
+            console.log(`Processing ${apiData.children.length} documents`);
             
             return apiData.children.map((item, index) => {
                 
@@ -2053,6 +2091,69 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const creationDate = itemData.creationDate;
                 const modifiedDate = itemData.modifiedDate || creationDate;
                 
+                // Extract shipping-specific data from various sources
+                const extractValue = (paths) => {
+                    for (const path of paths) {
+                        const value = path.split('.').reduce((obj, key) => obj?.[key], itemData);
+                        if (value !== undefined && value !== null && value !== '') {
+                            return value;
+                        }
+                    }
+                    return null;
+                };
+                
+                // Extract shipping data from the document structure
+                const shippingData = {
+                    checkInTime: extractValue([
+                        'core_documents_shipment.checkinTime.dateTime',
+                        'core_documents_shipment.checkInTime.dateTime',
+                        'core_documents_shipment.checkinTime',
+                        'core_documents_shipment.checkInTime'
+                    ]),
+                    signedDate: extractValue([
+                        'core_documents_shipment.receiverSignature.signedDate',
+                        'core_documents_shipment.receiverSignature.signedDate',
+                        'core_documents_shipment.signedDate',
+                        'core_documents_shipment.signature.signedDate'
+                    ]),
+                    driver: extractValue([
+                        'core_documents_shipment.driver.displayName',
+                        'core_documents_shipment.driver.name',
+                        'owner.user.displayName',
+                        'createdBy.displayName'
+                    ]),
+                    firm: extractValue([
+                        'core_documents_shipment.driver.denormalizedProperties.owner.firm.displayName',
+                        'owner.firm.displayName',
+                        'core_documents_shipment.driver.firm.displayName',
+                        'core_documents_shipment.carrier.displayName'
+                    ]),
+                    receiver: extractValue([
+                        'core_documents_shipment.receiverSignature.signer',
+                        'core_documents_shipment.receiverSignature.signedBy.user.displayName',
+                        'core_documents_shipment.receiver.displayName',
+                        'core_documents_shipment.signer'
+                    ]),
+                    trailerNumber: extractValue([
+                        'core_documents_shipment.trailerNumber',
+                        'core_documents_shipment.trailer.number',
+                        'core_documents_shipment.trailer',
+                        'core_documents_shipment.trailerNo'
+                    ]),
+                    sealNumber: extractValue([
+                        'core_documents_shipment.seal.number',
+                        'core_documents_shipment.sealNumber',
+                        'core_documents_shipment.seal',
+                        'core_documents_shipment.sealNo'
+                    ]),
+                    setTemperature: extractValue([
+                        'core_documents_shipment.setTemperature',
+                        'core_documents_shipment.temperature',
+                        'core_documents_shipment.tempSetting',
+                        'core_documents_shipment.setTemp'
+                    ])
+                };
+                
                 const doc = {
                     id: itemData.uniqueId || `doc_${index}`,
                     name: documentName,
@@ -2061,6 +2162,15 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     modifiedDate: modifiedDate,
                     creationDate: creationDate,
                     url: documentUrl,
+                    // Add shipping-specific fields
+                    checkInTime: shippingData.checkInTime,
+                    signedDate: shippingData.signedDate,
+                    driver: shippingData.driver,
+                    firm: shippingData.firm,
+                    receiver: shippingData.receiver,
+                    trailerNumber: shippingData.trailerNumber,
+                    sealNumber: shippingData.sealNumber,
+                    setTemperature: shippingData.setTemperature,
                     metadata: {
                         originalData: itemData,
                         attachments: attachments,
@@ -2068,8 +2178,23 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                     }
                 };
                 
+                console.log(`Document ${index + 1}:`, {
+                    name: doc.name,
+                    url: doc.url,
+                    hasUrl: !!doc.url,
+                    checkInTime: doc.checkInTime,
+                    driver: doc.driver,
+                    firm: doc.firm
+                });
+                
                 return doc;
-            }).filter(doc => doc.url); // Only include documents with download URLs
+            }).filter(doc => {
+                const hasUrl = !!doc.url;
+                if (!hasUrl) {
+                    console.log(`Filtering out document without URL: ${doc.name}`);
+                }
+                return hasUrl;
+            }); // Only include documents with download URLs
         }
 
         let allVectorDocuments = []; // Store all documents for search
@@ -2101,7 +2226,13 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const filteredDocs = allVectorDocuments.filter(doc => 
                     doc.name.toLowerCase().includes(searchTerm) ||
                     doc.type.toLowerCase().includes(searchTerm) ||
-                    (doc.id && doc.id.toLowerCase().includes(searchTerm))
+                    (doc.id && doc.id.toLowerCase().includes(searchTerm)) ||
+                    (doc.driver && doc.driver.toLowerCase().includes(searchTerm)) ||
+                    (doc.firm && doc.firm.toLowerCase().includes(searchTerm)) ||
+                    (doc.receiver && doc.receiver.toLowerCase().includes(searchTerm)) ||
+                    (doc.trailerNumber && doc.trailerNumber.toLowerCase().includes(searchTerm)) ||
+                    (doc.sealNumber && doc.sealNumber.toLowerCase().includes(searchTerm)) ||
+                    (doc.setTemperature && doc.setTemperature.toLowerCase().includes(searchTerm))
                 );
                 renderDocuments(filteredDocs);
             }
@@ -2148,38 +2279,64 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 row.className = 'hover:bg-gray-50';
                 row.dataset.documentId = doc.id;
                 
-                const modifiedDate = doc.modifiedDate ? new Date(doc.modifiedDate).toLocaleDateString() : 'Unknown';
+                // Format dates and times
+                const formatDateTime = (dateStr) => {
+                    if (!dateStr) return '-';
+                    try {
+                        const date = new Date(dateStr);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    } catch (e) {
+                        return dateStr;
+                    }
+                };
                 
-                // Determine document type based on name content
-                let docType = 'Unknown';
-                let typeClass = 'unknown';
-                if (doc.name.toLowerCase().includes('inbound') || doc.name.toLowerCase().includes('in-bound')) {
-                    docType = 'Inbound';
-                    typeClass = 'inbound';
-                } else if (doc.name.toLowerCase().includes('outbound') || doc.name.toLowerCase().includes('out-bound')) {
-                    docType = 'Outbound';
-                    typeClass = 'outbound';
-                } else if (doc.type && doc.type.toLowerCase().includes('inbound')) {
-                    docType = 'Inbound';
-                    typeClass = 'inbound';
-                } else if (doc.type && doc.type.toLowerCase().includes('outbound')) {
-                    docType = 'Outbound';
-                    typeClass = 'outbound';
-                } else {
-                    // Default based on common patterns or fallback
-                    docType = doc.name.includes('-') && doc.name.split('-').length > 1 ? 'Inbound' : 'Outbound';
-                    typeClass = doc.name.includes('-') && doc.name.split('-').length > 1 ? 'inbound' : 'outbound';
-                }
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '-';
+                    try {
+                        return new Date(dateStr).toLocaleDateString();
+                    } catch (e) {
+                        return dateStr;
+                    }
+                };
+                
+                const formatValue = (value, type = 'default') => {
+                    const isEmpty = !value || value === '';
+                    const displayValue = isEmpty ? '-' : value;
+                    const cssClass = isEmpty ? 'data-cell empty' : 'data-cell';
+                    
+                    if (type === 'trailer-seal') {
+                        return `<span class="${cssClass} trailer-seal">${displayValue}</span>`;
+                    } else if (type === 'temperature') {
+                        return `<span class="${cssClass} temperature">${displayValue}</span>`;
+                    } else {
+                        return `<span class="${cssClass}">${displayValue}</span>`;
+                    }
+                };
+                
+                const receivedDate = formatDate(doc.modifiedDate || doc.creationDate);
+                const checkInTime = formatDateTime(doc.checkInTime);
+                const signedDate = formatDate(doc.signedDate);
 
                 row.innerHTML = `
-                    <td class="px-3 py-3 w-1/2">
+                    <td class="px-3 py-3 w-52">
                         <div class="document-name truncate pr-2" title="${doc.name}">${doc.name}</div>
                     </td>
-                    <td class="px-3 py-3 w-1/6">
-                        <span class="type-badge ${typeClass}">${docType}</span>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                        <span class="data-cell">${receivedDate}</span>
                     </td>
-                    <td class="px-3 py-3 w-1/6 text-sm text-gray-500">${modifiedDate}</td>
-                    <td class="px-3 py-3 w-1/6">
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                        <span class="data-cell">${signedDate}</span>
+                    </td>
+                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.trailerNumber || 'No trailer number'}">${formatValue(doc.trailerNumber, 'trailer-seal')}</td>
+                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.sealNumber || 'No seal number'}">${formatValue(doc.sealNumber, 'trailer-seal')}</td>
+                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.setTemperature || 'No temperature setting'}">${formatValue(doc.setTemperature, 'temperature')}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.driver || 'No driver information'}">${formatValue(doc.driver)}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.firm || 'No firm information'}">${formatValue(doc.firm)}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.receiver || 'No receiver information'}">${formatValue(doc.receiver)}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                        <span class="data-cell">${checkInTime}</span>
+                    </td>
+                    <td class="px-3 py-3 w-24">
                         <button class="preview-btn text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
                             Preview
                         </button>
@@ -2451,6 +2608,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         function loadVectorApiSettings() {
             const savedEndpoint = localStorage.getItem('vectorApiEndpoint');
             const savedToken = localStorage.getItem('vectorBearerToken');
+            const savedFacility = localStorage.getItem('vectorFacility') || 'US Cold Lumberton';
             const savedDateRange = localStorage.getItem('vectorDateRange') || '30';
             const savedResultSize = localStorage.getItem('vectorResultSize') || '100';
             
@@ -2462,6 +2620,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 settingsVectorBearerToken.value = savedToken;
             }
             
+            if (settingsVectorFacility) {
+                settingsVectorFacility.value = savedFacility;
+            }
+            
             if (settingsVectorDateRange) settingsVectorDateRange.value = savedDateRange;
             if (settingsVectorResultSize) settingsVectorResultSize.value = savedResultSize;
         }
@@ -2470,6 +2632,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
         function saveVectorSettings() {
             const endpoint = settingsVectorApiEndpoint.value.trim();
             const token = settingsVectorBearerToken.value.trim();
+            const facility = settingsVectorFacility.value.trim() || 'US Cold Lumberton';
             const dateRange = settingsVectorDateRange.value || '30';
             const resultSize = settingsVectorResultSize.value || '100';
             
@@ -2481,6 +2644,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             // Save to localStorage
             localStorage.setItem('vectorApiEndpoint', endpoint);
             localStorage.setItem('vectorBearerToken', token);
+            localStorage.setItem('vectorFacility', facility);
             localStorage.setItem('vectorDateRange', dateRange);
             localStorage.setItem('vectorResultSize', resultSize);
             
@@ -2495,6 +2659,26 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 saveVectorApiSettings.classList.remove('bg-green-600');
                 saveVectorApiSettings.classList.add('bg-blue-600');
             }, 2000);
+        }
+
+        // Auto-refresh functions
+        function startVectorAutoRefresh() {
+            // Clear existing interval if any
+            if (vectorAutoRefreshInterval) {
+                clearInterval(vectorAutoRefreshInterval);
+            }
+            
+            // Set up auto-refresh every 5 minutes (300000 milliseconds)
+            vectorAutoRefreshInterval = setInterval(() => {
+                loadDocumentsFromVector();
+            }, 300000);
+        }
+
+        function stopVectorAutoRefresh() {
+            if (vectorAutoRefreshInterval) {
+                clearInterval(vectorAutoRefreshInterval);
+                vectorAutoRefreshInterval = null;
+            }
         }
 
         // Initialize Vector API settings
