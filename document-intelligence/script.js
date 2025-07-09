@@ -2436,7 +2436,7 @@ Only output the final, consolidated JSON object. Do not include any other text, 
             paginationContainer.appendChild(nextButton);
             
             // Insert pagination after the table
-            const tableContainer = document.querySelector('#vectorDocumentsList .bg-white.border');
+            const tableContainer = document.querySelector('#vectorDocumentsList .bg-white');
             if (tableContainer) {
                 tableContainer.appendChild(paginationContainer);
             }
