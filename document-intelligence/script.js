@@ -2668,10 +2668,10 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 clearInterval(vectorAutoRefreshInterval);
             }
             
-            // Set up auto-refresh every 5 minutes (300000 milliseconds)
+            // Set up auto-refresh every minute (60000 milliseconds)
             vectorAutoRefreshInterval = setInterval(() => {
                 loadDocumentsFromVector();
-            }, 300000);
+            }, 60000);
         }
 
         function stopVectorAutoRefresh() {
