@@ -509,24 +509,14 @@ input:checked + .toggle-slider:before {
 
 #documentsTable tbody tr.selected td {
     padding-right: 6px !important;
+    color: white !important;
 }
 
-#documentsTable tbody tr.selected::before {
-    content: '✓ SELECTED';
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(251, 191, 36, 0.95);
-    color: #1e40af;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 9px;
-    font-weight: 700;
-    z-index: 10;
-    white-space: nowrap;
-    pointer-events: none;
+#documentsTable tbody tr.selected td .data-cell {
+    color: white !important;
 }
+
+
 
 #documentsTable tbody tr.selected .document-name {
     color: white;

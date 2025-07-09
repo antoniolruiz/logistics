@@ -2318,29 +2318,33 @@ Only output the final, consolidated JSON object. Do not include any other text, 
                 const signedDate = formatDate(doc.signedDate);
 
                 row.innerHTML = `
-                    <td class="px-3 py-3 w-52">
-                        <div class="document-name truncate pr-2" title="${doc.name}">${doc.name}</div>
+                    <td class="px-3 py-3 w-64">
+                        <div class="flex items-center gap-2">
+                            <button class="preview-btn text-blue-600 hover:text-blue-800 transition-colors flex-shrink-0" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <div class="document-name truncate" title="${doc.name}">${doc.name}</div>
+                        </div>
                     </td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                    <td class="px-3 py-3 w-36 text-sm text-gray-500">
                         <span class="data-cell">${receivedDate}</span>
                     </td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                    <td class="px-3 py-3 w-36 text-sm text-gray-500">
                         <span class="data-cell">${signedDate}</span>
                     </td>
-                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.trailerNumber || 'No trailer number'}">${formatValue(doc.trailerNumber, 'trailer-seal')}</td>
-                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.sealNumber || 'No seal number'}">${formatValue(doc.sealNumber, 'trailer-seal')}</td>
-                    <td class="px-3 py-3 w-24 text-sm text-gray-500" title="${doc.setTemperature || 'No temperature setting'}">${formatValue(doc.setTemperature, 'temperature')}</td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.driver || 'No driver information'}">${formatValue(doc.driver)}</td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.firm || 'No firm information'}">${formatValue(doc.firm)}</td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.receiver || 'No receiver information'}">${formatValue(doc.receiver)}</td>
-                    <td class="px-3 py-3 w-32 text-sm text-gray-500">
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.trailerNumber || 'No trailer number'}">${formatValue(doc.trailerNumber, 'trailer-seal')}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.sealNumber || 'No seal number'}">${formatValue(doc.sealNumber, 'trailer-seal')}</td>
+                    <td class="px-3 py-3 w-32 text-sm text-gray-500" title="${doc.setTemperature || 'No temperature setting'}">${formatValue(doc.setTemperature, 'temperature')}</td>
+                    <td class="px-3 py-3 w-40 text-sm text-gray-500" title="${doc.driver || 'No driver information'}">${formatValue(doc.driver)}</td>
+                    <td class="px-3 py-3 w-40 text-sm text-gray-500" title="${doc.firm || 'No firm information'}">${formatValue(doc.firm)}</td>
+                    <td class="px-3 py-3 w-40 text-sm text-gray-500" title="${doc.receiver || 'No receiver information'}">${formatValue(doc.receiver)}</td>
+                    <td class="px-3 py-3 w-40 text-sm text-gray-500">
                         <span class="data-cell">${checkInTime}</span>
                     </td>
-                    <td class="px-3 py-3 w-24">
-                        <button class="preview-btn text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="event.stopPropagation(); previewDocument('${doc.id}')" title="Preview Document">
-                            Preview
-                        </button>
-                    </td>
+
                 `;
 
                 row.addEventListener('click', () => selectDocumentForAnalysis(doc.id));
