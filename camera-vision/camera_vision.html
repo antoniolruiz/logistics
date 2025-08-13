@@ -1789,29 +1789,41 @@ The very first character of your output must be [ and the very last character mu
         });
 
         function handleExportBolData() {
-            const card = document.getElementById('bolResultCard');
-            if (!card) return;
-
             const headers = ["Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)"];
             const rows = [];
-            
-            const trailerRows = card.querySelectorAll('tbody > tr');
-            if (trailerRows.length > 0 && trailerRows[0].cells.length > 1) {
-                 trailerRows.forEach(row => {
+            // Prefer the in-memory trailers (includes edits from mobile cards)
+            if (Array.isArray(currentTrailers) && currentTrailers.length > 0) {
+                currentTrailers.forEach(t => {
                     rows.push([
-                        row.cells[0] ? row.cells[0].innerText : 'N/A', // Trailer ID
-                        row.cells[1] ? row.cells[1].innerText : 'N/A', // Carrier
-                        row.cells[2] ? row.cells[2].innerText : 'N/A', // Loaded
-                        row.cells[3] ? row.cells[3].innerText : 'N/A', // Location
-                        row.cells[4] ? row.cells[4].innerText : 'N/A', // Type
-                        row.cells[5] ? row.cells[5].innerText : 'N/A'  // Size
+                        t.trailer_id ?? 'N/A',
+                        t.carrier ?? 'N/A',
+                        (typeof t.is_loaded === 'boolean') ? (t.is_loaded ? 'Yes' : 'No') : (t.is_loaded ?? 'N/A'),
+                        t.location ?? 'N/A',
+                        t.trailer_type ?? 'N/A',
+                        (t.trailer_size ?? 'N/A')
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                 rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                // Fallback to table if present
+                const card = document.getElementById('bolResultCard');
+                const trailerRows = card ? card.querySelectorAll('tbody > tr') : [];
+                if (trailerRows.length > 0 && trailerRows[0].cells.length > 1) {
+                    trailerRows.forEach(row => {
+                        rows.push([
+                            row.cells[0] ? row.cells[0].innerText : 'N/A',
+                            row.cells[1] ? row.cells[1].innerText : 'N/A',
+                            row.cells[2] ? row.cells[2].innerText : 'N/A',
+                            row.cells[3] ? row.cells[3].innerText : 'N/A',
+                            row.cells[4] ? row.cells[4].innerText : 'N/A',
+                            row.cells[5] ? row.cells[5].innerText : 'N/A'
+                        ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                    });
+                } else {
+                    rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
+                }
             }
 
-            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
+            const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csvContent));
             link.setAttribute("download", "yard_audit_results.csv");
@@ -1988,11 +2000,16 @@ The very first character of your output must be [ and the very last character mu
 
         // Raw Results Modal Listeners
         showRawResultsBtn.addEventListener('click', () => {
-            if (rawModelResponse) {
-                rawResultsText.textContent = rawModelResponse;
-                rawResultsModal.classList.remove('hidden');
-                rawResultsModal.classList.add('flex');
+            // Build JSON from in-memory trailers so it reflects edits
+            let jsonText = '';
+            if (Array.isArray(currentTrailers) && currentTrailers.length > 0) {
+                jsonText = JSON.stringify(currentTrailers, null, 2);
+            } else if (rawModelResponse) {
+                jsonText = rawModelResponse;
             }
+            rawResultsText.textContent = jsonText || '[]';
+            rawResultsModal.classList.remove('hidden');
+            rawResultsModal.classList.add('flex');
         });
 
         const closeRawResultsModal = () => {
