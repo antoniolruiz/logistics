@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Camera Vision: Yard Auditor – Technical Documentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b1220; --panel:#101828; --muted:#9aa4b2; --text:#e6e8ea; --brand:#3b82f6; --good:#16a34a; --warn:#f59e0b; --bad:#ef4444; }
+    html,body { margin:0; padding:0; background:#0b1220; color:var(--text); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; line-height:1.5; }
+    .container { max-width:1100px; margin:0 auto; padding:2rem; }
+    .card { background:var(--panel); border:1px solid #1f2937; border-radius:14px; padding:1.25rem 1.25rem; margin-bottom:1rem; }
+    h1 { font-size:1.9rem; margin:0 0 1rem 0; }
+    h2 { font-size:1.25rem; margin:1.25rem 0 0.5rem; }
+    h3 { font-size:1.05rem; margin:1rem 0 0.35rem; }
+    p, li { color:#d6d9dd; }
+    code, pre { background:#0a0f1a; border:1px solid #162135; color:#e2e8f0; border-radius:8px; }
+    code { padding:0.15rem 0.35rem; }
+    pre { padding:0.75rem; overflow:auto; }
+    a { color:var(--brand); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    .muted { color:var(--muted); }
+    .tag { display:inline-block; padding:0.15rem 0.45rem; border-radius:999px; font-size:0.75rem; border:1px solid #2b3547; background:#0a0f1a; color:#d6d9dd; }
+    .grid { display:grid; gap:1rem; }
+    .grid-2 { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .grid-3 { grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .toc a { display:block; padding:0.25rem 0; color:#cfd3d8; }
+    .toc a:hover { color:#fff; }
+    .kbd { border:1px solid #3a465b; background:#0d1524; padding:0.1rem 0.35rem; border-radius:6px; font-size:0.85rem; }
+    .pill { padding:0.2rem 0.5rem; border-radius:6px; font-weight:600; }
+    .pill-good { background:rgba(22,163,74,0.12); color:#86efac; border:1px solid rgba(22,163,74,0.35); }
+    .pill-warn { background:rgba(245,158,11,0.12); color:#fde68a; border:1px solid rgba(245,158,11,0.35); }
+    .pill-bad { background:rgba(239,68,68,0.12); color:#fecaca; border:1px solid rgba(239,68,68,0.35); }
+    .small { font-size:0.9rem; }
+    .caption { color:#aab2bd; font-size:0.9rem; }
+    .hr { height:1px; background:#1f2937; border:0; margin:0.75rem 0 1.25rem; }
+    .list-tight li { margin:0.2rem 0; }
+    .foot { color:#9aa4b2; font-size:0.9rem; margin-top:0.25rem; }
+    .diagram { display:block; width:100%; height:auto; background:#0a0f1a; border:1px solid #182235; border-radius:10px; padding:0.75rem; }
+  </style>
+  <meta name="description" content="Technical documentation for the Camera Vision: Yard Auditor web app, including architecture, data flow, video frame extraction, LLM integration, prompting strategy, comparison logic, configuration, and troubleshooting." />
+</head>
+<body>
+  <div class="container">
+    <header class="card">
+      <h1>Camera Vision: Yard Auditor – Technical Documentation</h1>
+      <div class="muted">Version: 1.1 • Updated for prompt improvements, higher-quality frames, new logo URL, and default bearer token.</div>
+    </header>
+
+    <section class="card">
+      <h2>Table of Contents</h2>
+      <div class="grid grid-2 toc">
+        <div>
+          <a href="#overview">1. Overview & Goals</a>
+          <a href="#flow">2. High-Level Flow</a>
+          <a href="#ui">3. UI & Usage</a>
+          <a href="#video">4. Video Processing</a>
+          <a href="#models">5. Model Integration</a>
+          <a href="#prompt">6. Prompting Strategy</a>
+          <a href="#results">7. Results Rendering</a>
+        </div>
+        <div>
+          <a href="#comparison">8. Comparison Module</a>
+          <a href="#config">9. Configuration & Keys</a>
+          <a href="#security">10. Security Notes</a>
+          <a href="#limitations">11. Limitations & Accuracy Tips</a>
+          <a href="#troubleshooting">12. Troubleshooting</a>
+          <a href="#changelog">13. Changelog</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="overview" class="card">
+      <h2>1) Overview & Goals</h2>
+      <p>
+        The Yard Auditor web application analyzes yard videos to identify unique trailers and produce a structured JSON manifest. It extracts frames from an uploaded video, sends those frames to a selected multimodal LLM (Gemini, OpenAI, or Claude), and renders results in an editable table with export options. A comparison workflow can match current observations against historical data via API or CSV.
+      </p>
+      <ul class="list-tight">
+        <li><span class="tag">Input</span> User-uploaded yard video</li>
+        <li><span class="tag">Processing</span> Up to 100 image frames with high JPEG quality (0.95)</li>
+        <li><span class="tag">Output</span> JSON array of trailer objects (IDs, carrier, loaded, location, type, size, and optional confidences)</li>
+        <li><span class="tag">Extras</span> Comparison against Vector API or CSV, CSV exports, raw results viewing, image zoom, inline edits</li>
+      </ul>
+    </section>
+
+    <section id="flow" class="card">
+      <h2>2) High‑Level Flow</h2>
+      <svg class="diagram" viewBox="0 0 1100 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="System flow diagram">
+        <defs>
+          <style>
+            .b{fill:#0d1524;stroke:#264061;stroke-width:1.2px;}
+            .t{fill:#dbe2ea;font: 13px Inter, sans-serif;}
+            .a{stroke:#264061;stroke-width:1.2px;marker-end:url(#arrow);} 
+          </style>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#264061" />
+          </marker>
+        </defs>
+        <rect x="20" y="40" width="200" height="60" rx="10" class="b"/>
+        <text x="120" y="75" text-anchor="middle" class="t">User uploads video</text>
+
+        <rect x="260" y="40" width="240" height="60" rx="10" class="b"/>
+        <text x="380" y="67" text-anchor="middle" class="t">Frame extraction</text>
+        <text x="380" y="87" text-anchor="middle" class="t small">0..100 frames, quality=0.95</text>
+
+        <rect x="540" y="40" width="240" height="60" rx="10" class="b"/>
+        <text x="660" y="67" text-anchor="middle" class="t">LLM inference</text>
+        <text x="660" y="87" text-anchor="middle" class="t small">Gemini / GPT‑4o / Claude</text>
+
+        <rect x="820" y="40" width="260" height="60" rx="10" class="b"/>
+        <text x="950" y="67" text-anchor="middle" class="t">JSON array of trailers</text>
+        <text x="950" y="87" text-anchor="middle" class="t small">IDs, metadata, confidences</text>
+
+        <line x1="220" y1="70" x2="260" y2="70" class="a"/>
+        <line x1="500" y1="70" x2="540" y2="70" class="a"/>
+        <line x1="780" y1="70" x2="820" y2="70" class="a"/>
+
+        <rect x="260" y="150" width="240" height="60" rx="10" class="b"/>
+        <text x="380" y="177" text-anchor="middle" class="t">Results rendering</text>
+        <text x="380" y="197" text-anchor="middle" class="t small">Carousel + editable table</text>
+
+        <rect x="540" y="150" width="240" height="60" rx="10" class="b"/>
+        <text x="660" y="177" text-anchor="middle" class="t">Comparison</text>
+        <text x="660" y="197" text-anchor="middle" class="t small">API or CSV; added/removed</text>
+
+        <line x1="950" y1="100" x2="660" y2="150" class="a"/>
+        <line x1="950" y1="100" x2="380" y2="150" class="a"/>
+      </svg>
+    </section>
+
+    <section id="ui" class="card">
+      <h2>3) UI & Usage</h2>
+      <ol>
+        <li>Click “Upload Yard Video” and select a file. Frames are prepared with a visual progress indicator.</li>
+        <li>Click “Initiate Yard Auditor”. Provide an API key based on the selected model if prompted.</li>
+        <li>Watch the progress bar for Uploading → Model → Fetching Properties → Final Output.</li>
+        <li>View the results card: image carousel (click to zoom) and an editable trailers table.</li>
+        <li>Use “Export Data” to download CSV; “Raw Results” to see the JSON the model returned.</li>
+        <li>Click “Compare Against Yard” to load API data or upload a CSV and see Added/Removed/Remaining.</li>
+      </ol>
+      <p class="caption">AI configuration panel (model + keys) can be toggled by triple‑clicking the Vector logo.</p>
+    </section>
+
+    <section id="video" class="card">
+      <h2>4) Video Processing</h2>
+      <p>
+        The app samples up to 100 frames uniformly across the video duration. Each frame is drawn to a canvas and encoded as a JPEG data URL with quality <code>0.95</code> to preserve detail for OCR‑like tasks. Frame timestamps are saved to enable selecting the closest frame later if needed.
+      </p>
+      <pre><code>// Key points
+// - Max frames: 100 (uniform sampling)
+// - Canvas draw per seeked position
+// - JPEG export: toDataURL('image/jpeg', 0.95)
+// - Progress indicator updates per frame
+// - Results: { frames: string[], timestamps: number[] }
+</code></pre>
+      <p class="foot">Functionality in <span class="kbd">renderVideoToFrames</span>.</p>
+    </section>
+
+    <section id="models" class="card">
+      <h2>5) Model Integration</h2>
+      <ul>
+        <li><b>Gemini</b> (Google): <code>models/${'{selectedModel}'}:generateContent</code> with <code>response_mime_type: application/json</code>. Sends one text part (prompt) plus N image parts.</li>
+        <li><b>OpenAI</b>: <code>/v1/chat/completions</code> with <code>response_format: json_object</code>. Messages include a text item and multiple <code>image_url</code> items.</li>
+        <li><b>Claude</b> (Anthropic): <code>/v1/messages</code> with content array mixing text and base64 image blocks.</li>
+      </ul>
+      <p>The app parses the provider‑specific response and expects a single JSON array of trailer objects. The raw response is saved for inspection in the “Raw Results” modal.</p>
+      <p class="foot">Core calls are initiated in <span class="kbd">handleBolParsing</span>. API keys are read via <span class="kbd">getApiKey</span>.</p>
+    </section>
+
+    <section id="prompt" class="card">
+      <h2>6) Prompting Strategy</h2>
+      <p>
+        The default prompt instructs the model (LOGOS) to output a strict JSON array of unique trailers. It emphasizes:
+      </p>
+      <ul class="list-tight">
+        <li><span class="pill pill-good">High confidence</span> for <code>trailer_id</code> and <code>location</code> (prefer null over guesses)</li>
+        <li>Optional fields like <code>id_confidence</code>, <code>location_confidence</code>, <code>supporting_frame_identifiers</code>, <code>id_bbox</code>, <code>location_candidates</code></li>
+        <li>Stateful tracking across frames and majority voting on ambiguous ID characters (O/0, I/1, S/5, B/8)</li>
+        <li>Strict output: first character <code>[</code>, last character <code>]</code>, no prose</li>
+      </ul>
+      <p class="foot">Configured in the constant <span class="kbd">defaultBolPrompt</span>. Users can edit it via the “Edit Prompt” panel.</p>
+    </section>
+
+    <section id="results" class="card">
+      <h2>7) Results Rendering</h2>
+      <p>
+        The app normalizes the model output and extracts per‑trailer image references using <code>image_identifier</code> (1‑based index into the extracted frames). A carousel shows the selected trailer frames; a table lists trailer properties and supports inline editing, row addition, and removal. CSV export builds a matrix of the table values.
+      </p>
+      <pre><code>// Table columns
+[ "Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)" ]
+
+// Export: yard_audit_results.csv
+</code></pre>
+      <p class="foot">Rendering logic lives in <span class="kbd">displayBolResults</span>, with table interactions delegated to <span class="kbd">attachTrailersTableListeners</span>.</p>
+    </section>
+
+    <section id="comparison" class="card">
+      <h2>8) Comparison Module</h2>
+      <p>
+        The Compare modal supports two sources for the “previous” yard state: (1) a Vector API query with a bearer token, or (2) a user‑uploaded CSV. The current run’s results form the “current” state. The app computes three sets: Added (current − previous), Removed (previous − current), and Remaining (intersection).
+      </p>
+      <div class="grid grid-2">
+        <div>
+          <h3>API Fetch</h3>
+          <ul class="list-tight">
+            <li>POST to a configured endpoint with bearer token.</li>
+            <li>Fallback to a CORS proxy is attempted if direct fetch is blocked.</li>
+            <li>Response is normalized by <code>transformApiData</code> into trailer objects.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>CSV Upload</h3>
+          <ul class="list-tight">
+            <li>Parses header row into keys; remaining rows mapped to objects.</li>
+            <li>Column names normalized: lower‑cased, spaces → underscores.</li>
+          </ul>
+        </div>
+      </div>
+      <pre><code>// Comparison results
+Added → not in previous
+Removed → not in current
+Remaining → present in both
+
+// Export: yard_comparison_results.csv
+</code></pre>
+      <p class="foot">Core in <span class="kbd">runComparison</span>, UI wiring in the Compare modal listeners.</p>
+    </section>
+
+    <section id="config" class="card">
+      <h2>9) Configuration & Keys</h2>
+      <ul class="list-tight">
+        <li><b>Model</b>: Select between Gemini, GPT‑4o, or Claude; UI toggles key inputs accordingly.</li>
+        <li><b>Google API Key</b>: Stored in a password field; default key is a placeholder for demos.</li>
+        <li><b>OpenAI/Anthropic API Key</b>: Shared input for GPT/Claude flows.</li>
+        <li><b>Vector API Endpoint</b>: Configurable in the AI Config section.</li>
+        <li><b>Default Bearer Token</b>: Pre‑filled to <code>2f3fc620c121ca8478d147c870ef19d7</code> for convenience; replace for production.</li>
+        <li><b>Vector Logo</b>: Updated CDN URL (September 2024 build).</li>
+      </ul>
+      <p class="caption">Open the hidden AI Config via triple‑click on the Vector logo.</p>
+    </section>
+
+    <section id="security" class="card">
+      <h2>10) Security Notes</h2>
+      <ul class="list-tight">
+        <li>All API calls execute client‑side. Keys entered here are not stored server‑side.</li>
+        <li>Use dedicated keys with limited scopes/quotas for demos.</li>
+        <li>For production, consider a minimal backend relay to avoid exposing secrets in the browser and to manage CORS.</li>
+      </ul>
+    </section>
+
+    <section id="limitations" class="card">
+      <h2>11) Limitations & Accuracy Tips</h2>
+      <ul class="list-tight">
+        <li>Lighting, motion blur, and camera angle affect ID legibility. Prefer slow pans and good lighting.</li>
+        <li>We increased JPEG quality to 0.95 to aid recognition.</li>
+        <li>The prompt enforces high‑confidence extraction; uncertain IDs/locations should be null.</li>
+        <li>For even better accuracy, consider a second pass per trailer with tight crops of the ID region and optional OCR reconciliation.</li>
+        <li>Location accuracy improves if the yard labeling is large, high‑contrast, and visible in multiple frames.</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting" class="card">
+      <h2>12) Troubleshooting</h2>
+      <ul class="list-tight">
+        <li><b>Video processing error</b>: Try a different format/codec. Ensure the browser can decode it natively.</li>
+        <li><b>Strict JSON parse error</b>: The model may have returned prose. Re‑run or tighten the prompt; ensure the correct provider is selected.</li>
+        <li><b>CORS error on API Compare</b>: The API host may block browser origins. Use the CSV path or proxy through a backend.</li>
+        <li><b>No results</b>: Verify API key validity and model availability/quotas.</li>
+      </ul>
+    </section>
+
+    <section id="changelog" class="card">
+      <h2>13) Changelog (recent)</h2>
+      <ul class="list-tight">
+        <li>Updated Vector logo URL to latest CDN.</li>
+        <li>Changed default bearer token value in config to <code>2f3fc620c121ca8478d147c870ef19d7</code>.</li>
+        <li>Strengthened default prompt for confidence enforcement and optional metadata (confidences, bboxes, supporting frames).</li>
+        <li>Raised JPEG frame quality from 0.8 → 0.95 for sharper IDs.</li>
+      </ul>
+      <p class="muted small">Primary file: <span class="kbd">camera_vision.html</span></p>
+    </section>
+
+    <footer class="card">
+      <div class="muted small">© Yard Auditor – Internal Documentation. This page is a static HTML file you can ship with the app or print to PDF.</div>
+    </footer>
+  </div>
+</body>
+</html>
