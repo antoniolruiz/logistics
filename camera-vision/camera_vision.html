@@ -781,6 +781,8 @@ The very first character of your output must be [ and the very last character mu
                         <div class="text-xs text-gray-500 mt-1">Click "Initiate Yard Auditor" to begin analysis</div>
                     </div>
                 `;
+                checkAllInputs();
+                if (hasApiKey()) parseBolBtn.disabled = false;
             } catch (error) {
                 displayMessage(`Error processing video: ${error.message}`);
                 bolPreviewContainer.innerHTML = '';
