@@ -68,6 +68,7 @@
         }
         .field-block, .mt-1.flex.items-center.p-2.border.bg-gray-50.rounded-md { margin-bottom: 1.1rem !important; }
          html, body { overflow-x: hidden; }
+         #mobileCardsContainer { overflow-anchor: none; }
          /* Improve mobile tap targets and spacing */
          @media (max-width: 420px) {
              .container { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
@@ -1600,12 +1601,10 @@ The very first character of your output must be [ and the very last character mu
                 };
 
                 const goPrev = () => {
-                    currentCardIndex = Math.max(0, currentCardIndex - 1);
-                    const y = window.scrollY; updateStepper(); window.scrollTo(0, y);
+                    const y = window.pageYOffset; currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); setTimeout(() => window.scrollTo(0, y), 0);
                 };
                 const goNext = () => {
-                    currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
-                    const y = window.scrollY; updateStepper(); window.scrollTo(0, y);
+                    const y = window.pageYOffset; currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); setTimeout(() => window.scrollTo(0, y), 0);
                 };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
@@ -1707,6 +1706,18 @@ The very first character of your output must be [ and the very last character mu
                                 editable.textContent = input.value || 'N/A';
                                 editable.style.display = '';
                                 input.replaceWith(editable);
+                                // Persist to current trailer on blur so export/raw reflect edits
+                                if (trailers[currentCardIndex]) {
+                                    const t = trailers[currentCardIndex];
+                                    const col = editable.getAttribute('data-col');
+                                    if (col) {
+                                        let val = editable.textContent.trim();
+                                        if (col === 'is_loaded') { val = /^y(es)?$/i.test(val); }
+                                        else if (col === 'trailer_size') { val = val && !isNaN(parseInt(val)) ? parseInt(val) : (val || null); }
+                                        else { val = val || null; }
+                                        t[col] = val;
+                                    }
+                                }
                             });
                             input.addEventListener('keydown', function(ev) {
                                 if (ev.key === 'Enter') input.blur();
