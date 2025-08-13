@@ -536,6 +536,29 @@
         let trailerImageFrameNumbers = []; // Parallel array of frame numbers for trailerImages
         let videoDuration = 0; // Store video duration
         let lastAuditDurationText = '';
+        let wakeLock = null; // Screen Wake Lock while running
+
+        async function acquireWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    document.addEventListener('visibilitychange', async () => {
+                        try {
+                            if (document.visibilityState === 'visible' && !wakeLock) {
+                                wakeLock = await navigator.wakeLock.request('screen');
+                            }
+                        } catch (_) {}
+                    }, { passive: true });
+                }
+            } catch (err) {
+                console.warn('WakeLock not available', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            try { if (wakeLock && wakeLock.release) wakeLock.release(); } catch (_) {}
+            wakeLock = null;
+        }
 
         const defaultBolPrompt = `You are LOGOS (Logistics Observation and Guidance System), an advanced AI agent specializing in real-time visual analysis of logistics environments. Your sole function is to process visual data (images or video frames) of a truck yard and act as a meticulous digital manifest creator.
 
@@ -1018,6 +1041,7 @@ The very first character of your output must be [ and the very last character mu
             loading.classList.remove('hidden');
             startProgressAnimation();
             setProgress(10, '');
+            acquireWakeLock();
 
             if (videoFrames.length === 0) {
                 displayMessage("Please upload a video and wait for frames to render.");
@@ -1128,6 +1152,7 @@ The very first character of your output must be [ and the very last character mu
                 setProgress(0, '');
                 stopProgressAnimation();
             } finally {
+                releaseWakeLock();
                 // loading.classList.add('hidden');
             }
         }
@@ -1210,8 +1235,18 @@ The very first character of your output must be [ and the very last character mu
                         reject(new Error('Failed to load video file'));
                     });
                     
-                    const url = URL.createObjectURL(file);
-                    video.src = url;
+                    // Stream from input for mobile to reduce initial delay; fallback to object URL
+                    try {
+                        if (file.stream) {
+                            const response = new Response(file.stream());
+                            const blob = await response.blob();
+                            video.src = URL.createObjectURL(blob);
+                        } else {
+                            video.src = URL.createObjectURL(file);
+                        }
+                    } catch (_) {
+                        video.src = URL.createObjectURL(file);
+                    }
                     video.load();
                     
                 } catch (error) {
@@ -1525,11 +1560,11 @@ The very first character of your output must be [ and the very last character mu
                                 <div class=\"grid grid-cols-2 gap-2 text-sm\"> 
                                     <div>
                                         <div class=\"text-gray-500\">Trailer ID</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_id\">${trailer?.trailer_id || 'N/A'}</span></div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_id\">${(trailer?.trailer_id ?? '') || 'N/A'}</span></div>
                                     </div>
                                     <div>
                                         <div class=\"text-gray-500\">Carrier</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"carrier\">${trailer?.carrier || 'N/A'}</span></div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"carrier\">${(trailer?.carrier ?? '') || 'N/A'}</span></div>
                                     </div>
                                     <div>
                                         <div class=\"text-gray-500\">Loaded</div>
@@ -1537,15 +1572,15 @@ The very first character of your output must be [ and the very last character mu
                                     </div>
                                     <div>
                                         <div class=\"text-gray-500\">Location</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"location\">${trailer?.location || 'N/A'}</span></div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"location\">${(trailer?.location ?? '') || 'N/A'}</span></div>
                                     </div>
                                     <div>
                                         <div class=\"text-gray-500\">Type</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_type\">${trailer?.trailer_type || 'N/A'}</span></div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_type\">${(trailer?.trailer_type ?? '') || 'N/A'}</span></div>
                                     </div>
                                     <div>
                                         <div class=\"text-gray-500\">Size (ft)</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_size\">${trailer?.trailer_size || 'N/A'}</span></div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_size\">${(trailer?.trailer_size ?? '') || 'N/A'}</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -1573,13 +1608,32 @@ The very first character of your output must be [ and the very last character mu
                     }
                 };
 
-                const goPrev = () => { currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); };
-                const goNext = () => { currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); };
+                const goPrev = () => {
+                    currentCardIndex = Math.max(0, currentCardIndex - 1);
+                    const y = window.scrollY; updateStepper(); window.scrollTo({ top: y, behavior: 'instant' });
+                };
+                const goNext = () => {
+                    currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
+                    const y = window.scrollY; updateStepper(); window.scrollTo({ top: y, behavior: 'instant' });
+                };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
                 if (prevBtnBottom) prevBtnBottom.addEventListener('click', goPrev);
                 if (nextBtnBottom) nextBtnBottom.addEventListener('click', goNext);
                 if (confirmBtn) confirmBtn.addEventListener('click', () => {
+                    // Persist visible edits into trailers[currentCardIndex]
+                    const card = cardsContainer.querySelector('[data-row]');
+                    if (card && trailers[currentCardIndex]) {
+                        const getVal = (sel) => (card.querySelector(sel)?.textContent || '').trim();
+                        const t = trailers[currentCardIndex];
+                        t.trailer_id = getVal('[data-col="trailer_id"]') || null;
+                        t.carrier = getVal('[data-col="carrier"]') || null;
+                        t.is_loaded = (getVal('[data-col="is_loaded"]').toLowerCase().startsWith('y'));
+                        t.location = getVal('[data-col="location"]') || null;
+                        t.trailer_type = getVal('[data-col="trailer_type"]') || null;
+                        const sizeTxt = getVal('[data-col="trailer_size"]');
+                        t.trailer_size = sizeTxt && !isNaN(parseInt(sizeTxt)) ? parseInt(sizeTxt) : sizeTxt || null;
+                    }
                     if (confirmedSet.has(currentCardIndex)) confirmedSet.delete(currentCardIndex); else confirmedSet.add(currentCardIndex);
                     updateStepper();
                 });
