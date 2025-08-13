@@ -1542,9 +1542,10 @@ The very first character of your output must be [ and the very last character mu
                     const frameNumber = parseInt(trailer?.image_identifier);
                     const frameImg = (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) ? videoFrames[frameNumber - 1] : null;
                     const cardHtml = `
-                        <div class=\"space-y-2\">
+                        <div class=\"space-y-2\"> 
                             ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" data-frame=\"${frameNumber}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
-                            <div class=\"rounded-lg border border-gray-200 bg-white p-3 shadow-sm\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
+                            <div class=\"mobile-trailer-card rounded-lg border border-gray-200 bg-white p-3 shadow-sm relative transition-colors\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
+                                <div class=\"confirmed-badge hidden absolute top-2 right-2 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow\">Confirmed</div>
                                 <div class=\"flex items-center justify-between mb-2\"> 
                                     <div class=\"font-semibold text-gray-800 truncate\">${trailer?.trailer_id || 'N/A'}</div>
                                     <button class=\"remove-card-btn text-red-500 hover:text-red-700 font-bold text-lg\" title=\"Remove\">&minus;</button>
@@ -1592,6 +1593,16 @@ The very first character of your output must be [ and the very last character mu
                     if (prevBtnBottom) prevBtnBottom.disabled = atStart;
                     if (nextBtnBottom) nextBtnBottom.disabled = atEnd;
                     if (confirmBtn) confirmBtn.classList.toggle('bg-emerald-700', confirmedSet.has(currentCardIndex));
+                    const cardEl = cardsContainer.querySelector('.mobile-trailer-card');
+                    if (cardEl) {
+                        if (confirmedSet.has(currentCardIndex)) {
+                            cardEl.classList.add('ring-2','ring-emerald-400','bg-emerald-50');
+                            const badge = cardEl.querySelector('.confirmed-badge'); if (badge) badge.classList.remove('hidden');
+                        } else {
+                            cardEl.classList.remove('ring-2','ring-emerald-400','bg-emerald-50');
+                            const badge = cardEl.querySelector('.confirmed-badge'); if (badge) badge.classList.add('hidden');
+                        }
+                    }
                     // Update header counter
                     const confirmCounter = document.getElementById('confirmCounter');
                     const durEl2 = document.getElementById('auditDuration');
@@ -1789,41 +1800,29 @@ The very first character of your output must be [ and the very last character mu
         });
 
         function handleExportBolData() {
+            const card = document.getElementById('bolResultCard');
+            if (!card) return;
+
             const headers = ["Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)"];
             const rows = [];
-            // Prefer the in-memory trailers (includes edits from mobile cards)
-            if (Array.isArray(currentTrailers) && currentTrailers.length > 0) {
-                currentTrailers.forEach(t => {
+            
+            const trailerRows = card.querySelectorAll('tbody > tr');
+            if (trailerRows.length > 0 && trailerRows[0].cells.length > 1) {
+                 trailerRows.forEach(row => {
                     rows.push([
-                        t.trailer_id ?? 'N/A',
-                        t.carrier ?? 'N/A',
-                        (typeof t.is_loaded === 'boolean') ? (t.is_loaded ? 'Yes' : 'No') : (t.is_loaded ?? 'N/A'),
-                        t.location ?? 'N/A',
-                        t.trailer_type ?? 'N/A',
-                        (t.trailer_size ?? 'N/A')
+                        row.cells[0] ? row.cells[0].innerText : 'N/A', // Trailer ID
+                        row.cells[1] ? row.cells[1].innerText : 'N/A', // Carrier
+                        row.cells[2] ? row.cells[2].innerText : 'N/A', // Loaded
+                        row.cells[3] ? row.cells[3].innerText : 'N/A', // Location
+                        row.cells[4] ? row.cells[4].innerText : 'N/A', // Type
+                        row.cells[5] ? row.cells[5].innerText : 'N/A'  // Size
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
-                // Fallback to table if present
-                const card = document.getElementById('bolResultCard');
-                const trailerRows = card ? card.querySelectorAll('tbody > tr') : [];
-                if (trailerRows.length > 0 && trailerRows[0].cells.length > 1) {
-                    trailerRows.forEach(row => {
-                        rows.push([
-                            row.cells[0] ? row.cells[0].innerText : 'N/A',
-                            row.cells[1] ? row.cells[1].innerText : 'N/A',
-                            row.cells[2] ? row.cells[2].innerText : 'N/A',
-                            row.cells[3] ? row.cells[3].innerText : 'N/A',
-                            row.cells[4] ? row.cells[4].innerText : 'N/A',
-                            row.cells[5] ? row.cells[5].innerText : 'N/A'
-                        ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
-                    });
-                } else {
-                    rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
-                }
+                 rows.push(['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
             }
 
-            const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csvContent));
             link.setAttribute("download", "yard_audit_results.csv");
@@ -2000,16 +1999,11 @@ The very first character of your output must be [ and the very last character mu
 
         // Raw Results Modal Listeners
         showRawResultsBtn.addEventListener('click', () => {
-            // Build JSON from in-memory trailers so it reflects edits
-            let jsonText = '';
-            if (Array.isArray(currentTrailers) && currentTrailers.length > 0) {
-                jsonText = JSON.stringify(currentTrailers, null, 2);
-            } else if (rawModelResponse) {
-                jsonText = rawModelResponse;
+            if (rawModelResponse) {
+                rawResultsText.textContent = rawModelResponse;
+                rawResultsModal.classList.remove('hidden');
+                rawResultsModal.classList.add('flex');
             }
-            rawResultsText.textContent = jsonText || '[]';
-            rawResultsModal.classList.remove('hidden');
-            rawResultsModal.classList.add('flex');
         });
 
         const closeRawResultsModal = () => {
