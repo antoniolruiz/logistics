@@ -156,9 +156,15 @@
                          <p id="videoFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                      </div>
                      <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"></div>
-                     <input id="bolUpload" type="file" class="hidden" accept="video/*" />
+                     <input id="bolUpload" type="file" class="hidden" accept="video/*" capture="environment" />
                  </label>
-                <div class="text-center mt-6 md:mt-8 mb-6 md:mb-8">
+                <div class="text-center mt-2">
+                    <button id="recordVideoBtn" class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-md text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                        Record Video (beta)
+                    </button>
+                </div>
+                <div class="text-center mt-4 md:mt-8 mb-6 md:mb-8">
                     <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">Initiate Yard Auditor</button>
                 </div>
             </div>
@@ -817,6 +823,51 @@ The very first character of your output must be [ and the very last character mu
                 checkAllInputs(); // Disable button on failure
             }
         });
+        // Optional: record directly via MediaRecorder (bypasses photo picker)
+        const recordBtn = document.getElementById('recordVideoBtn');
+        if (recordBtn) {
+            recordBtn.addEventListener('click', async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                    const chunks = [];
+                    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+                    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+                    mediaRecorder.onstop = async () => {
+                        const blob = new Blob(chunks, { type: 'video/webm' });
+                        videoFile = new File([blob], `yard_${Date.now()}.webm`, { type: 'video/webm' });
+                        videoFileNameDisplay.textContent = videoFile.name;
+                        bolPromptText.classList.add('hidden');
+                        checkAllInputs();
+                        bolPreviewContainer.innerHTML = `
+                            <div class="text-center col-span-full p-4">
+                                <div class="text-base md:text-lg font-semibold text-blue-600 mb-2">Processing Video...</div>
+                                <div class="w-full bg-blue-100 rounded-full h-3 relative overflow-hidden mb-2">
+                                    <div id="videoProgressBar" class="h-3 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                                </div>
+                                <div id="videoProgressText" class="text-xs sm:text-sm text-gray-600">Initializing...</div>
+                            </div>`;
+                        const result = await renderVideoToFrames(videoFile);
+                        videoFrames = result.frames;
+                        frameTimestamps = result.timestamps;
+                        bolPreviewContainer.innerHTML = `
+                            <div class="text-center col-span-full p-4">
+                                <div class="text-green-600 font-semibold mb-2">✓ Video Ready for Analysis</div>
+                                <div class="text-xs text-gray-500 mt-1">Click "Initiate Yard Auditor" to begin analysis</div>
+                            </div>`;
+                        checkAllInputs();
+                        if (hasApiKey()) parseBolBtn.disabled = false;
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    mediaRecorder.start();
+                    await acquireWakeLock();
+                    // Simple UX: tap the button again to stop
+                    const stopHandler = () => { mediaRecorder.stop(); recordBtn.removeEventListener('click', stopHandler); releaseWakeLock(); };
+                    recordBtn.addEventListener('click', stopHandler);
+                } catch (err) {
+                    displayMessage(`Unable to access camera: ${err.message || err}`);
+                }
+            });
+        }
         
         parseBolBtn.addEventListener('click', handleBolParsing);
         exportBolBtn.addEventListener('click', handleExportBolData);
@@ -1611,11 +1662,12 @@ The very first character of your output must be [ and the very last character mu
                     }
                 };
 
+                const fixScroll = () => { if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } };
                 const goPrev = () => {
-                    const y = window.pageYOffset; currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); setTimeout(() => window.scrollTo(0, y), 0);
+                    const y = window.pageYOffset; currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); setTimeout(() => { fixScroll(); window.scrollTo(0, y); }, 0);
                 };
                 const goNext = () => {
-                    const y = window.pageYOffset; currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); setTimeout(() => window.scrollTo(0, y), 0);
+                    const y = window.pageYOffset; currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); setTimeout(() => { fixScroll(); window.scrollTo(0, y); }, 0);
                 };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
