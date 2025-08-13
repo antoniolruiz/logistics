@@ -1236,17 +1236,8 @@ The very first character of your output must be [ and the very last character mu
                     });
                     
                     // Stream from input for mobile to reduce initial delay; fallback to object URL
-                    try {
-                        if (file.stream) {
-                            const response = new Response(file.stream());
-                            const blob = await response.blob();
-                            video.src = URL.createObjectURL(blob);
-                        } else {
-                            video.src = URL.createObjectURL(file);
-                        }
-                    } catch (_) {
-                        video.src = URL.createObjectURL(file);
-                    }
+                    // Use object URL for broad compatibility
+                    try { video.src = URL.createObjectURL(file); } catch (_) { video.src = ''; }
                     video.load();
                     
                 } catch (error) {
@@ -1610,11 +1601,11 @@ The very first character of your output must be [ and the very last character mu
 
                 const goPrev = () => {
                     currentCardIndex = Math.max(0, currentCardIndex - 1);
-                    const y = window.scrollY; updateStepper(); window.scrollTo({ top: y, behavior: 'instant' });
+                    const y = window.scrollY; updateStepper(); window.scrollTo(0, y);
                 };
                 const goNext = () => {
                     currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
-                    const y = window.scrollY; updateStepper(); window.scrollTo({ top: y, behavior: 'instant' });
+                    const y = window.scrollY; updateStepper(); window.scrollTo(0, y);
                 };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
@@ -1640,6 +1631,24 @@ The very first character of your output must be [ and the very last character mu
                 setTimeout(updateStepper, 0);
                 if (list || cardsContainer) {
                     (list || cardsContainer).addEventListener('click', (e) => {
+                        const confirmClick = e.target.closest && e.target.closest('#confirmCardBtn');
+                        if (confirmClick) {
+                            const card = cardsContainer.querySelector('[data-row]');
+                            if (card && trailers[currentCardIndex]) {
+                                const getVal = (sel) => (card.querySelector(sel)?.textContent || '').trim();
+                                const t = trailers[currentCardIndex];
+                                t.trailer_id = getVal('[data-col="trailer_id"]') || null;
+                                t.carrier = getVal('[data-col="carrier"]') || null;
+                                t.is_loaded = (getVal('[data-col="is_loaded"]').toLowerCase().startsWith('y'));
+                                t.location = getVal('[data-col="location"]') || null;
+                                t.trailer_type = getVal('[data-col="trailer_type"]') || null;
+                                const sizeTxt = getVal('[data-col="trailer_size"]');
+                                t.trailer_size = sizeTxt && !isNaN(parseInt(sizeTxt)) ? parseInt(sizeTxt) : sizeTxt || null;
+                            }
+                            if (confirmedSet.has(currentCardIndex)) confirmedSet.delete(currentCardIndex); else confirmedSet.add(currentCardIndex);
+                            updateStepper();
+                            return;
+                        }
                         const thumb = e.target.closest('img.trailer-thumb');
                         if (thumb && thumb.dataset.frame) {
                             const frameNum = parseInt(thumb.dataset.frame);
