@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Camera Vision: Yard Auditor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -67,6 +67,19 @@
             outline: none;
         }
         .field-block, .mt-1.flex.items-center.p-2.border.bg-gray-50.rounded-md { margin-bottom: 1.1rem !important; }
+         html, body { overflow-x: hidden; }
+         /* Improve mobile tap targets and spacing */
+         @media (max-width: 420px) {
+             .container { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+             .max-w-6xl { border-radius: 0; box-shadow: none; padding: 1rem !important; }
+             header .text-3xl { font-size: 1.5rem; }
+             #trailersTable th, #trailersTable td { padding: 0.5rem 0.5rem; }
+             #trailersTable { font-size: 0.875rem; }
+         }
+        @media (max-width: 420px) {
+            label[for="bolUpload"] { min-height: 12rem !important; padding: 1rem !important; }
+            #progressLabel, #progressDots { font-size: 1rem !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -76,7 +89,7 @@
             <header class="mb-8">
                 <div class="flex items-center justify-between relative mb-6">
                     <div class="flex-1"></div>
-                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-d91b495/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-9b36617/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
                 </div>
                 <div class="text-center mt-2">
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">Camera Vision: Yard Auditor</h1>
@@ -125,7 +138,7 @@
                         </div>
                         <div>
                             <label for="mainBearerTokenInput" class="block text-sm font-medium text-gray-600">Bearer Token</label>
-                            <input type="password" id="mainBearerTokenInput" value="c8bbdf8ea487904a48cad965c3590f8d" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
+                            <input type="password" id="mainBearerTokenInput" value="2f3fc620c121ca8478d147c870ef19d7" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                         </div>
                     </div>
                 </div>
@@ -141,11 +154,11 @@
                          <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload a video</span></p>
                          <p id="videoFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                      </div>
-                     <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                     <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"></div>
                      <input id="bolUpload" type="file" class="hidden" accept="video/*" />
                  </label>
-                <div class="text-center mt-8 mb-8">
-                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed">Initiate Yard Auditor</button>
+                <div class="text-center mt-6 md:mt-8 mb-6 md:mb-8">
+                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">Initiate Yard Auditor</button>
                 </div>
             </div>
 
@@ -155,8 +168,8 @@
     <div id="loading" class="text-center my-4 hidden">
         <div class="w-full max-w-2xl mx-auto">
             <div class="flex items-center justify-center mb-2">
-                <span id="progressLabel" class="text-xl font-semibold text-blue-600">Uploading Video</span>
-                <span id="progressDots" class="text-xl font-semibold text-blue-600 ml-1">...</span>
+                <span id="progressLabel" class="text-lg md:text-xl font-semibold text-blue-600">Uploading Video</span>
+                <span id="progressDots" class="text-lg md:text-xl font-semibold text-blue-600 ml-1">...</span>
             </div>
             <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
                 <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
@@ -171,23 +184,30 @@
          <div id="bolResultContainer" class="hidden mt-6">
              <div class="flex flex-col items-center mb-4">
                  <h2 class="text-2xl font-bold text-gray-800 font-google-sans mb-4">Yard Audit Results</h2>
-                 <div class="flex gap-2">
-                     <button id="printBolBtn" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                 <div id="resultsActionBar" class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 py-2">
+                     <div class="max-w-6xl mx-auto px-2 sm:px-0 flex flex-wrap items-center justify-center gap-2">
+                         <button id="newAuditBtn" class="bg-gray-100 text-gray-800 hover:text-gray-900 hover:bg-gray-200 font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v8h8"/></svg>
+                             New Audit
+                         </button>
+                         <div id="confirmCounter" class="text-[11px] sm:text-xs text-gray-600 px-2">0/0 Confirmed</div>
+                         <button id="printBolBtn" class="bg-green-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-green-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="13" width="12" height="8" rx="2"/><path d="M6 17h0"/></svg>
-                         Print Results
-                     </button>
-                     <button id="exportBolBtn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         Print
+                         </button>
+                         <button id="exportBolBtn" class="bg-indigo-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-indigo-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                         Export Data
-                     </button>
-                     <button id="showRawResultsBtn" class="bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-orange-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         Export
+                         </button>
+                         <button id="showRawResultsBtn" class="bg-orange-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-orange-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                         Raw Results
-                     </button>
-                     <button id="compareYardBtn" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-sm flex items-center gap-2">
+                         Raw
+                         </button>
+                         <button id="compareYardBtn" class="bg-purple-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-purple-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-git-compare"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9V6a2 2 0 0 1 2-2h7"/></svg>
-                         Compare Against Yard
-                     </button>
+                         Compare
+                         </button>
+                     </div>
                  </div>
              </div>
             <div id="bolResultCard" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
@@ -507,6 +527,7 @@
         let frameTimestamps = []; // Store timestamps for each frame
         let currentFrameIndex = 0;
         let trailerImages = []; // Global variable for trailer images
+        let trailerImageFrameNumbers = []; // Parallel array of frame numbers for trailerImages
         let videoDuration = 0; // Store video duration
 
         const defaultBolPrompt = `You are LOGOS (Logistics Observation and Guidance System), an advanced AI agent specializing in real-time visual analysis of logistics environments. Your sole function is to process visual data (images or video frames) of a truck yard and act as a meticulous digital manifest creator.
@@ -515,34 +536,42 @@
 Your primary objective is to identify every unique semi-trailer within the provided visual data and compile a comprehensive JSON manifest according to the strict schema and protocol defined below.
 
 ## JSON Schema & Field Definitions
-You must provide the information for each unique trailer as an object within a single JSON array. Adhere precisely to these field definitions:
+You must provide the information for each unique trailer as an object within a single JSON array. Adhere precisely to these field definitions. In addition to the core fields, include confidence scores and supporting metadata as described below. Extra fields are allowed but the response must still be a JSON array of per-trailer objects:
 
-trailer_id: (String) The primary alphanumeric tracking number on the trailer.
+trailer_id: (String|null) The primary alphanumeric tracking number on the trailer.
 CRITICAL: This is the unique identifier. It must NOT include trailer dimensions (e.g., "53'").
 PRIORITY: Locate the main registration or unit number (e.g., UMLZ 548231, XTRZ 123456, JBHT 789101).
-ACTION: If an ID is partially obscured, make a best-effort attempt to transcribe only the clearly visible characters. Do not guess.
+ACCURACY: Be extremely conservative. If any character is ambiguous (e.g., O/0, I/1, S/5, B/8), do not guess. If certainty is < 0.8, set trailer_id to null.
+ACTION: Use multiple frames to confirm the exact characters via majority voting across frames where the ID region is visible.
 
-carrier: (String) The name of the operating trucking company.
+carrier: (String|null) The name of the operating trucking company.
 ACTION: Identify this from logos or text on the trailer. Prioritize the operating carrier name (e.g., "Swift", "J.B. Hunt") over the trailer manufacturer name (e.g., "Wabash", "Great Dane").
 
-is_loaded: (Boolean) A definitive boolean value (true/false).
+is_loaded: (Boolean|null) A definitive boolean value (true/false).
 ACTION: This is determined exclusively by the visual presence of a plastic or metal security seal on the rear door latch mechanism. If a seal is present, return true. If no seal is present or the doors are not visible, return false.
 
-location: (String) A precise string describing the trailer's position.
-ACTION: Prioritize loading dock numbers first (e.g., "Door 42"). If not at a dock, use parking space numbers (e.g., "Spot B17") or a descriptive location (e.g., "North Fence Line").
+location: (String|null) A precise string describing the trailer's position.
+ACTION: Prioritize loading dock numbers first (e.g., "Door 42"). If not at a dock, use parking space numbers (e.g., "Spot B17") or a descriptive location (e.g., "North Fence Line"). Choose a location only if the same label is consistently closest to the trailer across multiple frames; if there is any ambiguity between adjacent spots (e.g., off-by-one), return null.
 
-trailer_type: (String) A controlled vocabulary string.
+trailer_type: (String|null) A controlled vocabulary string.
 ACTION: Must be one of: "Dry Van", "Reefer", "Flatbed", "Tanker", "Intermodal Chassis", or "Other". A "Reefer" is distinguished by a large refrigeration unit on its front face.
 
-trailer_size: (Number) The length of the trailer in feet.
+trailer_size: (Number|null) The length of the trailer in feet.
 ACTION: Look for explicit numerical markings like 53 or 48 on the trailer body. Return the value as a number (e.g., 53), not a string.
 
-image_identifier: (Number) The frame number (1-100) that provides the best view of this trailer.
+image_identifier: (Number) The single best frame number (1-100) that provides the clearest ID view.
 ACTION: Return a number between 1 and 100 representing the extracted frame that shows the clearest, most readable view of the trailer_id. This is NOT a timestamp - it is the sequential frame number from the video processing (frame 1, frame 2, frame 3, etc.). Choose the frame where the trailer identification is most legible and complete. NOTE: It is perfectly acceptable for multiple trailers to use the same frame number if they appear in the same frame.
+
+Additional Recommended Fields (optional but preferred)
+- id_confidence: (Number 0..1) Confidence that trailer_id is exactly correct. If < 0.8, set trailer_id to null.
+- location_confidence: (Number 0..1) Confidence that the chosen location is exactly correct. If < 0.8, set location to null.
+- supporting_frame_identifiers: (Array<Number>) Up to 3 additional frame numbers (1-100) that also show this trailer clearly.
+- id_bbox: (Array<Number>) [x, y, w, h] for the ID region as normalized coordinates (0..1), if visible.
+- location_candidates: (Array<String>) Nearby/adjacent location labels considered when choosing the final location.
 
 ## Core Operational Protocol
 
-Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. When you first identify a trailer, track it across subsequent frames to confirm its details and find the best possible view. You must only report each unique trailer_id once in the final output. Aggregate information from multiple sightings of the same trailer to create the most complete record.
+Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. Track each candidate trailer across frames, perform majority voting on each character of the ID to avoid O/0, I/1, S/5, B/8 confusions, and select the best frame for readability. Only report each unique trailer_id once in the final output. If no ID can be confirmed with high confidence, emit a single object with trailer_id: null and other fields as null where unknown.
 
 Processing Rate (For Video): You must process the visual data at a rate of at least 10 frames per second to ensure no trailer is missed.
 
@@ -723,13 +752,13 @@ The very first character of your output must be [ and the very last character mu
             checkAllInputs(); 
 
             bolPreviewContainer.innerHTML = `
-                <div class="text-center col-span-full p-4">
-                    <div class="text-lg font-semibold text-blue-600 mb-2">Processing Video...</div>
-                    <div class="w-full bg-blue-100 rounded-full h-3 relative overflow-hidden mb-2">
-                        <div id="videoProgressBar" class="h-3 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                    <div class="text-center col-span-full p-4">
+                        <div class="text-base md:text-lg font-semibold text-blue-600 mb-2">Processing Video...</div>
+                        <div class="w-full bg-blue-100 rounded-full h-3 relative overflow-hidden mb-2">
+                            <div id="videoProgressBar" class="h-3 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                        </div>
+                        <div id="videoProgressText" class="text-xs sm:text-sm text-gray-600">Initializing...</div>
                     </div>
-                    <div id="videoProgressText" class="text-sm text-gray-600">Initializing...</div>
-                </div>
             `;
 
             try {
@@ -755,6 +784,18 @@ The very first character of your output must be [ and the very last character mu
         
         parseBolBtn.addEventListener('click', handleBolParsing);
         exportBolBtn.addEventListener('click', handleExportBolData);
+        // New Audit button toggles upload section back
+        document.addEventListener('click', (e) => {
+            if (e.target && (e.target.id === 'newAuditBtn' || e.target.closest && e.target.closest('#newAuditBtn'))) {
+                const uploadSection = document.getElementById('bolContent');
+                if (uploadSection) {
+                    uploadSection.classList.toggle('hidden');
+                    if (!uploadSection.classList.contains('hidden')) {
+                        window.scrollTo({ top: uploadSection.getBoundingClientRect().top + window.scrollY - 24, behavior: 'smooth' });
+                    }
+                }
+            }
+        });
 
         howToBtn.addEventListener('click', () => {
             updateKeyHelpPanel();
@@ -868,6 +909,7 @@ The very first character of your output must be [ and the very last character mu
                             th { background: #f1f5f9; font-weight: 700; }
                             tr:nth-child(even) { background: #f9fafb; }
                             .highlighted-row { background: #dbeafe !important; border-color: #3b82f6 !important; }
+                            @media (max-width: 420px) { body { padding: 1rem; } h2 { font-size: 1.5rem; } }
                         </style>
                     </head>
                     <body>
@@ -923,6 +965,7 @@ The very first character of your output must be [ and the very last character mu
         ];
         let currentMessageIndex = 0;
         let dotsInterval;
+        let messagesInterval;
 
         function setProgress(percent, label) {
             progressBar.style.width = percent + '%';
@@ -943,16 +986,15 @@ The very first character of your output must be [ and the very last character mu
             }, 500);
 
             // Rotate messages every 3 seconds
-            setInterval(() => {
+            messagesInterval = setInterval(() => {
                 currentMessageIndex = (currentMessageIndex + 1) % progressMessages.length;
                 progressLabel.textContent = progressMessages[currentMessageIndex];
             }, 3000);
         }
 
         function stopProgressAnimation() {
-            if (dotsInterval) {
-                clearInterval(dotsInterval);
-            }
+            if (dotsInterval) clearInterval(dotsInterval);
+            if (messagesInterval) clearInterval(messagesInterval);
         }
 
         // --- Update handleBolParsing and PDF rendering to use progress bar ---
@@ -1052,6 +1094,9 @@ The very first character of your output must be [ and the very last character mu
                 setTimeout(() => { 
                     loading.classList.add('hidden'); 
                     stopProgressAnimation();
+                    // Collapse upload section after successful audit
+                    const uploadSection = document.getElementById('bolContent');
+                    if (uploadSection) uploadSection.classList.add('hidden');
                 }, 800);
             } catch (error) {
                 displayMessage(error.message);
@@ -1086,11 +1131,15 @@ The very first character of your output must be [ and the very last character mu
                     const frames = [];
                     const timestamps = [];
                     let frameCount = 0;
-                    const maxFrames = 100; // Increased to maximum for better quality
+                    // Reduce frames on small screens to improve performance and memory
+                    const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 420px)').matches;
+                    const maxFrames = isSmallScreen ? 40 : 100;
                     
                     video.addEventListener('loadedmetadata', () => {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
+                        // Downscale on small screens to reduce memory
+                        const scale = isSmallScreen ? Math.min(1, 720 / Math.max(video.videoWidth, video.videoHeight)) : 1;
+                        canvas.width = Math.floor(video.videoWidth * scale);
+                        canvas.height = Math.floor(video.videoHeight * scale);
                         videoDuration = video.duration;
                         
                         const interval = videoDuration / maxFrames;
@@ -1109,7 +1158,9 @@ The very first character of your output must be [ and the very last character mu
                         
                         video.addEventListener('seeked', () => {
                             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            const frameDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            // Lower JPEG quality on small screens for faster base64 and upload
+                            const jpegQuality = isSmallScreen ? 0.75 : 0.95;
+                            const frameDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
                             frames.push(frameDataUrl);
                             timestamps.push(video.currentTime);
                             frameCount++;
@@ -1189,20 +1240,19 @@ The very first character of your output must be [ and the very last character mu
             // Store current trailers for comparison
             currentTrailers = trailers;
 
-            // Extract frames based on frame numbers for each trailer
-            trailerImages = trailers
-                .filter(trailer => trailer.image_identifier !== null && trailer.image_identifier !== undefined)
+            // Extract frames and keep frame numbers
+            const imageTuples = trailers
                 .map(trailer => {
-                    // Use frame number directly (1-100)
                     const frameNumber = parseInt(trailer.image_identifier);
-                    
                     if (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= 100 && frameNumber <= videoFrames.length) {
-                        // Frame numbers are 1-based, but array is 0-based
-                        return videoFrames[frameNumber - 1] || null;
+                        const img = videoFrames[frameNumber - 1] || null;
+                        return img ? { img, frameNumber } : null;
                     }
                     return null;
                 })
-                .filter(frame => frame !== null);
+                .filter(item => item !== null);
+            trailerImages = imageTuples.map(t => t.img);
+            trailerImageFrameNumbers = imageTuples.map(t => t.frameNumber);
 
             const updateTrailerCarousel = () => {
                 const frame = bolResultCard.querySelector('#carouselFrame');
@@ -1240,14 +1290,14 @@ The very first character of your output must be [ and the very last character mu
             };
             
             const createCarousel = () => {
-                const carouselContainer = document.createElement('div');
-                carouselContainer.className = 'md:col-span-1 relative';
+                        const carouselContainer = document.createElement('div');
+                        carouselContainer.className = 'md:col-span-1 relative';
 
-                const frame = document.createElement('img');
-                frame.id = 'carouselFrame';
-                frame.src = trailerImages.length > 0 ? trailerImages[0] : '';
-                frame.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer';
-                frame.alt = 'Trailer 1';
+                    const frame = document.createElement('img');
+                    frame.id = 'carouselFrame';
+                    frame.src = trailerImages.length > 0 ? trailerImages[0] : '';
+                    frame.className = 'rounded-lg border shadow-md w-full h-auto cursor-pointer max-h-[60vh] object-contain bg-black/5';
+                    frame.alt = 'Trailer 1';
                 frame.addEventListener('click', () => openImageZoomModal());
 
                 const prevBtn = document.createElement('button');
@@ -1305,31 +1355,106 @@ The very first character of your output must be [ and the very last character mu
                                 <td class="p-2 editable-table-cell" data-col="location">${trailer.location || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_type">${trailer.trailer_type || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_size">${trailer.trailer_size || 'N/A'}</td>
-                                <td class="p-2 text-center"><button class="remove-row-btn text-red-500 hover:text-red-700 font-bold text-lg" title="Remove row">&minus;</button></td>
+                                <td class="p-2 text-right">
+                                    <button class="remove-row-btn inline-flex items-center gap-1 text-red-600 hover:text-red-700 text-sm px-2 py-1 rounded-full hover:bg-red-50" title="Remove row">
+                                        <span>&minus;</span><span class="hidden sm:inline">Remove</span>
+                                    </button>
+                                </td>
                             </tr>
                         `).join('')}
                         </tbody>
                     </table>
                     <div class="mt-2 text-right">
-                        <button id="addRowBtn" class="bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded hover:bg-blue-200 transition">+ Add Trailer</button>
+                        <button id="addRowBtn" class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded-full hover:bg-blue-200 transition text-sm">+ Add Trailer</button>
                     </div>
             `;
 
+            // Mobile cards view
+            let trailersCardsHtml = `
+                <div id="trailersListMobile" class="space-y-3">
+                    ${trailers.map((trailer, idx) => {
+                        const frameNumber = parseInt(trailer.image_identifier);
+                        const frameImg = (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) ? videoFrames[frameNumber - 1] : null;
+                        return `
+                        <div class=\"rounded-lg border border-gray-200 bg-white p-3 shadow-sm\" data-row=\"${idx}\" data-frame=\"${trailer.image_identifier || ''}\"> 
+                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" class=\"w-full h-auto rounded mb-2 max-h-[40vh] object-contain bg-black/5\" />` : ''}
+                            <div class=\"flex items-center justify-between mb-2\">
+                                <div class=\"font-semibold text-gray-800 truncate\">${trailer.trailer_id || 'N/A'}</div>
+                                <button class=\"remove-card-btn text-red-500 hover:text-red-700 font-bold text-lg\" title=\"Remove\">&minus;</button>
+                            </div>
+                            <div class=\"grid grid-cols-2 gap-2 text-sm\">
+                                <div>
+                                    <div class=\"text-gray-500\">Trailer ID</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_id\">${trailer.trailer_id || 'N/A'}</span></div>
+                                </div>
+                                <div>
+                                    <div class=\"text-gray-500\">Carrier</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"carrier\">${trailer.carrier || 'N/A'}</span></div>
+                                </div>
+                                <div>
+                                    <div class=\"text-gray-500\">Loaded</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"is_loaded\">${trailer.is_loaded ? 'Yes' : 'No'}</span></div>
+                                </div>
+                                <div>
+                                    <div class=\"text-gray-500\">Location</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"location\">${trailer.location || 'N/A'}</span></div>
+                                </div>
+                                <div>
+                                    <div class=\"text-gray-500\">Type</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_type\">${trailer.trailer_type || 'N/A'}</span></div>
+                                </div>
+                                <div>
+                                    <div class=\"text-gray-500\">Size (ft)</div>
+                                    <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_size\">${trailer.trailer_size || 'N/A'}</span></div>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                    <div class="text-right">
+                        <button id="addCardBtn" class="bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded hover:bg-blue-200 transition">+ Add Trailer</button>
+                    </div>
+                </div>
+            `;
+
             const mainDiv = document.createElement('div');
-            mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-6';
+            mainDiv.className = 'grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6';
             mainDiv.innerHTML = `
-                <div class="md:col-span-1">
-                    <div id="mainCarouselContainer" class="relative">
+                <div class="md:col-span-1 order-2 md:order-1">
+                    <div id="mainCarouselContainer" class="relative hidden md:block">
                         </div>
                 </div>
-                <div class="md:col-span-2">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Yard Audit Results</h3>
+                 <div class="md:col-span-2 order-1 md:order-2">
+                    <div class="mb-2 md:mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1 md:mb-2">Yard Audit Results</h3>
                         <p class="text-sm text-gray-600">Found ${trailers.length} unique trailers in the yard</p>
                     </div>
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Trailers Identified</label>
-                        <div class="p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">${trailersHtml}</div>
+                        <!-- Desktop/Table view -->
+                        <div class="hidden md:block p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">
+                            <div class="min-w-[640px]">${trailersHtml}</div>
+                        </div>
+                        <!-- Mobile/Cards view with inline image beside card -->
+                        <div class="block md:hidden mt-1">
+                            <div id="mobileStepper" class="flex items-center justify-between mb-2">
+                            <button id="prevCardBtn" class="inline-flex items-center gap-1 bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-1.5 rounded-full text-sm disabled:opacity-40" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
+                                Prev
+                            </button>
+                            <div id="stepCounter" class="text-xs text-gray-600"></div>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-1 text-xs text-gray-600 select-none">
+                                    <input id="confirmCardCheckbox" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    Confirm
+                                </label>
+                                <button id="nextCardBtn" class="inline-flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-full text-sm">
+                                Next
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                            <div class="space-y-3" id="mobileCardsContainer"></div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1342,6 +1467,154 @@ The very first character of your output must be [ and the very last character mu
             bolResultCard.querySelectorAll('#carouselFrame').forEach(frame => {
                  frame.addEventListener('click', () => openImageZoomModal());
             });
+
+            // Mobile cards interactions (edit and remove)
+            if (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) {
+                const list = bolResultCard.querySelector('#trailersListMobile');
+                const cardsContainer = bolResultCard.querySelector('#mobileCardsContainer');
+                const stepCounter = bolResultCard.querySelector('#stepCounter');
+                const prevBtn = bolResultCard.querySelector('#prevCardBtn');
+                const nextBtn = bolResultCard.querySelector('#nextCardBtn');
+                const confirmCheckbox = bolResultCard.querySelector('#confirmCardCheckbox');
+                let currentCardIndex = 0;
+                let confirmedSet = new Set();
+
+                // Build a single-card carousel view
+                const buildCardAt = (idx) => {
+                    if (!cardsContainer) return;
+                    const trailer = trailers[idx];
+                    const frameNumber = parseInt(trailer?.image_identifier);
+                    const frameImg = (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) ? videoFrames[frameNumber - 1] : null;
+                    const cardHtml = `
+                        <div class=\"space-y-2\">
+                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" data-frame=\"${frameNumber}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
+                            <div class=\"rounded-lg border border-gray-200 bg-white p-3 shadow-sm\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
+                                <div class=\"flex items-center justify-between mb-2\"> 
+                                    <div class=\"font-semibold text-gray-800 truncate\">${trailer?.trailer_id || 'N/A'}</div>
+                                    <button class=\"remove-card-btn text-red-500 hover:text-red-700 font-bold text-lg\" title=\"Remove\">&minus;</button>
+                                </div>
+                                <div class=\"grid grid-cols-2 gap-2 text-sm\"> 
+                                    <div>
+                                        <div class=\"text-gray-500\">Trailer ID</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_id\">${trailer?.trailer_id || 'N/A'}</span></div>
+                                    </div>
+                                    <div>
+                                        <div class=\"text-gray-500\">Carrier</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"carrier\">${trailer?.carrier || 'N/A'}</span></div>
+                                    </div>
+                                    <div>
+                                        <div class=\"text-gray-500\">Loaded</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"is_loaded\">${trailer?.is_loaded ? 'Yes' : 'No'}</span></div>
+                                    </div>
+                                    <div>
+                                        <div class=\"text-gray-500\">Location</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"location\">${trailer?.location || 'N/A'}</span></div>
+                                    </div>
+                                    <div>
+                                        <div class=\"text-gray-500\">Type</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_type\">${trailer?.trailer_type || 'N/A'}</span></div>
+                                    </div>
+                                    <div>
+                                        <div class=\"text-gray-500\">Size (ft)</div>
+                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"trailer_size\">${trailer?.trailer_size || 'N/A'}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                    cardsContainer.innerHTML = cardHtml;
+                };
+
+                const updateStepper = () => {
+                    if (!cardsContainer) return;
+                    // Render just the current card
+                    buildCardAt(currentCardIndex);
+                    if (stepCounter) stepCounter.textContent = `${Math.min(currentCardIndex + 1, trailers.length)} / ${trailers.length}`;
+                    if (prevBtn) prevBtn.disabled = currentCardIndex <= 0;
+                    if (nextBtn) nextBtn.disabled = currentCardIndex >= trailers.length - 1;
+                    if (confirmCheckbox) confirmCheckbox.checked = confirmedSet.has(currentCardIndex);
+                    // Update header counter
+                    const confirmCounter = document.getElementById('confirmCounter');
+                    if (confirmCounter) confirmCounter.textContent = `${confirmedSet.size}/${trailers.length} Confirmed`;
+                };
+
+                if (prevBtn) prevBtn.addEventListener('click', () => { currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); });
+                if (nextBtn) nextBtn.addEventListener('click', () => { currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); });
+                if (confirmCheckbox) confirmCheckbox.addEventListener('change', () => {
+                    if (confirmCheckbox.checked) confirmedSet.add(currentCardIndex); else confirmedSet.delete(currentCardIndex);
+                    updateStepper();
+                });
+                setTimeout(updateStepper, 0);
+                if (list || cardsContainer) {
+                    (list || cardsContainer).addEventListener('click', (e) => {
+                        const thumb = e.target.closest('img.trailer-thumb');
+                        if (thumb && thumb.dataset.frame) {
+                            const frameNum = parseInt(thumb.dataset.frame);
+                            const idx = trailerImageFrameNumbers ? trailerImageFrameNumbers.indexOf(frameNum) : -1;
+                            if (idx >= 0) {
+                                currentFrameIndex = idx;
+                                // Sync hidden desktop carousel too
+                                if (typeof updateTrailerCarousel === 'function') {
+                                    updateTrailerCarousel();
+                                }
+                                openImageZoomModal();
+                            } else if (!isNaN(frameNum)) {
+                                // Fallback: choose the nearest available trailer image frame for syncing
+                                if (Array.isArray(trailerImageFrameNumbers) && trailerImageFrameNumbers.length > 0) {
+                                    let nearestIdx = 0;
+                                    let minDiff = Math.abs(trailerImageFrameNumbers[0] - frameNum);
+                                    for (let i = 1; i < trailerImageFrameNumbers.length; i++) {
+                                        const diff = Math.abs(trailerImageFrameNumbers[i] - frameNum);
+                                        if (diff < minDiff) { minDiff = diff; nearestIdx = i; }
+                                    }
+                                    currentFrameIndex = nearestIdx;
+                                    if (typeof updateTrailerCarousel === 'function') {
+                                        updateTrailerCarousel();
+                                    }
+                                }
+                                // Show the exact video frame in zoom even if not part of trailerImages
+                                try {
+                                    const tempImg = videoFrames[frameNum - 1];
+                                    if (tempImg) {
+                                        zoomedImage.src = tempImg;
+                                        imageZoomModal.classList.remove('hidden');
+                                        imageZoomModal.classList.add('flex');
+                                    }
+                                } catch (_) {}
+                            }
+                            return;
+                        }
+                        const removeBtn = e.target.closest('.remove-card-btn');
+                        if (removeBtn) {
+                            // Remove from trailers array and rebuild
+                            const card = cardsContainer.querySelector('[data-row]');
+                            const indexToRemove = currentCardIndex;
+                            trailers.splice(indexToRemove, 1);
+                            confirmedSet = new Set(Array.from(confirmedSet).filter(i => i !== indexToRemove).map(i => i > indexToRemove ? i - 1 : i));
+                            currentCardIndex = Math.min(currentCardIndex, Math.max(0, trailers.length - 1));
+                            updateStepper();
+                            return;
+                        }
+                        const editable = e.target.closest('.editable-field');
+                        if (editable) {
+                            const currentValue = editable.textContent === 'N/A' ? '' : editable.textContent;
+                            const input = document.createElement('input');
+                            input.value = currentValue;
+                            input.className = 'w-full rounded-md border border-blue-300 focus:ring-blue-500 focus:border-blue-500 p-1 bg-white editable-input';
+                            input.addEventListener('blur', function() {
+                                editable.textContent = input.value || 'N/A';
+                                editable.style.display = '';
+                                input.replaceWith(editable);
+                            });
+                            input.addEventListener('keydown', function(ev) {
+                                if (ev.key === 'Enter') input.blur();
+                            });
+                            editable.parentNode.replaceChild(input, editable);
+                            input.focus();
+                            input.select();
+                        }
+                    });
+                }
+            }
             
             resultsWrapper.classList.remove('hidden');
             bolResultContainer.classList.remove('hidden');
@@ -2207,4 +2480,3 @@ The very first character of your output must be [ and the very last character mu
     </script>
 </body>
 </html>
-
