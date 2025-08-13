@@ -108,7 +108,7 @@
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
                         <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                         <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash</option>
-                        <option value="gpt-4o">OpenAI GPT-4o</option>
+                        <option value="gpt-5">OpenAI GPT-5</option>
                         <option value="claude-4">Claude 4</option>
                     </select>
                 </div>
@@ -211,11 +211,8 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                           Share
                              </button>
-                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-git-compare"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9V6a2 2 0 0 1 2-2h7"/></svg>
-                         Compare
-                             </button>
                          </div>
-                         <div id="confirmCounter" class="mt-1 text-[11px] sm:text-xs text-gray-600 text-center">0/0 Confirmed</div>
+                         
                      </div>
                  </div>
              </div>
@@ -597,6 +594,9 @@ The very first character of your output must be [ and the very last character mu
 
         const defaultGoogleApiKey = "AIzaSyDe0pVIFyKI_SiTpVMlpbt1Gtdg3uF9WbU";
         googleApiKeyInput.value = defaultGoogleApiKey;
+        // Note: For security, do not hardcode OpenAI keys in client code. Leave empty by default.
+        // const defaultOpenAIKey = "";
+        // openaiApiKeyInput.value = defaultOpenAIKey;
 
         bolPromptTextarea.value = defaultBolPrompt;
 
@@ -962,7 +962,7 @@ The very first character of your output must be [ and the very last character mu
 
         function checkAllInputs() {
             const hasKey = hasApiKey();
-            parseBolBtn.disabled = !(hasKey && videoFile);
+            parseBolBtn.disabled = !(hasKey && Array.isArray(videoFrames) && videoFrames.length > 0);
         }
 
         // --- Progress Bar Logic ---
@@ -1119,8 +1119,7 @@ The very first character of your output must be [ and the very last character mu
                     const seconds = Math.round((elapsedMs % 60000) / 1000);
                     lastAuditDurationText = `${minutes}m ${seconds}s`;
                     const durEl = document.getElementById('auditDuration');
-                    const confirmCounter = document.getElementById('confirmCounter');
-                    if (durEl) durEl.textContent = `Completed in ${lastAuditDurationText}${confirmCounter ? ` • ${confirmCounter.textContent}` : ''}`;
+                    if (durEl) durEl.textContent = `Completed in ${lastAuditDurationText}`;
                 }, 800);
             } catch (error) {
                 displayMessage(error.message);
@@ -1470,10 +1469,10 @@ The very first character of your output must be [ and the very last character mu
                                     Previous
                                 </button>
                                 <div class="flex items-center gap-3">
-                                    <label class="flex items-center gap-1 text-sm text-gray-700 select-none">
-                                        <input id="confirmCardCheckbox" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <button id="confirmCardBtn" class="inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-2 rounded-full text-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
                                         Confirm
-                                    </label>
+                                    </button>
                                     <button id="nextCardBtn2" class="inline-flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-full text-sm">
                                     Next
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
@@ -1503,7 +1502,7 @@ The very first character of your output must be [ and the very last character mu
                 const nextBtn = bolResultCard.querySelector('#nextCardBtn2') || bolResultCard.querySelector('#nextCardBtn');
                 const prevBtnBottom = bolResultCard.querySelector('#prevCardBtn2');
                 const nextBtnBottom = bolResultCard.querySelector('#nextCardBtn2');
-                const confirmCheckbox = bolResultCard.querySelector('#confirmCardCheckbox');
+                const confirmBtn = bolResultCard.querySelector('#confirmCardBtn');
                 let currentCardIndex = 0;
                 let confirmedSet = new Set();
 
@@ -1563,15 +1562,12 @@ The very first character of your output must be [ and the very last character mu
                     if (nextBtn) nextBtn.disabled = atEnd;
                     if (prevBtnBottom) prevBtnBottom.disabled = atStart;
                     if (nextBtnBottom) nextBtnBottom.disabled = atEnd;
-                    if (confirmCheckbox) confirmCheckbox.checked = confirmedSet.has(currentCardIndex);
+                    if (confirmBtn) confirmBtn.classList.toggle('bg-emerald-700', confirmedSet.has(currentCardIndex));
                     // Update header counter
                     const confirmCounter = document.getElementById('confirmCounter');
-                    if (confirmCounter) {
-                        confirmCounter.textContent = `${confirmedSet.size}/${trailers.length} Confirmed`;
-                        const durEl = document.getElementById('auditDuration');
-                        if (durEl && lastAuditDurationText) {
-                            durEl.textContent = `Completed in ${lastAuditDurationText} • ${confirmCounter.textContent}`;
-                        }
+                    const durEl2 = document.getElementById('auditDuration');
+                    if (durEl2 && lastAuditDurationText) {
+                        durEl2.textContent = `Completed in ${lastAuditDurationText}`;
                     }
                 };
 
@@ -1581,8 +1577,8 @@ The very first character of your output must be [ and the very last character mu
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
                 if (prevBtnBottom) prevBtnBottom.addEventListener('click', goPrev);
                 if (nextBtnBottom) nextBtnBottom.addEventListener('click', goNext);
-                if (confirmCheckbox) confirmCheckbox.addEventListener('change', () => {
-                    if (confirmCheckbox.checked) confirmedSet.add(currentCardIndex); else confirmedSet.delete(currentCardIndex);
+                if (confirmBtn) confirmBtn.addEventListener('click', () => {
+                    if (confirmedSet.has(currentCardIndex)) confirmedSet.delete(currentCardIndex); else confirmedSet.add(currentCardIndex);
                     updateStepper();
                 });
                 setTimeout(updateStepper, 0);
