@@ -187,23 +187,30 @@
                  <div id="resultsActionBar" class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur supports-[backdrop-filter]:backdrop-blur border-b border-gray-200 py-2">
                      <div class="max-w-6xl mx-auto px-2 sm:px-0">
                          <div class="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-2">
-                             <button id="newAuditBtn" class="w-full sm:w-auto justify-center bg-gray-100 text-gray-800 hover:text-gray-900 hover:bg-gray-200 font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <button id="newAuditBtn" class="w-full sm:w-auto justify-center bg-gray-100 text-gray-800 hover:text-gray-900 hover:bg-gray-200 font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v8h8"/></svg>
                              New Audit
                              </button>
-                             <button id="printBolBtn" class="w-full sm:w-auto justify-center bg-green-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-green-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <button id="printBolBtn" class="w-full sm:w-auto justify-center bg-green-600 text-white font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md hover:bg-green-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><rect x="6" y="13" width="12" height="8" rx="2"/><path d="M6 17h0"/></svg>
                          Print
                              </button>
-                             <button id="exportBolBtn" class="w-full sm:w-auto justify-center bg-indigo-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-indigo-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <button id="exportBolBtn" class="w-full sm:w-auto justify-center bg-indigo-600 text-white font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md hover:bg-indigo-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                          Export
                              </button>
-                             <button id="showRawResultsBtn" class="w-full sm:w-auto justify-center bg-orange-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-orange-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <button id="showRawResultsBtn" class="w-full sm:w-auto justify-center bg-orange-600 text-white font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md hover:bg-orange-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                          Raw
                              </button>
-                             <button id="compareYardBtn" class="w-full sm:w-auto justify-center bg-purple-600 text-white font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-full hover:bg-purple-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                             <button id="compareYardBtn" class="w-full sm:w-auto justify-center bg-purple-600 text-white font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md hover:bg-purple-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-git-compare"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9V6a2 2 0 0 1 2-2h7"/></svg>
+                          Compare
+                             </button>
+                             <button id="shareBtn" class="w-full sm:w-auto justify-center bg-teal-600 text-white font-medium py-2 px-3 sm:py-2 sm:px-4 rounded-md hover:bg-teal-700 transition duration-200 shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                          Share
+                             </button>
                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-git-compare"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9V6a2 2 0 0 1 2-2h7"/></svg>
                          Compare
                              </button>
@@ -531,6 +538,7 @@
         let trailerImages = []; // Global variable for trailer images
         let trailerImageFrameNumbers = []; // Parallel array of frame numbers for trailerImages
         let videoDuration = 0; // Store video duration
+        let lastAuditDurationText = '';
 
         const defaultBolPrompt = `You are LOGOS (Logistics Observation and Guidance System), an advanced AI agent specializing in real-time visual analysis of logistics environments. Your sole function is to process visual data (images or video frames) of a truck yard and act as a meticulous digital manifest creator.
 
@@ -796,6 +804,9 @@ The very first character of your output must be [ and the very last character mu
                         window.scrollTo({ top: uploadSection.getBoundingClientRect().top + window.scrollY - 24, behavior: 'smooth' });
                     }
                 }
+                // Also un-hide header/logo section
+                const mainHeader = document.getElementById('mainHeader');
+                if (mainHeader) mainHeader.classList.remove('hidden');
             }
         });
 
@@ -1106,9 +1117,10 @@ The very first character of your output must be [ and the very last character mu
                     const elapsedMs = Math.max(0, Math.round(t1 - t0));
                     const minutes = Math.floor(elapsedMs / 60000);
                     const seconds = Math.round((elapsedMs % 60000) / 1000);
-                    const durationText = `${minutes}m ${seconds}s`;
+                    lastAuditDurationText = `${minutes}m ${seconds}s`;
                     const durEl = document.getElementById('auditDuration');
-                    if (durEl) durEl.textContent = `Completed in ${durationText}`;
+                    const confirmCounter = document.getElementById('confirmCounter');
+                    if (durEl) durEl.textContent = `Completed in ${lastAuditDurationText}${confirmCounter ? ` • ${confirmCounter.textContent}` : ''}`;
                 }, 800);
             } catch (error) {
                 displayMessage(error.message);
@@ -1143,9 +1155,9 @@ The very first character of your output must be [ and the very last character mu
                     const frames = [];
                     const timestamps = [];
                     let frameCount = 0;
-                    // Reduce frames on small screens to improve performance and memory
+                    // Reduce or increase frames depending on screen: 100 for mobile, 200 for larger screens
                     const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 420px)').matches;
-                    const maxFrames = isSmallScreen ? 40 : 100;
+                    const maxFrames = isSmallScreen ? 100 : 200;
                     
                     video.addEventListener('loadedmetadata', () => {
                         // Downscale on small screens to reduce memory
@@ -1554,7 +1566,13 @@ The very first character of your output must be [ and the very last character mu
                     if (confirmCheckbox) confirmCheckbox.checked = confirmedSet.has(currentCardIndex);
                     // Update header counter
                     const confirmCounter = document.getElementById('confirmCounter');
-                    if (confirmCounter) confirmCounter.textContent = `${confirmedSet.size}/${trailers.length} Confirmed`;
+                    if (confirmCounter) {
+                        confirmCounter.textContent = `${confirmedSet.size}/${trailers.length} Confirmed`;
+                        const durEl = document.getElementById('auditDuration');
+                        if (durEl && lastAuditDurationText) {
+                            durEl.textContent = `Completed in ${lastAuditDurationText} • ${confirmCounter.textContent}`;
+                        }
+                    }
                 };
 
                 const goPrev = () => { currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); };
@@ -1915,6 +1933,65 @@ The very first character of your output must be [ and the very last character mu
         rawResultsModal.addEventListener('click', (e) => {
             if (e.target === rawResultsModal) {
                 closeRawResultsModal();
+            }
+        });
+
+        // Share modal (lightweight prompt)
+        document.addEventListener('click', async (e) => {
+            if (e.target && (e.target.id === 'shareBtn' || (e.target.closest && e.target.closest('#shareBtn')))) {
+                try {
+                    const email = prompt('Enter email address to share results:');
+                    if (!email) return;
+                    const type = confirm('OK = Share CSV\nCancel = Share JSON') ? 'csv' : 'json';
+                    let blob; let filename;
+                    if (type === 'csv') {
+                        // Reuse export logic to build CSV
+                        const card = document.getElementById('bolResultCard');
+                        const headers = ["Trailer ID","Carrier","Loaded","Location","Type","Size (ft)"];
+                        const trailerRows = card ? card.querySelectorAll('tbody > tr') : [];
+                        const rows = [];
+                        if (trailerRows.length) {
+                            trailerRows.forEach(row => rows.push([
+                                row.cells[0]?.innerText || 'N/A',
+                                row.cells[1]?.innerText || 'N/A',
+                                row.cells[2]?.innerText || 'N/A',
+                                row.cells[3]?.innerText || 'N/A',
+                                row.cells[4]?.innerText || 'N/A',
+                                row.cells[5]?.innerText || 'N/A'
+                            ].map(d => `"${String(d).replace(/"/g,'""')}"`).join(',')));
+                        }
+                        const csv = headers.join(',') + "\n" + rows.join("\n");
+                        blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                        filename = 'yard_audit_results.csv';
+                    } else {
+                        // Use rawModelResponse if present; else build JSON from table
+                        let jsonText = rawModelResponse;
+                        if (!jsonText) {
+                            const card = document.getElementById('bolResultCard');
+                            const trailerRows = card ? card.querySelectorAll('tbody > tr') : [];
+                            const trailers = [];
+                            trailerRows.forEach(row => trailers.push({
+                                trailer_id: row.cells[0]?.innerText || null,
+                                carrier: row.cells[1]?.innerText || null,
+                                is_loaded: (row.cells[2]?.innerText || '').toLowerCase().startsWith('y'),
+                                location: row.cells[3]?.innerText || null,
+                                trailer_type: row.cells[4]?.innerText || null,
+                                trailer_size: row.cells[5]?.innerText || null
+                            }));
+                            jsonText = JSON.stringify(trailers, null, 2);
+                        }
+                        blob = new Blob([jsonText], { type: 'application/json' });
+                        filename = 'yard_audit_results.json';
+                    }
+                    // Download locally as a first step (email send would require a backend)
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    alert(`Prepared ${type.toUpperCase()} for ${email}. To enable email sending, connect a backend endpoint (e.g., serverless function).`);
+                } catch (err) {
+                    alert('Failed to prepare share: ' + (err?.message || err));
+                }
             }
         });
 
