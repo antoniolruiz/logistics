@@ -86,7 +86,7 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
-            <header class="mb-8">
+            <header id="mainHeader" class="mb-8">
                 <div class="flex items-center justify-between relative mb-6">
                     <div class="flex-1"></div>
                     <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-9b36617/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
@@ -106,8 +106,8 @@
                     <select id="modelSelector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition">
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro</option>
                         <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash</option>
-                        <option value="gemini-2.5-pro" selected>Gemini 2.5 Pro</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        <option value="gemini-2.5-flash" selected>Gemini 2.5 Fast</option>
                         <option value="gpt-4o">OpenAI GPT-4o</option>
                         <option value="claude-4">Claude 4</option>
                     </select>
@@ -1014,6 +1014,7 @@ The very first character of your output must be [ and the very last character mu
             const selectedModel = modelSelector.value;
 
             try {
+                const t0 = performance.now();
                 setProgress(20, '');
                 const apiKey = getApiKey();
                 const prompt = bolPromptTextarea.value;
@@ -1097,6 +1098,15 @@ The very first character of your output must be [ and the very last character mu
                     // Collapse upload section after successful audit
                     const uploadSection = document.getElementById('bolContent');
                     if (uploadSection) uploadSection.classList.add('hidden');
+                    const mainHeader = document.getElementById('mainHeader');
+                    if (mainHeader) mainHeader.classList.add('hidden');
+                    const t1 = performance.now();
+                    const elapsedMs = Math.max(0, Math.round(t1 - t0));
+                    const minutes = Math.floor(elapsedMs / 60000);
+                    const seconds = Math.round((elapsedMs % 60000) / 1000);
+                    const durationText = `${minutes}m ${seconds}s`;
+                    const durEl = document.getElementById('auditDuration');
+                    if (durEl) durEl.textContent = `Completed in ${durationText}`;
                 }, 800);
             } catch (error) {
                 displayMessage(error.message);
@@ -1426,7 +1436,7 @@ The very first character of your output must be [ and the very last character mu
                  <div class="md:col-span-2 order-1 md:order-2">
                     <div class="mb-2 md:mb-4">
                         <h3 class="text-lg font-semibold text-gray-800 mb-1 md:mb-2">Yard Audit Results</h3>
-                        <p class="text-sm text-gray-600">Found ${trailers.length} unique trailers in the yard</p>
+                        <p id="auditDuration" class="text-sm text-gray-600"></p>
                     </div>
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Trailers Identified</label>
@@ -1447,13 +1457,19 @@ The very first character of your output must be [ and the very last character mu
                                     <input id="confirmCardCheckbox" type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                     Confirm
                                 </label>
-                                <button id="nextCardBtn" class="inline-flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-full text-sm">
-                                Next
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                                </button>
                             </div>
                         </div>
                             <div class="space-y-3" id="mobileCardsContainer"></div>
+                            <div class="flex items-center justify-between mt-2">
+                                <button id="prevCardBtn2" class="inline-flex items-center gap-1 bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-full text-sm disabled:opacity-40" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
+                                    Previous
+                                </button>
+                                <button id="nextCardBtn2" class="inline-flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-full text-sm">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1474,7 +1490,9 @@ The very first character of your output must be [ and the very last character mu
                 const cardsContainer = bolResultCard.querySelector('#mobileCardsContainer');
                 const stepCounter = bolResultCard.querySelector('#stepCounter');
                 const prevBtn = bolResultCard.querySelector('#prevCardBtn');
-                const nextBtn = bolResultCard.querySelector('#nextCardBtn');
+                const nextBtn = bolResultCard.querySelector('#nextCardBtn2') || bolResultCard.querySelector('#nextCardBtn');
+                const prevBtnBottom = bolResultCard.querySelector('#prevCardBtn2');
+                const nextBtnBottom = bolResultCard.querySelector('#nextCardBtn2');
                 const confirmCheckbox = bolResultCard.querySelector('#confirmCardCheckbox');
                 let currentCardIndex = 0;
                 let confirmedSet = new Set();
@@ -1529,16 +1547,24 @@ The very first character of your output must be [ and the very last character mu
                     // Render just the current card
                     buildCardAt(currentCardIndex);
                     if (stepCounter) stepCounter.textContent = `${Math.min(currentCardIndex + 1, trailers.length)} / ${trailers.length}`;
-                    if (prevBtn) prevBtn.disabled = currentCardIndex <= 0;
-                    if (nextBtn) nextBtn.disabled = currentCardIndex >= trailers.length - 1;
+                    const atStart = currentCardIndex <= 0;
+                    const atEnd = currentCardIndex >= trailers.length - 1;
+                    if (prevBtn) prevBtn.disabled = atStart;
+                    if (nextBtn) nextBtn.disabled = atEnd;
+                    if (prevBtnBottom) prevBtnBottom.disabled = atStart;
+                    if (nextBtnBottom) nextBtnBottom.disabled = atEnd;
                     if (confirmCheckbox) confirmCheckbox.checked = confirmedSet.has(currentCardIndex);
                     // Update header counter
                     const confirmCounter = document.getElementById('confirmCounter');
                     if (confirmCounter) confirmCounter.textContent = `${confirmedSet.size}/${trailers.length} Confirmed`;
                 };
 
-                if (prevBtn) prevBtn.addEventListener('click', () => { currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); });
-                if (nextBtn) nextBtn.addEventListener('click', () => { currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); });
+                const goPrev = () => { currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); };
+                const goNext = () => { currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); };
+                if (prevBtn) prevBtn.addEventListener('click', goPrev);
+                if (nextBtn) nextBtn.addEventListener('click', goNext);
+                if (prevBtnBottom) prevBtnBottom.addEventListener('click', goPrev);
+                if (nextBtnBottom) nextBtnBottom.addEventListener('click', goNext);
                 if (confirmCheckbox) confirmCheckbox.addEventListener('change', () => {
                     if (confirmCheckbox.checked) confirmedSet.add(currentCardIndex); else confirmedSet.delete(currentCardIndex);
                     updateStepper();
