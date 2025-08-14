@@ -27,6 +27,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Write build info
+        run: |
+          COMMIT_SHORT=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          DATE_UTC=$(date -u +"%Y-%m-%dT%H:%MZ")
+          echo "{\"commit\":\"${COMMIT_SHORT}\",\"date\":\"${DATE_UTC}\"}" > camera-vision/build-info.json
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

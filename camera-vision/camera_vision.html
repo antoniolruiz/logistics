@@ -1074,10 +1074,20 @@ The very first character of your output must be [ and the very last character mu
             updateBuildInfo();
         }
 
-        function updateBuildInfo() {
+        async function updateBuildInfo() {
             const bi = document.getElementById('buildInfo');
             if (!bi) return;
-            // Derive from script URL cache-busting or fallback to current date
+            try {
+                const resp = await fetch('build-info.json', { cache: 'no-store' });
+                if (resp.ok) {
+                    const info = await resp.json();
+                    if (info && info.commit) {
+                        bi.textContent = `Last update: ${info.commit}`;
+                        return;
+                    }
+                }
+            } catch (_) {}
+            // Fallback to load timestamp
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
             bi.textContent = `Last update: ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -1665,12 +1675,17 @@ The very first character of your output must be [ and the very last character mu
                     }
                 };
 
-                const fixScroll = () => { if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; } };
                 const goPrev = () => {
-                    const y = window.pageYOffset; currentCardIndex = Math.max(0, currentCardIndex - 1); updateStepper(); setTimeout(() => { fixScroll(); window.scrollTo(0, y); }, 0);
+                    const y = window.scrollY || window.pageYOffset; 
+                    currentCardIndex = Math.max(0, currentCardIndex - 1);
+                    updateStepper();
+                    requestAnimationFrame(() => window.scrollTo(0, y));
                 };
                 const goNext = () => {
-                    const y = window.pageYOffset; currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1); updateStepper(); setTimeout(() => { fixScroll(); window.scrollTo(0, y); }, 0);
+                    const y = window.scrollY || window.pageYOffset;
+                    currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
+                    updateStepper();
+                    requestAnimationFrame(() => window.scrollTo(0, y));
                 };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
