@@ -164,8 +164,11 @@
                         Record Video (beta)
                     </button>
                 </div>
-                <div class="text-center mt-4 md:mt-8 mb-6 md:mb-8">
+                <div class="text-center mt-4 md:mt-8 mb-2">
                     <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">Initiate Yard Auditor</button>
+                </div>
+                <div class="text-center mb-6 md:mb-8">
+                    <p id="buildInfo" class="text-xs text-gray-500">Loading version info…</p>
                 </div>
             </div>
 
@@ -830,6 +833,12 @@ The very first character of your output must be [ and the very last character mu
             recordBtn.addEventListener('click', async () => {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                    // Show live preview
+                    const preview = document.createElement('video');
+                    preview.autoplay = true; preview.muted = true; preview.playsInline = true; preview.srcObject = stream;
+                    preview.className = 'w-full max-w-md mx-auto rounded border mb-2';
+                    const host = document.getElementById('bol-preview-container');
+                    if (host) { host.innerHTML = ''; host.appendChild(preview); }
                     const chunks = [];
                     const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
                     mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
@@ -858,6 +867,7 @@ The very first character of your output must be [ and the very last character mu
                         checkAllInputs();
                         if (hasApiKey()) parseBolBtn.disabled = false;
                         stream.getTracks().forEach(t => t.stop());
+                        if (preview && preview.parentNode) preview.parentNode.removeChild(preview);
                     };
                     mediaRecorder.start();
                     await acquireWakeLock();
@@ -1040,7 +1050,8 @@ The very first character of your output must be [ and the very last character mu
 
         function checkAllInputs() {
             const hasKey = hasApiKey();
-            parseBolBtn.disabled = !(hasKey && Array.isArray(videoFrames) && videoFrames.length > 0);
+            const ready = hasKey && Array.isArray(videoFrames) && videoFrames.length > 0;
+            parseBolBtn.disabled = !ready;
         }
 
         // --- Progress Bar Logic ---
@@ -1076,11 +1087,17 @@ The very first character of your output must be [ and the very last character mu
                 progressDots.textContent = '.'.repeat(dotCount);
             }, 500);
 
-            // Rotate messages every 3 seconds
+            // Rotate messages every 3 seconds and stamp build time into footer if present
             messagesInterval = setInterval(() => {
                 currentMessageIndex = (currentMessageIndex + 1) % progressMessages.length;
                 progressLabel.textContent = progressMessages[currentMessageIndex];
             }, 3000);
+            const bi = document.getElementById('buildInfo');
+            if (bi) {
+                const now = new Date();
+                const pad = n => String(n).padStart(2,'0');
+                bi.textContent = `Last update: ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            }
         }
 
         function stopProgressAnimation() {
