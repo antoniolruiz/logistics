@@ -823,27 +823,7 @@ The very first character of your output must be [ and the very last character mu
                 checkAllInputs(); // Disable button on failure
             }
         });
-        // iOS Safari: show choice dialog so tapping upload area doesn't jump straight to camera
-        (function attachUploadChoiceIntercept(){
-            const uploadLabel = document.querySelector('label[for="bolUpload"]');
-            if (!uploadLabel) return;
-            const ua = navigator.userAgent || '';
-            const isIOS = /iP(hone|ad|od)/.test(ua);
-            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-            if (!(isIOS && isSafari)) return; // only intercept on iOS Safari
-            uploadLabel.addEventListener('click', (e) => {
-                // If file input already has files, let default
-                if (bolUpload && bolUpload.files && bolUpload.files.length > 0) return;
-                e.preventDefault();
-                const useCamera = confirm('Choose source:\nOK = Record with Camera\nCancel = Upload from Library');
-                if (useCamera) {
-                    const rb = document.getElementById('recordVideoBtn');
-                    if (rb) rb.click();
-                } else {
-                    bolUpload.click();
-                }
-            });
-        })();
+        // Use native picker behavior everywhere (no interception)
         // Optional: record directly via MediaRecorder (bypasses photo picker)
         const recordBtn = document.getElementById('recordVideoBtn');
         if (recordBtn) {
