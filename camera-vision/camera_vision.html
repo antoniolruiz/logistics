@@ -156,7 +156,7 @@
                          <p id="videoFileName" class="text-sm text-green-600 font-semibold mt-2"></p>
                      </div>
                      <div id="bol-preview-container" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"></div>
-                     <input id="bolUpload" type="file" class="hidden" accept="video/*" capture="environment" />
+                     <input id="bolUpload" type="file" class="hidden" accept="video/*"/>
                  </label>
                 <div class="text-center mt-2">
                     <button id="recordVideoBtn" class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-md text-sm">
@@ -823,6 +823,27 @@ The very first character of your output must be [ and the very last character mu
                 checkAllInputs(); // Disable button on failure
             }
         });
+        // iOS Safari: show choice dialog so tapping upload area doesn't jump straight to camera
+        (function attachUploadChoiceIntercept(){
+            const uploadLabel = document.querySelector('label[for="bolUpload"]');
+            if (!uploadLabel) return;
+            const ua = navigator.userAgent || '';
+            const isIOS = /iP(hone|ad|od)/.test(ua);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+            if (!(isIOS && isSafari)) return; // only intercept on iOS Safari
+            uploadLabel.addEventListener('click', (e) => {
+                // If file input already has files, let default
+                if (bolUpload && bolUpload.files && bolUpload.files.length > 0) return;
+                e.preventDefault();
+                const useCamera = confirm('Choose source:\nOK = Record with Camera\nCancel = Upload from Library');
+                if (useCamera) {
+                    const rb = document.getElementById('recordVideoBtn');
+                    if (rb) rb.click();
+                } else {
+                    bolUpload.click();
+                }
+            });
+        })();
         // Optional: record directly via MediaRecorder (bypasses photo picker)
         const recordBtn = document.getElementById('recordVideoBtn');
         if (recordBtn) {
