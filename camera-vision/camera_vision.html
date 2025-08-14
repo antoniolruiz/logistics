@@ -159,14 +159,9 @@
                      <input id="bolUpload" type="file" class="hidden" accept="video/*"/>
                      <input id="cameraCapture" type="file" class="hidden" accept="video/*" capture="environment"/>
                  </label>
-                <div class="text-center mt-2">
-                    <button id="recordVideoBtn" class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 px-3 py-2 rounded-md text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
-                        Use Camera App
-                    </button>
-                </div>
+                <div class="text-center mt-2 hidden"></div>
                 <div class="text-center mt-4 md:mt-8 mb-2">
-                    <button id="parseBolBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">Initiate Yard Auditor</button>
+                    <button id="parseBolBtn" disabled class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto">Initiate Yard Auditor</button>
                 </div>
                 <div class="text-center mb-6 md:mb-8">
                     <p id="buildInfo" class="text-xs text-gray-500">Loading version info…</p>
@@ -830,10 +825,8 @@ The very first character of your output must be [ and the very last character mu
         // Use native picker behavior everywhere (no interception)
         // Use OS camera app via capture input when clicking "Use Camera App"
         (function attachCameraApp(){
-            const recordBtn = document.getElementById('recordVideoBtn');
             const cameraInput = document.getElementById('cameraCapture');
-            if (!recordBtn || !cameraInput) return;
-            recordBtn.addEventListener('click', () => cameraInput.click());
+            if (!cameraInput) return;
             cameraInput.addEventListener('change', async (event) => {
                 if (event.target.files.length === 0) return;
                 videoFile = event.target.files[0];
@@ -1084,9 +1077,10 @@ The very first character of your output must be [ and the very last character mu
         function updateBuildInfo() {
             const bi = document.getElementById('buildInfo');
             if (!bi) return;
+            // Derive from script URL cache-busting or fallback to current date
             const now = new Date();
             const pad = n => String(n).padStart(2,'0');
-            bi.textContent = `Last update: ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            bi.textContent = `Last update: ${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
         }
         // Set once on ready
         document.addEventListener('DOMContentLoaded', updateBuildInfo);
@@ -1269,8 +1263,8 @@ The very first character of your output must be [ and the very last character mu
                         
                         video.addEventListener('seeked', () => {
                             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            // Lower JPEG quality on small screens for faster base64 and upload
-                            const jpegQuality = isSmallScreen ? 0.75 : 0.95;
+                            // Prefer higher JPEG quality to improve clarity
+                            const jpegQuality = isSmallScreen ? 0.9 : 0.98;
                             const frameDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
                             frames.push(frameDataUrl);
                             timestamps.push(video.currentTime);
