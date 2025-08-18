@@ -1675,27 +1675,13 @@ The very first character of your output must be [ and the very last character mu
                     }
                 };
 
-                const neutralizeNudge = (updateFn) => {
-                    const anchor = document.getElementById('mobileCardsContainer') || document.body;
-                    const before = anchor.getBoundingClientRect().top + (window.scrollY || window.pageYOffset);
-                    updateFn();
-                    requestAnimationFrame(() => {
-                        const after = anchor.getBoundingClientRect().top + (window.scrollY || window.pageYOffset);
-                        const delta = after - before;
-                        if (delta !== 0) window.scrollBy(0, delta);
-                    });
-                };
                 const goPrev = () => {
-                    neutralizeNudge(() => {
-                        currentCardIndex = Math.max(0, currentCardIndex - 1);
-                        updateStepper();
-                    });
+                    currentCardIndex = Math.max(0, currentCardIndex - 1);
+                    updateStepper();
                 };
                 const goNext = () => {
-                    neutralizeNudge(() => {
-                        currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
-                        updateStepper();
-                    });
+                    currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
+                    updateStepper();
                 };
                 if (prevBtn) prevBtn.addEventListener('click', goPrev);
                 if (nextBtn) nextBtn.addEventListener('click', goNext);
