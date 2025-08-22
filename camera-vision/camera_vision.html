@@ -68,7 +68,8 @@
         }
         .field-block, .mt-1.flex.items-center.p-2.border.bg-gray-50.rounded-md { margin-bottom: 1.1rem !important; }
          html, body { overflow-x: hidden; }
-         #mobileCardsContainer { overflow-anchor: none; }
+         /* allow native scroll anchoring for iOS Safari stability */
+         /* #mobileCardsContainer { overflow-anchor: none; } */
          /* Improve mobile tap targets and spacing */
          @media (max-width: 420px) {
              .container { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
@@ -90,7 +91,7 @@
             <header id="mainHeader" class="mb-8">
                 <div class="flex items-center justify-between relative mb-6">
                     <div class="flex-1"></div>
-                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-9b36617/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
+                    <img id="vectorLogo" src="https://cdn-eblmdf.nitrocdn.com/vVuBUVEtyJTDzFmiTWcmAlTgwfLlYdtZ/assets/images/optimized/rev-4420213/www.withvector.com/wp-content/uploads/2024/09/vector-logo.png" alt="Vector Logo" style="height:38px; width:auto; margin-right:8px;" class="rounded-lg shadow-sm hover:scale-105 transition-transform duration-200 cursor-pointer" />
                 </div>
                 <div class="text-center mt-2">
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 font-google-sans">Camera Vision: Yard Auditor</h1>
