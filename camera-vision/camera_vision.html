@@ -181,6 +181,10 @@
             <div class="w-full bg-blue-100 rounded-full h-6 relative overflow-hidden">
                 <div id="progressBar" class="h-6 bg-blue-500 rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
             </div>
+            <div id="thinkingPanel" class="mt-3 text-left max-w-2xl mx-auto hidden">
+                <div class="text-sm font-medium text-gray-700 mb-1">Model thinking…</div>
+                <pre id="thinkingText" class="max-h-40 overflow-auto font-mono text-xs bg-gray-50 border border-gray-200 rounded p-2 whitespace-pre-wrap"></pre>
+            </div>
         </div>
     </div>
     <div id="messageContainer" class="hidden">
@@ -1059,6 +1063,12 @@ The very first character of your output must be [ and the very last character mu
         function startProgressAnimation() {
             currentMessageIndex = 0;
             progressLabel.textContent = progressMessages[0];
+            const thinkingPanel = document.getElementById('thinkingPanel');
+            const thinkingText = document.getElementById('thinkingText');
+            if (thinkingPanel && thinkingText) {
+                thinkingPanel.classList.add('hidden');
+                thinkingText.textContent = '';
+            }
             
             // Animate dots
             let dotCount = 0;
@@ -1131,16 +1141,47 @@ The very first character of your output must be [ and the very last character mu
 
                 if (selectedModel.startsWith('gemini')) {
                     setProgress(40, '');
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:streamGenerateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: prompt }, ...imageParts] }],
-                        generationConfig: { "response_mime_type": "application/json" }
+                        generationConfig: { response_mime_type: 'application/json' }
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, '');
-                    const result = await response.json();
-                    resultText = result.candidates[0].content.parts[0].text;
+                    if (!response.ok || !response.body) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    // Stream handling
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    const thinkingPanel = document.getElementById('thinkingPanel');
+                    const thinkingText = document.getElementById('thinkingText');
+                    if (thinkingPanel) thinkingPanel.classList.remove('hidden');
+                    let received = 0;
+                    let chunks = '';
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        const text = decoder.decode(value, { stream: true });
+                        chunks += text;
+                        received += value.byteLength;
+                        // Best effort: show partial text tokens as "thinking"
+                        if (thinkingText) thinkingText.textContent = chunks.slice(0, 4000);
+                        // Progress heuristic: ramp 40% -> 90% as bytes arrive
+                        const pct = Math.min(90, 40 + Math.floor(Math.log2(1 + received) * 10));
+                        setProgress(pct, 'Running AI Model');
+                    }
+                    // Gemini streaming returns newline-delimited JSON events; extract final text
+                    let finalText = '';
+                    try {
+                        const lines = chunks.split('\n').filter(Boolean);
+                        for (const line of lines) {
+                            const evt = JSON.parse(line);
+                            const part = evt?.candidates?.[0]?.content?.parts?.[0]?.text || evt?.text;
+                            if (typeof part === 'string') finalText += part;
+                        }
+                    } catch (_) {
+                        // Fallback: use raw chunks
+                        finalText = chunks.trim();
+                    }
+                    resultText = finalText;
                 } else if (selectedModel === 'claude-4') {
                     setProgress(40, '');
                     const apiUrl = 'https://api.anthropic.com/v1/messages';
@@ -1184,14 +1225,42 @@ The very first character of your output must be [ and the very last character mu
                     }));
                     const payload = {
                         model: selectedModel,
-                        response_format: { "type": "json_object" },
-                        messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, ...imageContent]}]
+                        response_format: { type: 'json_object' },
+                        messages: [{ role: 'user', content: [ { type: 'text', text: prompt }, ...imageContent]}],
+                        stream: true
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    setProgress(70, '');
-                    const result = await response.json();
-                    resultText = result.choices[0].message.content;
+                    if (!response.ok || !response.body) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    const thinkingPanel = document.getElementById('thinkingPanel');
+                    const thinkingText = document.getElementById('thinkingText');
+                    if (thinkingPanel) thinkingPanel.classList.remove('hidden');
+                    let received = 0;
+                    let acc = '';
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        received += value.byteLength;
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            const m = line.match(/^data: (.*)$/);
+                            if (!m) continue;
+                            if (m[1] === '[DONE]') continue;
+                            try {
+                                const delta = JSON.parse(m[1]);
+                                const content = delta?.choices?.[0]?.delta?.content;
+                                if (content) {
+                                    acc += content;
+                                    if (thinkingText) thinkingText.textContent = acc.slice(0, 4000);
+                                }
+                            } catch {}
+                        }
+                        const pct = Math.min(90, 40 + Math.floor(Math.log2(1 + received) * 10));
+                        setProgress(pct, 'Running AI Model');
+                    }
+                    resultText = acc;
                 }
                 setProgress(90, '');
                 const consolidatedData = JSON.parse(resultText);
@@ -1201,6 +1270,8 @@ The very first character of your output must be [ and the very last character mu
                 setTimeout(() => { 
                     loading.classList.add('hidden'); 
                     stopProgressAnimation();
+                    const thinkingPanel = document.getElementById('thinkingPanel');
+                    if (thinkingPanel) thinkingPanel.classList.add('hidden');
                     // Collapse upload section after successful audit
                     const uploadSection = document.getElementById('bolContent');
                     if (uploadSection) uploadSection.classList.add('hidden');
@@ -1218,6 +1289,8 @@ The very first character of your output must be [ and the very last character mu
                 displayMessage(error.message);
                 setProgress(0, '');
                 stopProgressAnimation();
+                const thinkingPanel = document.getElementById('thinkingPanel');
+                if (thinkingPanel) thinkingPanel.classList.add('hidden');
             } finally {
                 releaseWakeLock();
                 // loading.classList.add('hidden');
