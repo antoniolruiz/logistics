@@ -1400,7 +1400,7 @@ The very first character of your output must be [ and the very last character mu
             const imageTuples = trailers
                 .map(trailer => {
                     const frameNumber = parseInt(trailer.image_identifier);
-                    if (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= 100 && frameNumber <= videoFrames.length) {
+                    if (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) {
                         const img = videoFrames[frameNumber - 1] || null;
                         return img ? { img, frameNumber } : null;
                     }
