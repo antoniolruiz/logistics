@@ -598,19 +598,19 @@ ACTION: Must be one of: "Dry Van", "Reefer", "Flatbed", "Tanker", "Intermodal Ch
 trailer_size: (Number|null) The length of the trailer in feet.
 ACTION: Look for explicit numerical markings like 53 or 48 on the trailer body. Return the value as a number (e.g., 53), not a string.
 
-image_identifier: (Number) The single best frame number (1-100) that provides the clearest ID view.
-ACTION: Return a number between 1 and 100 representing the extracted frame that shows the clearest, most readable view of the trailer_id. This is NOT a timestamp - it is the sequential frame number from the video processing (frame 1, frame 2, frame 3, etc.). Choose the frame where the trailer identification is most legible and complete. NOTE: It is perfectly acceptable for multiple trailers to use the same frame number if they appear in the same frame.
+image_identifier: (Number) The single best frame number that provides the clearest ID view.
+ACTION: Return the extracted frame that shows the clearest, most readable view of the trailer_id. This is NOT a timestamp - it is the sequential frame number from the video processing (frame 1, frame 2, frame 3, etc.). Choose the frame where the trailer identification is most legible and complete. NOTE: It is perfectly acceptable for multiple trailers to use the same frame number if they appear in the same frame.
 
 Additional Recommended Fields (optional but preferred)
 - id_confidence: (Number 0..1) Confidence that trailer_id is exactly correct. If < 0.8, set trailer_id to null.
 - location_confidence: (Number 0..1) Confidence that the chosen location is exactly correct. If < 0.8, set location to null.
-- supporting_frame_identifiers: (Array<Number>) Up to 3 additional frame numbers (1-100) that also show this trailer clearly.
+- supporting_frame_identifiers: (Array<Number>) Up to 3 additional frame numbers that also show this trailer clearly.
 - id_bbox: (Array<Number>) [x, y, w, h] for the ID region as normalized coordinates (0..1), if visible.
 - location_candidates: (Array<String>) Nearby/adjacent location labels considered when choosing the final location.
 
 ## Core Operational Protocol
 
-Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. Track each candidate trailer across frames, perform majority voting on each character of the ID to avoid O/0, I/1, S/5, B/8 confusions, and select the best frame for readability. Only report each unique trailer_id once in the final output. If no ID can be confirmed with high confidence, emit a single object with trailer_id: null and other fields as null where unknown.
+Stateful Tracking & De-duplication: The trailer_id is the unique key. Instead of analyzing frames in isolation, you must maintain a state. Track each candidate trailer across frames, perform majority voting on each character of the ID to avoid O/0, I/1, S/5, B/8 confusions, and select the best frame for readability. Only report each unique trailer_id once in the final output. If no ID can be confirmed with high confidence, skip the trailer.
 
 Processing Rate (For Video): You must process the visual data at a rate of at least 10 frames per second to ensure no trailer is missed.
 
