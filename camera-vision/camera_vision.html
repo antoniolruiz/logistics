@@ -1415,6 +1415,31 @@ The very first character of your output must be [ and the very last character mu
                     frame.alt = `Trailer ${currentFrameIndex + 1}`;
                     frameCounter.textContent = `${currentFrameIndex + 1} / ${trailerImages.length}`;
                 }
+                // Desktop supporting frame chips
+                const chipBarId = 'desktopFrameChips';
+                let chipBar = bolResultCard.querySelector(`#${chipBarId}`);
+                if (!chipBar) {
+                    chipBar = document.createElement('div');
+                    chipBar.id = chipBarId;
+                    chipBar.className = 'mt-2 flex flex-wrap gap-1 text-xs justify-center hidden md:flex';
+                    const container = bolResultCard.querySelector('#mainCarouselContainer');
+                    if (container) container.appendChild(chipBar);
+                }
+                chipBar.innerHTML = '';
+                const current = trailers[currentFrameIndex];
+                const ids = Array.isArray(current?.supporting_frame_identifiers) ? current.supporting_frame_identifiers.slice(0,3) : [];
+                ids.forEach(n => {
+                    const b = document.createElement('button');
+                    b.className = 'px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border';
+                    b.textContent = `Frame ${n}`;
+                    b.addEventListener('click', () => {
+                        if (!isNaN(n) && n >= 1 && n <= videoFrames.length) {
+                            currentFrameIndex = Math.max(0, n - 1);
+                            updateTrailerCarousel();
+                        }
+                    });
+                    chipBar.appendChild(b);
+                });
                 const zoomFrame = document.getElementById('zoomedFrame');
                 if(zoomFrame && trailerImages.length > 0) {
                     zoomFrame.src = trailerImages[currentFrameIndex];
@@ -1473,9 +1498,10 @@ The very first character of your output must be [ and the very last character mu
 
                 const frameCounter = document.createElement('div');
                 frameCounter.id = 'frameCounter';
-                frameCounter.className = 'absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full';
+                frameCounter.className = 'absolute top-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs font-semibold px-2 py-1 rounded-full';
                 
                 carouselContainer.append(frame, prevBtn, nextBtn, frameCounter);
+                // Desktop chips container appended in updateTrailerCarousel
 
                 if (trailerImages.length <= 1) {
                     prevBtn.classList.add('hidden');
@@ -1532,7 +1558,7 @@ The very first character of your output must be [ and the very last character mu
                             ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" class=\"w-full h-auto rounded mb-2 max-h-[40vh] object-contain bg-black/5\" />` : ''}
                             <div class=\"flex items-center justify-between mb-2\">
                                 <div class=\"font-semibold text-gray-800 truncate\">${trailer.trailer_id || 'N/A'}</div>
-                                <button class=\"remove-card-btn text-red-500 hover:text-red-700 font-bold text-lg\" title=\"Remove\">&minus;</button>
+                                
                             </div>
                             <div class=\"grid grid-cols-2 gap-2 text-sm\">
                                 <div>
@@ -1586,17 +1612,8 @@ The very first character of your output must be [ and the very last character mu
                         <div class="hidden md:block p-3 bg-gray-50 rounded-lg border mt-1 overflow-x-auto">
                             <div class="min-w-[640px]">${trailersHtml}</div>
                         </div>
-                        <!-- Mobile/Cards view with inline image beside card -->
+                        <!-- Mobile/Cards view with inline image above card -->
                         <div class="block md:hidden mt-1">
-                            <div id="mobileStepper" class="flex items-center justify-between mb-2">
-                                <button id="prevCardBtnTop" class="inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-sm disabled:opacity-40" disabled>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
-                                </button>
-                                <div id="stepCounter" class="text-xs text-gray-600"></div>
-                                <button id="nextCardBtnTop" class="inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                                </button>
-                            </div>
                             <div class="space-y-3" id="mobileCardsContainer"></div>
                             <div class="flex items-center justify-end gap-3 mt-2">
                                 <button id="confirmCardBtn" class="inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-2 rounded-full text-sm">
@@ -1641,10 +1658,16 @@ The very first character of your output must be [ and the very last character mu
                     const trailer = trailers[idx];
                     const frameNumber = parseInt(trailer?.image_identifier);
                     const frameImg = (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) ? videoFrames[frameNumber - 1] : null;
+                    const selectedFrameInit = (!isNaN(frameNumber) ? frameNumber : 1);
                     const cardHtml = `
                         <div class=\"space-y-2\"> 
                             ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" data-frame=\"${frameNumber}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
-                            ${Array.isArray(trailer?.supporting_frame_identifiers) && trailer.supporting_frame_identifiers.length ? `<div class=\"mt-2 flex flex-wrap gap-1 text-xs\">${trailer.supporting_frame_identifiers.slice(0,3).map(n => `<button data-frame-sel=\"${n}\" class=\"px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border\">Frame ${n}</button>`).join('')}</div>` : ''}
+                            <div class=\"mt-1 flex items-center justify-center gap-3\">
+                                <button data-frame-prev class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"/></svg></button>
+                                <span class=\"text-xs text-gray-600 frame-indicator\">Frame ${selectedFrameInit}</span>
+                                <button data-frame-next class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"/></svg></button>
+                            </div>
+                            ${Array.isArray(trailer?.supporting_frame_identifiers) && trailer.supporting_frame_identifiers.length ? `<div class=\"mt-2 flex flex-wrap gap-1 text-xs justify-center\">${trailer.supporting_frame_identifiers.slice(0,3).map(n => `<button data-frame-sel=\"${n}\" class=\"px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border\">Frame ${n}</button>`).join('')}</div>` : ''}
                             <div class=\"mobile-trailer-card rounded-lg border border-gray-200 bg-white p-3 shadow-sm relative transition-colors\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
                                 <div class=\"confirmed-badge hidden absolute top-2 right-2 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow\">Confirmed</div>
                                 <div class=\"flex items-center justify-between mb-2\"> 
@@ -1676,6 +1699,8 @@ The very first character of your output must be [ and the very last character mu
                             </div>
                         </div>`;
                     cardsContainer.innerHTML = cardHtml;
+                    const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
+                    if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(selectedFrameInit));
                 };
 
                 const updateStepper = () => {
@@ -1732,7 +1757,9 @@ The very first character of your output must be [ and the very last character mu
                         const t = trailers[currentCardIndex];
                         t.trailer_id = getVal('[data-col="trailer_id"]') || null;
                         t.carrier = getVal('[data-col="carrier"]') || null;
-                        t.is_loaded = (getVal('[data-col="is_loaded"]').toLowerCase().startsWith('y'));
+                        const selectedFrameAttr = card.getAttribute('data-selected-frame');
+                        const selectedFrameNum = selectedFrameAttr ? parseInt(selectedFrameAttr) : NaN;
+                        if (!isNaN(selectedFrameNum)) t.image_identifier = selectedFrameNum;
                         t.location = getVal('[data-col="location"]') || null;
                         t.trailer_type = getVal('[data-col="trailer_type"]') || null;
                         const sizeTxt = getVal('[data-col="trailer_size"]');
@@ -1752,7 +1779,7 @@ The very first character of your output must be [ and the very last character mu
                                 const t = trailers[currentCardIndex];
                                 t.trailer_id = getVal('[data-col="trailer_id"]') || null;
                                 t.carrier = getVal('[data-col="carrier"]') || null;
-                                t.is_loaded = (getVal('[data-col="is_loaded"]').toLowerCase().startsWith('y'));
+                                
                                 t.location = getVal('[data-col="location"]') || null;
                                 t.trailer_type = getVal('[data-col="trailer_type"]') || null;
                                 const sizeTxt = getVal('[data-col="trailer_size"]');
@@ -1787,20 +1814,28 @@ The very first character of your output must be [ and the very last character mu
                                         updateTrailerCarousel();
                                     }
                                 }
-                                // Show the exact video frame in zoom even if not part of trailerImages
-                                try {
-                                    const tempImg = videoFrames[frameNum - 1];
-                                    if (tempImg) {
-                                        zoomedImage.src = tempImg;
-                                        imageZoomModal.classList.remove('hidden');
-                                        imageZoomModal.classList.add('flex');
-                                    }
-                                } catch (_) {}
+                                // Directly switch the visible image on the card to the selected frame
+                                const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                                const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
+                                if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                                const indicator = cardsContainer.querySelector('.frame-indicator');
+                                if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                                const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
+                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
                             }
                             return;
                         }
                         const removeBtn = e.target.closest('#removeCardBtnBottom');
                         if (removeBtn) {
+                            const ok = confirm('Remove this trailer from results?');
+                            if (!ok) return;
+                            const indexToRemove = currentCardIndex;
+                            trailers.splice(indexToRemove, 1);
+                            confirmedSet = new Set(Array.from(confirmedSet).filter(i => i !== indexToRemove).map(i => i > indexToRemove ? i - 1 : i));
+                            currentCardIndex = Math.min(currentCardIndex, Math.max(0, trailers.length - 1));
+                            updateStepper();
+                            return;
+                        }
                         const frameSel = e.target.closest('button[data-frame-sel]');
                         if (frameSel && frameSel.getAttribute) {
                             const n = parseInt(frameSel.getAttribute('data-frame-sel'));
@@ -1811,16 +1846,35 @@ The very first character of your output must be [ and the very last character mu
                                 if (carouselFrame && imagesToShow[currentFrameIndex]) carouselFrame.src = imagesToShow[currentFrameIndex];
                                 const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
                                 if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                                const indicator = cardsContainer.querySelector('.frame-indicator');
+                                if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                                const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
+                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
                             }
                             return;
                         }
-                            const ok = confirm('Remove this trailer from results?');
-                            if (!ok) return;
-                            const indexToRemove = currentCardIndex;
-                            trailers.splice(indexToRemove, 1);
-                            confirmedSet = new Set(Array.from(confirmedSet).filter(i => i !== indexToRemove).map(i => i > indexToRemove ? i - 1 : i));
-                            currentCardIndex = Math.min(currentCardIndex, Math.max(0, trailers.length - 1));
-                            updateStepper();
+                        const prevChip = e.target.closest('[data-frame-prev]');
+                        if (prevChip) {
+                            currentFrameIndex = Math.max(0, currentFrameIndex - 1);
+                            const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                            const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
+                            if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                            const indicator = cardsContainer.querySelector('.frame-indicator');
+                            if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                            const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
+                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
+                            return;
+                        }
+                        const nextChip = e.target.closest('[data-frame-next]');
+                        if (nextChip) {
+                            const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                            currentFrameIndex = Math.min(imagesToShow.length - 1, currentFrameIndex + 1);
+                            const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
+                            if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                            const indicator = cardsContainer.querySelector('.frame-indicator');
+                            if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                            const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
+                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
                             return;
                         }
                         const editable = e.target.closest('.editable-field');
