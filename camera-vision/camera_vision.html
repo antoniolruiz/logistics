@@ -586,9 +586,6 @@ ACTION: Use multiple frames to confirm the exact characters via majority voting 
 carrier: (String|null) The name of the operating trucking company.
 ACTION: Identify this from logos or text on the trailer. Prioritize the operating carrier name (e.g., "Swift", "J.B. Hunt") over the trailer manufacturer name (e.g., "Wabash", "Great Dane").
 
-is_loaded: (Boolean|null) A definitive boolean value (true/false).
-ACTION: This is determined exclusively by the visual presence of a plastic or metal security seal on the rear door latch mechanism. If a seal is present, return true. If no seal is present or the doors are not visible, return false.
-
 location: (String|null) A precise string describing the trailer's position.
 ACTION: Prioritize loading dock numbers first (e.g., "Door 42"). If not at a dock, use parking space numbers (e.g., "Spot B17") or a descriptive location (e.g., "North Fence Line"). Choose a location only if the same label is consistently closest to the trailer across multiple frames; if there is any ambiguity between adjacent spots (e.g., off-by-one), return null.
 
@@ -1288,7 +1285,7 @@ The very first character of your output must be [ and the very last character mu
                     let frameCount = 0;
                     // Reduce or increase frames depending on screen: 100 for mobile, 200 for larger screens
                     const isSmallScreen = window.matchMedia && window.matchMedia('(max-width: 420px)').matches;
-                    const maxFrames = isSmallScreen ? 100 : 200;
+                    const maxFrames = isSmallScreen ? 100 : 120;
                     
                     video.addEventListener('loadedmetadata', () => {
                         // Downscale on small screens to reduce memory
@@ -1495,11 +1492,10 @@ The very first character of your output must be [ and the very last character mu
                            <tr class="border-b bg-gray-50">
                                 <th class="p-2 text-left font-semibold text-gray-700">Trailer ID</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Carrier</th>
-                                <th class="p-2 text-left font-semibold text-gray-700">Loaded</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Location</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Type</th>
                                 <th class="p-2 text-left font-semibold text-gray-700">Size (ft)</th>
-                                <th class="p-2"></th>
+                                <th class="p-2 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1507,11 +1503,11 @@ The very first character of your output must be [ and the very last character mu
                             <tr class="border-b" data-row="${idx}" data-frame="${trailer.image_identifier || ''}">
                                 <td class="p-2 editable-table-cell" data-col="trailer_id">${trailer.trailer_id || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="carrier">${trailer.carrier || 'N/A'}</td>
-                                <td class="p-2 editable-table-cell" data-col="is_loaded">${trailer.is_loaded ? 'Yes' : 'No'}</td>
                                 <td class="p-2 editable-table-cell" data-col="location">${trailer.location || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_type">${trailer.trailer_type || 'N/A'}</td>
                                 <td class="p-2 editable-table-cell" data-col="trailer_size">${trailer.trailer_size || 'N/A'}</td>
                                 <td class="p-2 text-right">
+                                    <button class="confirm-row-btn inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-700 text-sm px-2 py-1 rounded-full mr-2">Confirm</button>
                                     <button class="remove-row-btn inline-flex items-center gap-1 text-red-600 hover:text-red-700 text-sm px-2 py-1 rounded-full hover:bg-red-50" title="Remove row">
                                         <span>&minus;</span><span class="hidden sm:inline">Remove</span>
                                     </button>
@@ -1611,10 +1607,6 @@ The very first character of your output must be [ and the very last character mu
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                     Remove
                                 </button>
-                                <button id="nextCardBtn2" class="inline-flex items-center gap-1 bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-full text-sm">
-                                    Next
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -1638,7 +1630,7 @@ The very first character of your output must be [ and the very last character mu
                 const prevBtnTop = bolResultCard.querySelector('#prevCardBtnTop');
                 const nextBtnTop = bolResultCard.querySelector('#nextCardBtnTop');
                 const prevBtnBottom = bolResultCard.querySelector('#prevCardBtn2');
-                const nextBtnBottom = bolResultCard.querySelector('#nextCardBtn2');
+                const nextBtnBottom = null;
                 const confirmBtn = bolResultCard.querySelector('#confirmCardBtn');
                 let currentCardIndex = 0;
                 let confirmedSet = new Set();
@@ -1652,6 +1644,7 @@ The very first character of your output must be [ and the very last character mu
                     const cardHtml = `
                         <div class=\"space-y-2\"> 
                             ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" data-frame=\"${frameNumber}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
+                            ${Array.isArray(trailer?.supporting_frame_identifiers) && trailer.supporting_frame_identifiers.length ? `<div class=\"mt-2 flex flex-wrap gap-1 text-xs\">${trailer.supporting_frame_identifiers.slice(0,3).map(n => `<button data-frame-sel=\"${n}\" class=\"px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border\">Frame ${n}</button>`).join('')}</div>` : ''}
                             <div class=\"mobile-trailer-card rounded-lg border border-gray-200 bg-white p-3 shadow-sm relative transition-colors\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
                                 <div class=\"confirmed-badge hidden absolute top-2 right-2 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow\">Confirmed</div>
                                 <div class=\"flex items-center justify-between mb-2\"> 
@@ -1666,10 +1659,7 @@ The very first character of your output must be [ and the very last character mu
                                         <div class=\"text-gray-500\">Carrier</div>
                                         <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"carrier\">${(trailer?.carrier ?? '') || 'N/A'}</span></div>
                                     </div>
-                                    <div>
-                                        <div class=\"text-gray-500\">Loaded</div>
-                                        <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"is_loaded\">${trailer?.is_loaded ? 'Yes' : 'No'}</span></div>
-                                    </div>
+                                    
                                     <div>
                                         <div class=\"text-gray-500\">Location</div>
                                         <div class=\"mt-1 p-2 bg-gray-50 rounded border\"><span class=\"editable-field\" data-col=\"location\">${(trailer?.location ?? '') || 'N/A'}</span></div>
@@ -1698,7 +1688,7 @@ The very first character of your output must be [ and the very last character mu
                     if (prevBtnTop) prevBtnTop.disabled = atStart;
                     if (nextBtnTop) nextBtnTop.disabled = atEnd;
                     if (prevBtnBottom) prevBtnBottom.disabled = atStart;
-                    if (nextBtnBottom) nextBtnBottom.disabled = atEnd;
+                    
                     if (confirmBtn) confirmBtn.classList.toggle('bg-emerald-700', confirmedSet.has(currentCardIndex));
                     if (confirmBtn) {
                         const labelEl = confirmBtn.querySelector('.confirm-label');
@@ -1733,7 +1723,7 @@ The very first character of your output must be [ and the very last character mu
                 if (prevBtnTop) prevBtnTop.addEventListener('click', goPrev);
                 if (nextBtnTop) nextBtnTop.addEventListener('click', goNext);
                 if (prevBtnBottom) prevBtnBottom.addEventListener('click', goPrev);
-                if (nextBtnBottom) nextBtnBottom.addEventListener('click', goNext);
+                
                 if (confirmBtn) confirmBtn.addEventListener('click', () => {
                     // Persist visible edits into trailers[currentCardIndex]
                     const card = cardsContainer.querySelector('[data-row]');
@@ -1811,6 +1801,19 @@ The very first character of your output must be [ and the very last character mu
                         }
                         const removeBtn = e.target.closest('#removeCardBtnBottom');
                         if (removeBtn) {
+                        const frameSel = e.target.closest('button[data-frame-sel]');
+                        if (frameSel && frameSel.getAttribute) {
+                            const n = parseInt(frameSel.getAttribute('data-frame-sel'));
+                            if (!isNaN(n) && n >= 1 && n <= videoFrames.length) {
+                                currentFrameIndex = Math.max(0, n - 1);
+                                const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                                const carouselFrame = bolResultCard.querySelector('#carouselFrame');
+                                if (carouselFrame && imagesToShow[currentFrameIndex]) carouselFrame.src = imagesToShow[currentFrameIndex];
+                                const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
+                                if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                            }
+                            return;
+                        }
                             const ok = confirm('Remove this trailer from results?');
                             if (!ok) return;
                             const indexToRemove = currentCardIndex;
@@ -1957,7 +1960,7 @@ The very first character of your output must be [ and the very last character mu
             const card = document.getElementById('bolResultCard');
             if (!card) return;
 
-            const headers = ["Trailer ID", "Carrier", "Loaded", "Location", "Type", "Size (ft)"];
+            const headers = ["Trailer ID", "Carrier", "Location", "Type", "Size (ft)"];
             const rows = [];
             
             const trailerRows = card.querySelectorAll('tbody > tr');
@@ -1966,10 +1969,9 @@ The very first character of your output must be [ and the very last character mu
                     rows.push([
                         row.cells[0] ? row.cells[0].innerText : 'N/A', // Trailer ID
                         row.cells[1] ? row.cells[1].innerText : 'N/A', // Carrier
-                        row.cells[2] ? row.cells[2].innerText : 'N/A', // Loaded
-                        row.cells[3] ? row.cells[3].innerText : 'N/A', // Location
-                        row.cells[4] ? row.cells[4].innerText : 'N/A', // Type
-                        row.cells[5] ? row.cells[5].innerText : 'N/A'  // Size
+                        row.cells[2] ? row.cells[2].innerText : 'N/A', // Location
+                        row.cells[3] ? row.cells[3].innerText : 'N/A', // Type
+                        row.cells[4] ? row.cells[4].innerText : 'N/A'  // Size
                     ].map(d => `"${String(d).replace(/"/g, '""')}"`).join(','));
                 });
             } else {
@@ -2116,6 +2118,11 @@ The very first character of your output must be [ and the very last character mu
                     const row = e.target.closest('tr');
                     row.parentNode.removeChild(row);
                 }
+                if (e.target.classList.contains('confirm-row-btn')) {
+                    const row = e.target.closest('tr');
+                    row.classList.toggle('bg-emerald-50');
+                    e.target.textContent = row.classList.contains('bg-emerald-50') ? 'Undo' : 'Confirm';
+                }
                 if (e.target.id === 'addRowBtn') {
                     const tbody = newTable.getElementsByTagName('tbody')[0];
                     const row = document.createElement('tr');
@@ -2184,7 +2191,7 @@ The very first character of your output must be [ and the very last character mu
                     if (type === 'csv') {
                         // Reuse export logic to build CSV
                         const card = document.getElementById('bolResultCard');
-                        const headers = ["Trailer ID","Carrier","Loaded","Location","Type","Size (ft)"];
+                        const headers = ["Trailer ID","Carrier","Location","Type","Size (ft)"];
                         const trailerRows = card ? card.querySelectorAll('tbody > tr') : [];
                         const rows = [];
                         if (trailerRows.length) {
@@ -2210,10 +2217,9 @@ The very first character of your output must be [ and the very last character mu
                             trailerRows.forEach(row => trailers.push({
                                 trailer_id: row.cells[0]?.innerText || null,
                                 carrier: row.cells[1]?.innerText || null,
-                                is_loaded: (row.cells[2]?.innerText || '').toLowerCase().startsWith('y'),
-                                location: row.cells[3]?.innerText || null,
-                                trailer_type: row.cells[4]?.innerText || null,
-                                trailer_size: row.cells[5]?.innerText || null
+                                location: row.cells[2]?.innerText || null,
+                                trailer_type: row.cells[3]?.innerText || null,
+                                trailer_size: row.cells[4]?.innerText || null
                             }));
                             jsonText = JSON.stringify(trailers, null, 2);
                         }
