@@ -546,6 +546,7 @@
         let videoDuration = 0; // Store video duration
         let lastAuditDurationText = '';
         let wakeLock = null; // Screen Wake Lock while running
+        let selectedFrameNumByIndex = new Map(); // Map<trailerIdx, frameNum>
 
         async function acquireWakeLock() {
             try {
@@ -1392,6 +1393,12 @@ The very first character of your output must be [ and the very last character mu
 
             // Store current trailers for comparison
             currentTrailers = trailers;
+            // Initialize per-trailer selected frames map
+            selectedFrameNumByIndex = new Map();
+            trailers.forEach((t, i) => {
+                const n = parseInt(t?.image_identifier);
+                if (!isNaN(n) && n >= 1 && n <= videoFrames.length) selectedFrameNumByIndex.set(i, n);
+            });
 
             // Extract frames and keep frame numbers
             const imageTuples = trailers
@@ -1412,8 +1419,9 @@ The very first character of your output must be [ and the very last character mu
                 const frameCounter = bolResultCard.querySelector('#frameCounter');
                 if (frame && frameCounter && trailerImages.length > 0) {
                     frame.src = trailerImages[currentFrameIndex];
-                    frame.alt = `Trailer ${currentFrameIndex + 1}`;
-                    frameCounter.textContent = `${currentFrameIndex + 1} / ${trailerImages.length}`;
+                    const num = trailerImageFrameNumbers[currentFrameIndex] || (currentFrameIndex + 1);
+                    frame.alt = `Frame ${num}`;
+                    frameCounter.textContent = `Frame ${num}`;
                 }
                 // Desktop supporting frame chips
                 const chipBarId = 'desktopFrameChips';
@@ -1656,12 +1664,14 @@ The very first character of your output must be [ and the very last character mu
                 const buildCardAt = (idx) => {
                     if (!cardsContainer) return;
                     const trailer = trailers[idx];
-                    const frameNumber = parseInt(trailer?.image_identifier);
-                    const frameImg = (!isNaN(frameNumber) && frameNumber >= 1 && frameNumber <= videoFrames.length) ? videoFrames[frameNumber - 1] : null;
-                    const selectedFrameInit = (!isNaN(frameNumber) ? frameNumber : 1);
+                    const baseNum = parseInt(trailer?.image_identifier);
+                    let selectedFrameInit = selectedFrameNumByIndex.get(idx);
+                    if (!selectedFrameInit || isNaN(selectedFrameInit)) selectedFrameInit = (!isNaN(baseNum) ? baseNum : 1);
+                    selectedFrameInit = Math.min(Math.max(1, selectedFrameInit), videoFrames.length);
+                    const frameImg = videoFrames[selectedFrameInit - 1] || null;
                     const cardHtml = `
                         <div class=\"space-y-2\"> 
-                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${frameNumber}\" data-frame=\"${frameNumber}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
+                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${selectedFrameInit}\" data-frame=\"${selectedFrameInit}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
                             <div class=\"mt-1 flex items-center justify-center gap-3\">
                                 <button data-frame-prev class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"/></svg></button>
                                 <span class=\"text-xs text-gray-600 frame-indicator\">Frame ${selectedFrameInit}</span>
@@ -1791,37 +1801,18 @@ The very first character of your output must be [ and the very last character mu
                         }
                         const thumb = e.target.closest('img.trailer-thumb');
                         if (thumb && thumb.dataset.frame) {
-                            const frameNum = parseInt(thumb.dataset.frame);
-                            const idx = trailerImageFrameNumbers ? trailerImageFrameNumbers.indexOf(frameNum) : -1;
-                            if (idx >= 0) {
-                                currentFrameIndex = idx;
-                                // Sync hidden desktop carousel too
-                                if (typeof updateTrailerCarousel === 'function') {
-                                    updateTrailerCarousel();
-                                }
-                                openImageZoomModal();
-                            } else if (!isNaN(frameNum)) {
-                                // Fallback: choose the nearest available trailer image frame for syncing
-                                if (Array.isArray(trailerImageFrameNumbers) && trailerImageFrameNumbers.length > 0) {
-                                    let nearestIdx = 0;
-                                    let minDiff = Math.abs(trailerImageFrameNumbers[0] - frameNum);
-                                    for (let i = 1; i < trailerImageFrameNumbers.length; i++) {
-                                        const diff = Math.abs(trailerImageFrameNumbers[i] - frameNum);
-                                        if (diff < minDiff) { minDiff = diff; nearestIdx = i; }
-                                    }
-                                    currentFrameIndex = nearestIdx;
-                                    if (typeof updateTrailerCarousel === 'function') {
-                                        updateTrailerCarousel();
-                                    }
-                                }
-                                // Directly switch the visible image on the card to the selected frame
-                                const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                            const chosenNum = parseInt(thumb.dataset.frame);
+                            const idx = currentCardIndex;
+                            if (!isNaN(chosenNum)) {
+                                const clamped = Math.min(Math.max(1, chosenNum), videoFrames.length);
+                                selectedFrameNumByIndex.set(idx, clamped);
+                                const img = videoFrames[clamped - 1];
                                 const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                                if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                                if (cardThumb && img) cardThumb.src = img;
                                 const indicator = cardsContainer.querySelector('.frame-indicator');
-                                if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                                if (indicator) indicator.textContent = `Frame ${clamped}`;
                                 const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
+                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(clamped));
                             }
                             return;
                         }
@@ -1839,42 +1830,49 @@ The very first character of your output must be [ and the very last character mu
                         const frameSel = e.target.closest('button[data-frame-sel]');
                         if (frameSel && frameSel.getAttribute) {
                             const n = parseInt(frameSel.getAttribute('data-frame-sel'));
+                            const idx = currentCardIndex;
                             if (!isNaN(n) && n >= 1 && n <= videoFrames.length) {
-                                currentFrameIndex = Math.max(0, n - 1);
-                                const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                                selectedFrameNumByIndex.set(idx, n);
+                                const img = videoFrames[n - 1];
                                 const carouselFrame = bolResultCard.querySelector('#carouselFrame');
-                                if (carouselFrame && imagesToShow[currentFrameIndex]) carouselFrame.src = imagesToShow[currentFrameIndex];
+                                if (carouselFrame && img) carouselFrame.src = img;
                                 const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                                if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                                if (cardThumb && img) cardThumb.src = img;
                                 const indicator = cardsContainer.querySelector('.frame-indicator');
-                                if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                                if (indicator) indicator.textContent = `Frame ${n}`;
                                 const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
+                                if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(n));
                             }
                             return;
                         }
                         const prevChip = e.target.closest('[data-frame-prev]');
                         if (prevChip) {
-                            currentFrameIndex = Math.max(0, currentFrameIndex - 1);
-                            const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
+                            const idx = currentCardIndex;
+                            let n = selectedFrameNumByIndex.get(idx) || parseInt(trailers[idx]?.image_identifier) || 1;
+                            n = Math.max(1, n - 1);
+                            selectedFrameNumByIndex.set(idx, n);
+                            const img = videoFrames[n - 1];
                             const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                            if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                            if (cardThumb && img) cardThumb.src = img;
                             const indicator = cardsContainer.querySelector('.frame-indicator');
-                            if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                            if (indicator) indicator.textContent = `Frame ${n}`;
                             const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
+                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(n));
                             return;
                         }
                         const nextChip = e.target.closest('[data-frame-next]');
                         if (nextChip) {
-                            const imagesToShow = trailerImages.length > 0 ? trailerImages : videoFrames;
-                            currentFrameIndex = Math.min(imagesToShow.length - 1, currentFrameIndex + 1);
+                            const idx = currentCardIndex;
+                            let n = selectedFrameNumByIndex.get(idx) || parseInt(trailers[idx]?.image_identifier) || 1;
+                            n = Math.min(videoFrames.length, n + 1);
+                            selectedFrameNumByIndex.set(idx, n);
+                            const img = videoFrames[n - 1];
                             const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                            if (cardThumb && imagesToShow[currentFrameIndex]) cardThumb.src = imagesToShow[currentFrameIndex];
+                            if (cardThumb && img) cardThumb.src = img;
                             const indicator = cardsContainer.querySelector('.frame-indicator');
-                            if (indicator) indicator.textContent = `Frame ${currentFrameIndex + 1}`;
+                            if (indicator) indicator.textContent = `Frame ${n}`;
                             const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(currentFrameIndex + 1));
+                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(n));
                             return;
                         }
                         const editable = e.target.closest('.editable-field');
