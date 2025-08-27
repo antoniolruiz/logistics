@@ -1436,10 +1436,11 @@ The very first character of your output must be [ and the very last character mu
                 chipBar.innerHTML = '';
                 const current = trailers[currentFrameIndex];
                 const ids = Array.isArray(current?.supporting_frame_identifiers) ? current.supporting_frame_identifiers.slice(0,3) : [];
-                ids.forEach(n => {
+                ids.forEach((n, i) => {
                     const b = document.createElement('button');
-                    b.className = 'px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border';
-                    b.textContent = `Frame ${n}`;
+                    const isActive = (n === trailerImageFrameNumbers[currentFrameIndex]);
+                    b.className = 'px-2 py-1 rounded border ' + (isActive ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200');
+                    b.textContent = `Option ${i + 1}`;
                     b.addEventListener('click', () => {
                         if (!isNaN(n) && n >= 1 && n <= videoFrames.length) {
                             currentFrameIndex = Math.max(0, n - 1);
@@ -1671,13 +1672,13 @@ The very first character of your output must be [ and the very last character mu
                     const frameImg = videoFrames[selectedFrameInit - 1] || null;
                     const cardHtml = `
                         <div class=\"space-y-2\"> 
-                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Frame ${selectedFrameInit}\" data-frame=\"${selectedFrameInit}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
+                            ${frameImg ? `<img src=\"${frameImg}\" alt=\"Option\" data-frame=\"${selectedFrameInit}\" class=\"trailer-thumb w-full max-h-[50vh] rounded object-contain bg-black/5 cursor-zoom-in\" />` : ''}
                             <div class=\"mt-1 flex items-center justify-center gap-3\">
-                                <button data-frame-prev class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"/></svg></button>
-                                <span class=\"text-xs text-gray-600 frame-indicator\">Frame ${selectedFrameInit}</span>
-                                <button data-frame-next class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"/></svg></button>
+                                <button data-card-prev class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-left\"><path d=\"m15 18-6-6 6-6\"/></svg></button>
+                                <span class=\"text-xs text-gray-600 mobile-card-counter\"></span>
+                                <button data-card-next class=\"inline-flex items-center justify-center bg-gray-100 text-gray-800 hover:bg-gray-200 p-2 rounded-full text-xs\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-right\"><path d=\"m9 18 6-6-6-6\"/></svg></button>
                             </div>
-                            ${Array.isArray(trailer?.supporting_frame_identifiers) && trailer.supporting_frame_identifiers.length ? `<div class=\"mt-2 flex flex-wrap gap-1 text-xs justify-center\">${trailer.supporting_frame_identifiers.slice(0,3).map(n => `<button data-frame-sel=\"${n}\" class=\"px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border\">Frame ${n}</button>`).join('')}</div>` : ''}
+                            ${(() => { const opts = [selectedFrameInit, ...(Array.isArray(trailer?.supporting_frame_identifiers)? trailer.supporting_frame_identifiers: [])].filter(n => !isNaN(parseInt(n)) && parseInt(n)>=1 && parseInt(n)<=videoFrames.length).map(n=>parseInt(n)); const uniq=[]; opts.forEach(n=>{ if(!uniq.includes(n)) uniq.push(n); }); return uniq.length ? `<div class=\\"mt-2 flex flex-wrap gap-1 text-xs justify-center\\">${uniq.slice(0,4).map((n,i)=>`<button data-frame-sel=\\"${n}\\" class=\\"px-2 py-1 rounded border ${n===selectedFrameInit? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}\\">Option ${i+1}</button>`).join('')}</div>` : '' })()}
                             <div class=\"mobile-trailer-card rounded-lg border border-gray-200 bg-white p-3 shadow-sm relative transition-colors\" data-row=\"${idx}\" data-frame=\"${trailer?.image_identifier || ''}\"> 
                                 <div class=\"confirmed-badge hidden absolute top-2 right-2 bg-emerald-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow\">Confirmed</div>
                                 <div class=\"flex items-center justify-between mb-2\"> 
@@ -1718,6 +1719,8 @@ The very first character of your output must be [ and the very last character mu
                     // Render just the current card
                     buildCardAt(currentCardIndex);
                     if (stepCounter) stepCounter.textContent = `${Math.min(currentCardIndex + 1, trailers.length)} / ${trailers.length}`;
+                    const mc = cardsContainer.querySelector('.mobile-card-counter');
+                    if (mc) mc.textContent = `Card ${Math.min(currentCardIndex + 1, trailers.length)} of ${trailers.length}`;
                     const atStart = currentCardIndex <= 0;
                     const atEnd = currentCardIndex >= trailers.length - 1;
                     if (prevBtnTop) prevBtnTop.disabled = atStart;
@@ -1748,11 +1751,11 @@ The very first character of your output must be [ and the very last character mu
                 };
 
                 const goPrev = () => {
-                    currentCardIndex = Math.max(0, currentCardIndex - 1);
+                    currentCardIndex = (currentCardIndex - 1 + trailers.length) % trailers.length;
                     updateStepper();
                 };
                 const goNext = () => {
-                    currentCardIndex = Math.min(trailers.length - 1, currentCardIndex + 1);
+                    currentCardIndex = (currentCardIndex + 1) % trailers.length;
                     updateStepper();
                 };
                 if (prevBtnTop) prevBtnTop.addEventListener('click', goPrev);
@@ -1845,34 +1848,14 @@ The very first character of your output must be [ and the very last character mu
                             }
                             return;
                         }
-                        const prevChip = e.target.closest('[data-frame-prev]');
+                        const prevChip = e.target.closest('[data-card-prev]');
                         if (prevChip) {
-                            const idx = currentCardIndex;
-                            let n = selectedFrameNumByIndex.get(idx) || parseInt(trailers[idx]?.image_identifier) || 1;
-                            n = Math.max(1, n - 1);
-                            selectedFrameNumByIndex.set(idx, n);
-                            const img = videoFrames[n - 1];
-                            const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                            if (cardThumb && img) cardThumb.src = img;
-                            const indicator = cardsContainer.querySelector('.frame-indicator');
-                            if (indicator) indicator.textContent = `Frame ${n}`;
-                            const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(n));
+                            goPrev();
                             return;
                         }
-                        const nextChip = e.target.closest('[data-frame-next]');
+                        const nextChip = e.target.closest('[data-card-next]');
                         if (nextChip) {
-                            const idx = currentCardIndex;
-                            let n = selectedFrameNumByIndex.get(idx) || parseInt(trailers[idx]?.image_identifier) || 1;
-                            n = Math.min(videoFrames.length, n + 1);
-                            selectedFrameNumByIndex.set(idx, n);
-                            const img = videoFrames[n - 1];
-                            const cardThumb = cardsContainer.querySelector('img.trailer-thumb');
-                            if (cardThumb && img) cardThumb.src = img;
-                            const indicator = cardsContainer.querySelector('.frame-indicator');
-                            if (indicator) indicator.textContent = `Frame ${n}`;
-                            const cardEl2 = cardsContainer.querySelector('.mobile-trailer-card');
-                            if (cardEl2) cardEl2.setAttribute('data-selected-frame', String(n));
+                            goNext();
                             return;
                         }
                         const editable = e.target.closest('.editable-field');
