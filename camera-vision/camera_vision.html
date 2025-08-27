@@ -1133,45 +1133,17 @@ The very first character of your output must be [ and the very last character mu
 
                 if (selectedModel.startsWith('gemini')) {
                     setProgress(40, '');
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:streamGenerateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
                     const payload = {
                         contents: [{ parts: [{ text: prompt }, ...imageParts] }],
                         generationConfig: { response_mime_type: 'application/json' }
                     };
                     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok || !response.body) throw new Error(`API Error: ${response.status} ${await response.text()}`);
-                    // Stream handling
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder('utf-8');
-                    
-                    let received = 0;
-                    let chunks = '';
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) break;
-                        const text = decoder.decode(value, { stream: true });
-                        chunks += text;
-                        received += value.byteLength;
-                        // Best effort: show partial text tokens as "thinking"
-                        
-                        // Progress heuristic: ramp 40% -> 90% as bytes arrive
-                        const pct = Math.min(90, 40 + Math.floor(Math.log2(1 + received) * 10));
-                        setProgress(pct, 'Running AI Model');
-                    }
-                    // Gemini streaming returns newline-delimited JSON events; extract final text
-                    let finalText = '';
-                    try {
-                        const lines = chunks.split('\n').filter(Boolean);
-                        for (const line of lines) {
-                            const evt = JSON.parse(line);
-                            const part = evt?.candidates?.[0]?.content?.parts?.[0]?.text || evt?.text;
-                            if (typeof part === 'string') finalText += part;
-                        }
-                    } catch (_) {
-                        // Fallback: use raw chunks
-                        finalText = chunks.trim();
-                    }
-                    resultText = finalText;
+                    if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+                    setProgress(70, '');
+                    const result = await response.json();
+                    const parts = result?.candidates?.[0]?.content?.parts || [];
+                    resultText = parts.map(p => p.text || '').join('');
                 } else if (selectedModel === 'claude-4') {
                     setProgress(40, '');
                     const apiUrl = 'https://api.anthropic.com/v1/messages';
@@ -1251,7 +1223,14 @@ The very first character of your output must be [ and the very last character mu
                     resultText = acc;
                 }
                 setProgress(90, '');
-                const consolidatedData = JSON.parse(resultText);
+                // Be resilient to code fences / extra text
+                const stripFences = (s) => s.replace(/```json/gi, '```').replace(/```/g, '').trim();
+                let consolidatedData;
+                try {
+                    consolidatedData = JSON.parse(resultText);
+                } catch (_) {
+                    try { consolidatedData = JSON.parse(stripFences(resultText)); } catch (e2) { throw e2; }
+                }
                 rawModelResponse = resultText; // Store the raw response
                 setProgress(100, '');
                 displayBolResults(consolidatedData);
